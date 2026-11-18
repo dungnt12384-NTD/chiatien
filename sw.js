@@ -1,5 +1,5 @@
 /* Service worker: mở được khi mất mạng. Đổi VERSION mỗi lần phát hành để máy người dùng lấy bản mới. */
-const VERSION = 'v4';
+const VERSION='v5';
 const CACHE = 'chia-tien-' + VERSION;
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'vendor/supabase.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];

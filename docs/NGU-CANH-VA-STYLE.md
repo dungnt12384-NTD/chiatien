@@ -6,7 +6,7 @@
 ## 1. Dự án "Chia Tiền Nhóm"
 - Ứng dụng PWA một file `index.html` (JS thuần trong một IIFE), chạy trên GitHub Pages: https://dungnt12384-ntd.github.io/chiatien/
 - Backend Supabase (project ref `sqxqltbszsbgdsgbdldo`): RLS, các hàm `security definer`, đăng nhập ẩn danh cho người vào bằng mã chuyến. Migration mới nhất: `supabase/007_leader_ma_chuyen.sql` (đã chạy trên production).
-- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v34). Điều hướng dùng network-first, `cache:'no-cache'`.
+- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v35). Điều hướng dùng network-first, `cache:'no-cache'`.
 - Chủ dự án nói tiếng Việt. Claude làm hết qua dòng lệnh: sửa, kiểm thử, push (`git push origin HEAD:main`), chạy SQL.
 - Mô hình quyền: xem `docs/PHAN-QUYEN.md` (quản trị viên, người tổ chức, leader, người phụ trách, thành viên xem bằng mã `CH-XXXXXXXX`, link công khai `?v=`).
 
@@ -57,6 +57,17 @@ Giữ bố cục iOS, chỉ đổi màu, nền, họa tiết theo logo và backd
 - Nút chính chuyển sắc `--pv-grad`; nút phụ nền nhạt chữ tím than; ngày/tab con đang chọn nền tím than.
 - Màu từng tab (`--k`, trong dải thương hiệu): Của tôi `#2e3a87` · Chuyến `#00a04b` · Người đi `#0b9e8a` · Đã đóng `#1d9bf0` · Phòng `#4f46e5` · Khoản chi `#0a6ad6` · Tổng kết `#3faa2b` · Báo cáo `#6d3fc7`. (Bảng màu iOS ở trên bị lớp này ghi đè.)
 - `theme-color`/manifest: `#eef6fd` (sáng), `#070d26` (tối).
+
+### Bố cục tổng thể và icon thống nhất (v24, khối `<style id="layout">` đặt SAU khối `brand`)
+- **Thanh tab THẲNG, không bo hai đầu** (ghi đè mô tả viên kính ở trên):
+  - Máy tính và iPad (không có `html.phone`): đầu trang và thanh tab tràn hết chiều ngang (`margin-inline:calc(50% - 50vw)`), thanh tab dính trên cùng khi cuộn, kẻ mảnh trên/dưới. Tab đang chọn: nền nhạt màu `--k` 10% và vạch thẳng 3px ở đáy. Icon 28px, nhãn ngắn `.tls` 13px.
+  - Điện thoại (`html.phone`): thanh tab sát đáy, sát hai mép, chỉ kẻ mảnh ở trên. Tab đang chọn: nền nhạt `--k` và vạch 3px ở đỉnh. Cao 66px + vùng an toàn.
+  - Nội dung là cột giữa rộng `--col` (820px). `html, body` có `overflow-x:clip` để phần tràn mép không gây cuộn ngang.
+- **Icon thống nhất:** bỏ hết ký tự ⚠ ℹ ✓ 🔒 🗑 ✎ ✕ ⧉ ↩ 💾 ⬇; mọi icon là SVG khối đặc kiểu SF Symbols, tô `currentColor`:
+  - `.si`: icon trong chữ/nút (1.15em). `.sx`: icon nút nhỏ (đóng, sửa, xong). `.chev`: mũi tên.
+  - Mũi tên mở/đóng của `details.gcard` vẽ bằng `mask:var(--chev-mask)`, xoay 180° khi mở.
+  - Màn hình vào: logo = banknote, 3 tính năng = receipt, chart.pie, checkmark.shield.
+- Ghi chú: `100vw` tính cả thanh cuộn nên ở máy tính thanh tab lệch khoảng nửa bề rộng thanh cuộn (bị `clip` che, nhìn không thấy).
 
 ### Icon (v22, kiểu SF Symbols)
 Khối đặc bo tròn, tô bằng `fill` (không dùng nét): Của tôi = person.crop.circle, Chuyến = airplane, Người đi = person.2, Đã đóng = banknote, Phòng = bed.double, Khoản chi = receipt, Tổng kết = chart.pie, Báo cáo = doc.text. Đường dẫn SVG nằm trong `TAB_DEF` (class `sf`, phần khoét dùng `fill-rule="evenodd"`). Icon tiêu đề mục được gán từ `TAB_DEF` lúc tải trang theo `data-tab`, nên chỉ cần sửa một chỗ. Ở thanh tab icon tô màu `--k`; ở tiêu đề mục icon trắng trên squircle màu `--k`.

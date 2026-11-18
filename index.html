@@ -1122,7 +1122,7 @@ function fillCopyFrom(){const sel=$('#copyFrom');if(!sel)return;const keep=sel.v
   sel.innerHTML='<option value="">Không chép</option>'+R.trips.map(t=>`<option value="${t.id}">${esc(t.name)} (${t.data.members.length} người)</option>`).join('');
   sel.value=(had&&(keep===''||R.trips.some(t=>t.id===keep)))?keep:(trip().data.members.length?R.current:'');sel.dataset.init='1';}
 function syncTripUi(){fillCopyFrom();
-  {const emp=!!(R.trips.length===1&&R.trips[0].ph&&!PV_TOKEN&&dbCanWrite);document.documentElement.classList.toggle('empty',emp);if(emp){tripFormOpen=true;tripEditorOpen=false;if(curTab!=='trip'){curTab='trip';}}}
+  {const emp=!!(R.trips.length===1&&R.trips[0].ph&&!PV_TOKEN&&dbCanWrite);document.documentElement.classList.toggle('empty',emp);if(emp){tripFormOpen=true;tripEditorOpen=false;if(curTab!=='trip'){setTimeout(()=>showTab('trip',true),0);}}}
   const ed=$('#tripEditor'),fm=$('#tripForm'),nb=$('#tripNewBtn');
   if(ed)ed.style.display=(tripEditorOpen&&!tripFormOpen)?'flex':'none';
   if(tripFormOpen){if(!newTripColor)newTripColor=nextColor();const nc=$('#newTripColors');if(nc)nc.innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${newTripColor===c}" aria-label="Chọn màu ${c}" data-act="newColor" data-color="${c}"></button>`).join('');}

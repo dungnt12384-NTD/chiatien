@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>:root{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<style>details.legacy{border:1px dashed var(--line);border-radius:12px;padding:8px 12px}details.legacy>summary{cursor:pointer;font-size:13px;color:var(--muted)}details.legacy[open]{display:flex;flex-direction:column;gap:12px}:root{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>Chia Tiền Nhóm</title>
 <meta name="theme-color" content="#2f9e44">
 <meta name="mobile-web-app-capable" content="yes">
@@ -595,6 +595,8 @@ html.phone #balBody tr.clk td[data-label]::before{font-size:10.5px}
       <div id="acctBox" class="rb"></div>
       <div class="row"><button class="btn ghost small" type="button" id="syncNow">Đồng bộ lại ngay</button></div>
       <div class="hint" style="min-height:0">Chỉ người trong cùng nhóm mới xem được dữ liệu của nhóm. Thay đổi ở máy này tự gửi lên, máy khác nhận trong vài giây. Chưa đăng nhập thì dữ liệu chỉ lưu trên máy này.</div>
+      <div class="hint" id="syncMsg"></div>
+      <details class="legacy"><summary>Nhập dữ liệu từ bản cũ (hiếm dùng)</summary>
       <div class="sub">Hoặc chuyển bằng mã: ở máy có dữ liệu</div>
       <div class="row">
         <button class="btn" type="button" id="expAll">Sao chép mã tất cả chuyến</button>
@@ -604,8 +606,8 @@ html.phone #balBody tr.clk td[data-label]::before{font-size:10.5px}
       <div class="sub">Ở máy cần nhận dữ liệu</div>
       <textarea id="syncIn" class="codebox" rows="4" placeholder="Dán mã dữ liệu vào đây (bắt đầu bằng CTN2:)" aria-label="Dán mã dữ liệu"></textarea>
       <div class="row"><button class="btn" type="button" id="impBtn">Nhập dữ liệu</button></div>
-      <div class="hint" id="syncMsg"></div>
       <div class="hint" style="min-height:0">Gửi mã qua Zalo, Messenger hoặc email rồi dán ở máy kia. Chuyến trùng sẽ được cập nhật theo mã, chuyến mới được thêm vào, chuyến khác không bị xoá.</div>
+      </details>
     </div>
   </section>
 

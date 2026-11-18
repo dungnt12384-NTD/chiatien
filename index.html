@@ -941,6 +941,46 @@ html .ggroup,html .grow.on,html .gi.on,html [class*="gitem"].on{background:var(-
 html .gcard{border-left-color:var(--blue)!important}
 html .gcard>summary,html .gcard>.gh{background:var(--nav)!important;color:#fff!important}
 :root[data-theme="dark"] .gcard>summary,:root[data-theme="dark"] .gcard>.gh{background:#1a3c6e!important}
+/* ===== v19: mỗi MỤC/TAB một màu riêng cố định (không theo màu chuyến), icon khối 3D ===== */
+.tab[data-go="trip"],.sec[data-tab="trip"]{--k:#2563eb}
+.tab[data-go="member"],.sec[data-tab="member"]{--k:#0d9488}
+.tab[data-go="advance"],.sec[data-tab="advance"]{--k:#d97706}
+.tab[data-go="expense"],.sec[data-tab="expense"]{--k:#ea580c}
+.tab[data-go="room"],.sec[data-tab="room"]{--k:#7c3aed}
+.tab[data-go="result"],.sec[data-tab="result"]{--k:#16a34a}
+.tab[data-go="report"],.sec[data-tab="report"]{--k:#db2777}
+.tab[data-go="group"],.sec[data-tab="group"]{--k:#0891b2}
+.tab,.sec{--k:#1a73e8}
+.tab[data-go="trip"],.sec[data-tab="trip"]{--k:#2563eb}
+.tab[data-go="member"],.sec[data-tab="member"]{--k:#0d9488}
+.tab[data-go="advance"],.sec[data-tab="advance"]{--k:#d97706}
+.tab[data-go="expense"],.sec[data-tab="expense"]{--k:#ea580c}
+.tab[data-go="room"],.sec[data-tab="room"]{--k:#7c3aed}
+.tab[data-go="result"],.sec[data-tab="result"]{--k:#16a34a}
+.tab[data-go="report"],.sec[data-tab="report"]{--k:#db2777}
+.tab[data-go="group"],.sec[data-tab="group"]{--k:#0891b2}
+html .tab svg,html .sec-h .ico,html .ico{
+  background:linear-gradient(145deg,color-mix(in srgb,var(--k) 62%,#fff) 0%,var(--k) 50%,color-mix(in srgb,var(--k) 70%,#000) 100%)!important;
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -2px 0 rgba(0,0,0,.2),0 2px 0 color-mix(in srgb,var(--k) 55%,#000),0 4px 8px rgba(0,0,0,.22)}
+html .tab svg{width:26px;height:26px;padding:5px;border-radius:9px;stroke:#fff!important;stroke-width:2.2;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+html .sec-h .ico{border-radius:12px}
+html .sec-h .ico svg,html .ico svg{stroke:#fff!important;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+html .tab{--c:var(--k);color:#1f2937;border-bottom:0!important;position:relative}
+html .tab:hover{background:color-mix(in srgb,var(--k) 12%,#fff)}
+html .tab b{background:color-mix(in srgb,var(--k) 18%,#fff)!important;color:color-mix(in srgb,var(--k) 80%,#000)!important}
+/* tab đang chọn: khối màu riêng của tab, nổi lên; icon đảo thành nền trắng nét màu */
+html .tab[aria-selected="true"],html .tab[aria-selected="true"]:hover{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--k) 78%,#fff),var(--k) 55%,color-mix(in srgb,var(--k) 78%,#000))!important;
+  color:#fff!important;border-color:color-mix(in srgb,var(--k) 70%,#000)!important;
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.45),0 3px 8px rgba(0,0,0,.22)!important}
+html .tab[aria-selected="true"] svg{background:#fff!important;stroke:var(--k)!important;filter:none;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12),0 2px 5px rgba(0,0,0,.25)}
+html .tab[aria-selected="true"] b{background:rgba(255,255,255,.25)!important;color:#fff!important}
+:root[data-theme="dark"] .tab{color:#e8edf5;background:#1c2c47}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tab{color:#e8edf5;background:#1c2c47}}
+/* thẻ mục: vạch trên theo màu mục */
+html .sec{border-top:3px solid var(--k)!important}
+html .sec-h h2{color:color-mix(in srgb,var(--k) 70%,#0f2747)!important}
+html.phone .tab svg{width:24px;height:24px;padding:4px}
 /* ô chọn màu chuyến đã bỏ */
 #tripColors,#newTripColors,.swatches{display:none!important}
 </style>

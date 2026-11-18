@@ -6,7 +6,7 @@
 ## 1. Dự án "Chia Tiền Nhóm"
 - Ứng dụng PWA một file `index.html` (JS thuần trong một IIFE), chạy trên GitHub Pages: https://dungnt12384-ntd.github.io/chiatien/
 - Backend Supabase (project ref `sqxqltbszsbgdsgbdldo`): RLS, các hàm `security definer`, đăng nhập ẩn danh cho người vào bằng mã chuyến. Migration mới nhất: `supabase/007_leader_ma_chuyen.sql` (đã chạy trên production).
-- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v30). Điều hướng dùng network-first, `cache:'no-cache'`.
+- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v32). Điều hướng dùng network-first, `cache:'no-cache'`.
 - Chủ dự án nói tiếng Việt. Claude làm hết qua dòng lệnh: sửa, kiểm thử, push (`git push origin HEAD:main`), chạy SQL.
 - Mô hình quyền: xem `docs/PHAN-QUYEN.md` (quản trị viên, người tổ chức, leader, người phụ trách, thành viên xem bằng mã `CH-XXXXXXXX`, link công khai `?v=`).
 
@@ -40,13 +40,19 @@ Của tôi cyan `#32ade6` · Chuyến blue `#007aff` · Người đi teal `#30b0
 
 ### Thành phần
 - **Tiêu đề lớn (`.tripbar`):** nền trong suốt; dòng 1 tên nhóm màu `--brand` (như nút Back); dòng 2 tên chuyến 34px (điện thoại 30px) đậm; dòng 3 số người/ngày/tổng màu `--muted`.
-- **Thanh tab:** viên kính mờ (bo 999px). Điện thoại: nổi cách đáy 8px, cách mép 10px. Máy tính: dính trên, icon trên nhãn dưới. Icon tab là nét màu `--k`; tab đang chọn có viên nền (trắng ở máy tính, `--fill` ở điện thoại) và chữ màu `--k`.
+- **Thanh tab:** viên kính mờ (bo 999px). Điện thoại: nổi cách đáy 8px, cách mép 10px. Máy tính: dính trên, icon trên nhãn dưới. Icon tab là khối đặc màu `--k`; tab đang chọn có viên nền (trắng ở máy tính, `--fill` ở điện thoại) và chữ màu `--k`.
 - **Thẻ mục (`.sec`):** nền `--surface`, bo 26px (điện thoại 22px), không viền, không bóng. Tiêu đề 22px đậm, mô tả 15px `--muted`. Icon mục là squircle 40px bo 11px nền chuyển sắc `--k` có ánh bóng phía trên.
 - **Thẻ con (`.gcard`), ô số liệu (`.stat`, `.kpi`, `.rcard`):** nền `--surface2`, bo 18–20px, không viền.
 - **Nút:** hình viên thuốc. Chính nền `--brand` chữ trắng; phụ (`.ghost`) nền `--fill` chữ `--brand`; xoá nền đỏ nhạt chữ đỏ. Điện thoại cao 50px chữ 17px; bấm thì thu nhỏ 0.97.
 - **Ô nhập:** nền `--fill`, không viền, bo 12px, cao 44px, chữ 16px; focus có vòng `--brand`.
 - **Chọn ngày, tab con:** viên thuốc nền `--fill`; đang chọn nền `--brand` chữ trắng.
 - **Bảng:** tiêu đề nền thẻ, chữ `--muted` 13px; đường kẻ `--line`; hàng tổng nền `--brand-bg`.
+
+### Icon (v22, kiểu SF Symbols)
+Khối đặc bo tròn, tô bằng `fill` (không dùng nét): Của tôi = person.crop.circle, Chuyến = airplane, Người đi = person.2, Đã đóng = banknote, Phòng = bed.double, Khoản chi = receipt, Tổng kết = chart.pie, Báo cáo = doc.text. Đường dẫn SVG nằm trong `TAB_DEF` (class `sf`, phần khoét dùng `fill-rule="evenodd"`). Icon tiêu đề mục được gán từ `TAB_DEF` lúc tải trang theo `data-tab`, nên chỉ cần sửa một chỗ. Ở thanh tab icon tô màu `--k`; ở tiêu đề mục icon trắng trên squircle màu `--k`.
+
+### Cỡ chữ điện thoại (v22, `html.phone`)
+Không ẩn nội dung: mô tả dưới tiêu đề mục luôn hiện. Thân chữ 17px; tiêu đề lớn 32px; tiêu đề mục 23px; tiêu đề phụ 19px; nhãn ô nhập, gợi ý, mô tả 15px; số liệu 26px (ô số liệu 1 cột); nút cao 52px chữ 17px; ô nhập cao 50px chữ 17px. Thanh tab: icon 28px, nhãn 11px, nhãn dài tự xuống 2 dòng (không cắt chữ).
 
 ### Cách áp dụng
 Khối `<style id="ios">` nằm cuối, ghi đè các lớp cũ v1–v17 (nhiều chỗ dùng `!important` vì lớp cũ cũng dùng). Đổi màu nhấn sửa `--brand`; đổi màu một tab sửa bảng `--k`.

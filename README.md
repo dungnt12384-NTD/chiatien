@@ -19,3 +19,8 @@ Khoá `anon` trong `index.html` là khoá công khai theo thiết kế của Sup
 
 ## Quay lại phiên bản cũ
 Mọi lần sửa đều là một commit trên nhánh `main`. Nhánh `backup-v2-truoc-vai-tro` giữ bản chạy tốt trước khi thêm vai trò, sửa trùng và link chia sẻ. Hoàn tác một lần sửa: `git revert <mã commit>` rồi đẩy lên `main`, GitHub Pages tự cập nhật. Dữ liệu chuyến đi nằm trên Supabase, không nằm trong kho này: hãy dùng nút "Tải bản sao lưu" trong ứng dụng để có bản dự phòng.
+
+## Trang quản trị tổng và nhật ký (supabase/004_quan_tri_nhat_ky.sql)
+- Quản trị viên (bảng `platform_admins`) thấy nút **Quản trị tổng** sau khi đăng nhập: xem mọi nhóm, người tạo, thành viên, hạn mức tạo nhóm từng tài khoản, nhật ký toàn hệ thống; cấp/thu quyền quản trị.
+- Chủ nhóm hoặc quản trị viên: đổi quyền, xoá thành viên (có tuỳ chọn chặn), chặn email, tạm khoá việc vào nhóm bằng mã, đổi mã (không ảnh hưởng người đã vào), xem lịch sử nhóm.
+- Nhật ký (`audit_log`) ghi tự động bằng trigger: tạo/đổi tên/xoá nhóm và chuyến, thành viên vào/rời/bị xoá/đổi quyền, chặn, hạn mức. Lượt "sửa chuyến" được gộp tối đa 1 dòng/10 phút/người/chuyến.

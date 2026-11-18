@@ -652,6 +652,10 @@ html.phone .field.sm,html.phone .field{flex:1 1 100%}
 html.phone .tab .tls{font-size:10px;letter-spacing:-.3px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn:not(.ghost):not(.gray):not(.del):not(.danger):not(.success){color:var(--on)}}
 :root[data-theme="dark"] .btn:not(.ghost):not(.gray):not(.del):not(.danger):not(.success){color:var(--on)}
+html.empty #tabs,html.empty #tripBar,html.empty #tripTabs,html.empty #tripEditBtn,html.empty #tripNewCancel,html.empty #fundBar,html.empty .syncpill{display:none!important}
+html.empty .sec{text-align:left}
+html.empty .sec-h .grow,html.empty .sec-h h2,html.empty .sub,html.empty .field label,html.empty .hint,html.empty .note,html.empty .sec-b{text-align:left!important;align-items:stretch}
+html.empty #copyFrom,html.empty label[for="copyFrom"]{display:none}
 /* hộp thoại */
 .dlg{border-radius:18px;padding:22px}
 .dlg h3{font-size:18px}.dlg p{font-size:15px}
@@ -985,14 +989,14 @@ const mkTrip=(name,data)=>({id:uid(),name,data,color:R?nextColor():TRIP_COLORS[0
 function load(){
   try{const r=localStorage.getItem(KEY2);if(r){const p=JSON.parse(r);if(p&&p.trips&&p.trips.length)return p;}}catch(e){}
   try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);if(p&&p.members&&p.days&&p.days.length){const t=mkTrip('Chuyến đi 1',p);return {trips:[t],current:t.id};}}}catch(e){}
-  const t=mkTrip('Đà Lạt 2 ngày (mẫu)',sample());t.sample=true;return {trips:[t],current:t.id};
+  const t=mkTrip('Chuyến đi 1',blank());t.ph=true;return {trips:[t],current:t.id};
 }
 const trip=()=>R.trips.find(t=>t.id===R.current)||R.trips[0];
 const lastJson=new Map(),syncedSet=new Set(),deletedSet=new Set();
 let dbCanWrite=true,adoptOK=null,dbRef=null,syncState='off',syncNote='',syncAt=0,firstSnap=true;
 function placeholder(){const t=mkTrip('Chuyến đi 1',blank());t.ph=true;lastJson.set(t.id,snapJson(t));return t;}
 const snapJson=t=>JSON.stringify({name:t.name,color:t.color,data:t.data});
-function bumpChanged(){R.trips.forEach(t=>{const j=snapJson(t);if(lastJson.get(t.id)!==j){lastJson.set(t.id,j);t.updatedAt=Date.now();delete t.sample;delete t.ph;schedulePush(t);}});}
+function bumpChanged(){R.trips.forEach(t=>{const j=snapJson(t);if(lastJson.get(t.id)!==j){lastJson.set(t.id,j);if(t.ph&&!t.data.members.length&&!t.data.expenses.length&&!t.data.advances.length)return;t.updatedAt=Date.now();delete t.sample;delete t.ph;schedulePush(t);}});}
 function saveLocal(){R.syncedIds=[...syncedSet];R.deleted=[...deletedSet];try{localStorage.setItem(KEY2,JSON.stringify(R));}catch(e){}}
 function save(){bumpChanged();saveLocal();}
 R=load();const sampleIds=new Set(R.trips.filter(t=>t.sample).map(t=>t.id));R.trips.forEach((t,i)=>{if(!t.color)t.color=TRIP_COLORS[i%TRIP_COLORS.length];if(!t.updatedAt)t.updatedAt=Date.now();lastJson.set(t.id,snapJson(t));});
@@ -1090,6 +1094,7 @@ function fillCopyFrom(){const sel=$('#copyFrom');if(!sel)return;const keep=sel.v
   sel.innerHTML='<option value="">Không chép</option>'+R.trips.map(t=>`<option value="${t.id}">${esc(t.name)} (${t.data.members.length} người)</option>`).join('');
   sel.value=(had&&(keep===''||R.trips.some(t=>t.id===keep)))?keep:(trip().data.members.length?R.current:'');sel.dataset.init='1';}
 function syncTripUi(){fillCopyFrom();
+  {const emp=!!(R.trips.length===1&&R.trips[0].ph&&!PV_TOKEN&&dbCanWrite);document.documentElement.classList.toggle('empty',emp);if(emp){tripFormOpen=true;tripEditorOpen=false;if(curTab!=='trip'){curTab='trip';}}}
   const ed=$('#tripEditor'),fm=$('#tripForm'),nb=$('#tripNewBtn');
   if(ed)ed.style.display=(tripEditorOpen&&!tripFormOpen)?'flex':'none';
   if(tripFormOpen){if(!newTripColor)newTripColor=nextColor();const nc=$('#newTripColors');if(nc)nc.innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${newTripColor===c}" aria-label="Chọn màu ${c}" data-act="newColor" data-color="${c}"></button>`).join('');}
@@ -2848,6 +2853,7 @@ $('#bkAdd').addEventListener('click',()=>{const info=bulkInfo(),unit=advMode==='
     info.rows.forEach(r=>S.advances.push({id:uid(),member:r.id,amount:r.amt,note,bulk:1}));
     bulkSel.clear();$('#bkAmt').value='';$('#bkNote').value='';render();say('#bkSum',`Đã thêm ${fmt(info.total)} cho ${info.rows.length} ${unit}.`);});});
 $('#tripForm').addEventListener('submit',ev=>{ev.preventDefault();
+  R.trips=R.trips.filter(t=>!t.ph);
   const name=$('#newTripName').value.trim()||('Chuyến đi '+(R.trips.length+1));
   const data=blank();
   const srcT=R.trips.find(t=>t.id===$('#copyFrom').value);

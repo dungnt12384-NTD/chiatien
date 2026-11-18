@@ -779,6 +779,19 @@ td,th{border-bottom:1.5px solid var(--line)}
 @media (min-width:1101px){.wrap{max-width:1180px}.tab{gap:5px;padding:0 4px}.tab .tl{overflow:visible;text-overflow:clip;white-space:nowrap;font-size:13.5px}.tab b{padding:0 6px}}
 .sec.lock .row:not(:has(> :not(.lk-hide))){display:none}
 .sec.lock #memberBulk:empty,.sec.lock #memberMsg:empty{display:none}
+
+/* thẻ ở tab Quản trị: mỗi chức năng một màu */
+.gcard{--gk:var(--accent);border-left:6px solid var(--gk)!important;overflow:hidden}
+.gcard>.gh,.gcard>summary{background:color-mix(in srgb,var(--gk) 20%,var(--surface));margin:-16px -16px 4px;padding:12px 16px;border-bottom:1.5px solid color-mix(in srgb,var(--gk) 45%,var(--line))}
+.gcard>.gh b,.gcard>summary b,.gcard>summary{color:var(--fg)}
+details.gcard>summary{margin-bottom:-4px;list-style:none}
+details.gcard[open]>summary{margin-bottom:4px}
+.gcard .rcard{border-left:4px solid color-mix(in srgb,var(--gk) 70%,var(--line))!important;background:color-mix(in srgb,var(--gk) 6%,var(--surface))!important}
+#grpMain .rcard.cur{background:color-mix(in srgb,var(--gk) 16%,var(--surface))!important}
+.gcard .gsub{background:color-mix(in srgb,var(--gk) 5%,var(--surface));border:1px solid var(--line);border-top:1.5px solid color-mix(in srgb,var(--gk) 40%,var(--line));border-radius:10px;padding:10px}
+.gcard .sub{color:var(--gk);filter:brightness(.85)}
+.gcard .btn:not(.ghost):not(.danger-o):not(.success){background:var(--gk)}
+[data-q="logout"]{background:var(--surface)!important;color:var(--neg)!important;border:1.5px solid var(--neg)!important}
 </style>
 
 
@@ -787,7 +800,7 @@ td,th{border-bottom:1.5px solid var(--line)}
   <section id="gate" aria-labelledby="gTitle">
     <div class="g-hero"><div class="g-logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 7h14"/><path d="M5 7l-3 8a3 3 0 0 0 6 0Z"/><path d="M19 7l-3 8a3 3 0 0 0 6 0Z"/></svg></div>
       <h1 id="gTitle">Chia Tiền Nhóm</h1><p>Ghi chi tiêu chuyến đi chơi, tự chia tiền công bằng và chốt sổ với thủ quỹ, ai cũng xem được minh bạch.</p></div>
-    <div class="gcard g-code"><div class="gh"><b>Vào chuyến đi</b></div><div class="hint" style="min-height:0">Nhập mã chuyến leader gửi cho bạn. Không cần tài khoản.</div>
+    <div class="gcard g-code" style="--gk:#2f9e44"><div class="gh"><b>Vào chuyến đi</b></div><div class="hint" style="min-height:0">Nhập mã chuyến leader gửi cho bạn. Không cần tài khoản.</div>
       <div class="row"><div class="field"><label for="gCode" class="sr">Mã chuyến</label><input type="text" id="gCode" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="CH-XXXXXXXX" aria-label="Mã chuyến"></div><button type="button" class="btn" data-gt="code">Vào</button></div>
       <div id="gCodeMsg"></div></div>
     <ul class="g-feat">
@@ -1007,15 +1020,15 @@ td,th{border-bottom:1.5px solid var(--line)}
   <section class="sec" data-tab="group" hidden>
     <div class="sec-h"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></div><div class="grow"><h2>Quản trị</h2><p>Tài khoản, nhóm, thành viên, sao lưu</p></div></div>
     <div class="sec-b">
-      <div class="gcard" id="grpAcct">
-        <div class="sub">Tài khoản và đồng bộ</div>
+      <div class="gcard" id="grpAcct" style="--gk:#1971c2">
+        <div class="gh"><b>👤 Tài khoản và đồng bộ</b></div>
         <div class="note info" id="syncStatus" style="--c:var(--c-trip)"></div>
         <div id="acctBox" class="rb"></div>
         <div class="hint" id="syncMsg"></div>
       </div>
       <div id="grpMain"></div>
-      <div class="gcard" id="grpBackup">
-        <div class="sub">Sao lưu</div>
+      <div class="gcard" id="grpBackup" style="--gk:#0b7285">
+        <div class="gh"><b>💾 Sao lưu</b></div>
         <div class="row"><button class="btn ghost" type="button" id="sbBkDown">⬇ Tải bản sao lưu (file)</button><button class="btn ghost" type="button" id="sbBkUp">⬆ Khôi phục từ file</button><input type="file" id="sbBkFile" accept=".json,application/json" hidden></div>
         <div class="hint" id="sbBkInfo" style="min-height:0"></div>
       <details class="legacy"><summary>Nhập dữ liệu từ bản cũ (hiếm dùng)</summary>
@@ -2999,8 +3012,8 @@ function paintAccount(){
     (chips.length?`<div class="row" style="gap:8px;align-items:center">${chips.map(r=>`<span class="badge on">${r}</span>`).join('')}${sbGroup?`<span class="hint" style="min-height:0">nhóm <b>${esc(sbGroup.name)}</b></span>`:''}</div>`:'')+
     `<div class="row"><button type="button" class="btn ghost" data-q="sync">Đồng bộ lại ngay</button><button type="button" class="btn danger-o" data-q="logout">${isAnon()?'Thoát':'Đăng xuất'}</button></div>`;}
 function groupsCard(){
-  if(!sbGroups.length)return `<div class="gcard"><div class="gh"><b>Chuyến đi của bạn</b></div><div class="hint" style="min-height:0">${isAnon()?'Mã bạn đã nhập hết hạn, bị khoá hoặc đã đổi. Hỏi người tổ chức mã mới rồi nhập bên dưới.':'Bạn chưa tham gia chuyến nào. Nhập mã chuyến bên dưới, hoặc xin quyền tổ chức chuyến đi.'}</div></div>`;
-  return `<div class="gcard"><div class="gh"><b>${sbGroups.length>1?'Nhóm của bạn':'Nhóm'}</b></div>`+sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id;
+  if(!sbGroups.length)return `<div class="gcard" style="--gk:#2f9e44"><div class="gh"><b>🧳 Chuyến đi của bạn</b></div><div class="hint" style="min-height:0">${isAnon()?'Mã bạn đã nhập hết hạn, bị khoá hoặc đã đổi. Hỏi người tổ chức mã mới rồi nhập bên dưới.':'Bạn chưa tham gia chuyến nào. Nhập mã chuyến bên dưới, hoặc xin quyền tổ chức chuyến đi.'}</div></div>`;
+  return `<div class="gcard" style="--gk:#2f9e44"><div class="gh"><b>👥 ${sbGroups.length>1?'Nhóm của bạn':'Nhóm'}</b></div>`+sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id;
     return `<div class="rcard${cur?' cur':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(g.name)}</b>
       <div class="hint" style="min-height:0">${g.trips} chuyến${g.can_create&&!sbAdmin?' · bạn là người tổ chức':''}</div></div>
       ${cur?'<span class="badge on">Đang mở</span>':`<button type="button" class="btn small" data-q="pick" data-id="${esc(g.id)}">Mở</button>`}</div></div>`;}).join('')+`</div>`;}
@@ -3009,10 +3022,10 @@ function codeCard(){
       <div class="hint" style="min-height:0;${c.valid?'':'color:var(--neg)'}">${c.kind==='group'?'Mã nhóm · ':''}${c.valid?'còn hạn tới '+fd(c.expires_at):'hết hạn, bị khoá hoặc đã đổi mã'}</div></div>
       <button type="button" class="btn ghost small" data-q="forget" data-k="${esc(c.kind)}" data-id="${esc(c.target)}">Bỏ</button></div>`).join(''):'';
   const body=`<div class="row"><div class="field"><label for="qCode">Mã chuyến</label><input type="text" id="qCode" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="CH-XXXXXXXX"></div><button type="button" class="btn" data-q="code">Vào</button></div><div id="qCodeMsg"></div>${list?'<div class="sub">Mã đã nhập trên máy này</div>'+list:''}`;
-  return isAnon()||!sbGroups.length?`<div class="gcard"><div class="gh"><b>Nhập mã chuyến</b></div>${body}</div>`:`<details class="gcard"><summary><b>Xem chuyến khác bằng mã</b></summary>${body}</details>`;}
+  return isAnon()||!sbGroups.length?`<div class="gcard" style="--gk:#e8590c"><div class="gh"><b>🔑 Nhập mã chuyến</b></div>${body}</div>`:`<details class="gcard" style="--gk:#e8590c"><summary><b>🔑 Xem chuyến khác bằng mã</b></summary>${body}</details>`;}
 function requestCard(){
-  if(myReq)return `<div class="gcard"><div class="gh"><b>Xin quyền tổ chức chuyến</b></div><div class="note info" style="--c:var(--accent)">Đã gửi yêu cầu lúc ${fdt(myReq.at)}. Quản trị viên sẽ duyệt và gán bạn vào nhóm.</div>${myReq.note?`<div class="hint" style="min-height:0">Lời nhắn: ${esc(myReq.note)}</div>`:''}<div class="row"><button type="button" class="btn ghost small" data-q="reqagain">Sửa lời nhắn</button></div></div>`;
-  return `<div class="gcard"><div class="gh"><b>Muốn tổ chức chuyến đi?</b></div><div class="hint" style="min-height:0">Người tổ chức được tạo chuyến trong nhóm, thêm leader và người phụ trách. Quản trị viên sẽ duyệt yêu cầu.</div>
+  if(myReq)return `<div class="gcard" style="--gk:#7048e8"><div class="gh"><b>✋ Xin quyền tổ chức chuyến</b></div><div class="note info" style="--c:var(--accent)">Đã gửi yêu cầu lúc ${fdt(myReq.at)}. Quản trị viên sẽ duyệt và gán bạn vào nhóm.</div>${myReq.note?`<div class="hint" style="min-height:0">Lời nhắn: ${esc(myReq.note)}</div>`:''}<div class="row"><button type="button" class="btn ghost small" data-q="reqagain">Sửa lời nhắn</button></div></div>`;
+  return `<div class="gcard" style="--gk:#7048e8"><div class="gh"><b>✋ Muốn tổ chức chuyến đi?</b></div><div class="hint" style="min-height:0">Người tổ chức được tạo chuyến trong nhóm, thêm leader và người phụ trách. Quản trị viên sẽ duyệt yêu cầu.</div>
     <div class="field"><label for="qReq">Lời nhắn cho quản trị viên</label><textarea id="qReq" rows="2" maxlength="300" placeholder="Bạn là ai, muốn tổ chức chuyến cho nhóm nào?"></textarea></div>
     <div class="row"><button type="button" class="btn" data-q="req">Gửi yêu cầu</button></div></div>`;}
 function renderGroupTab(){
@@ -3044,7 +3057,7 @@ function adminHtml(){
       <div class="row"><div class="field"><select id="qRg-${esc(r.email)}" aria-label="Chọn nhóm">${admGroups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('')}</select></div>
       <button type="button" class="btn small" data-q="rapprove" data-e="${esc(r.email)}"${dis}>Duyệt vào nhóm</button><button type="button" class="btn ghost small" data-q="rreject" data-e="${esc(r.email)}"${dis}>Từ chối</button></div></div>`).join(''):'<div class="hint">Không có yêu cầu nào đang chờ.</div>';}
   else body=`<div class="rcard">${auditHtml(admAudit,true)}${admAuditMore?'<button type="button" class="btn ghost" data-q="amore">Xem thêm</button>':''}</div>`;
-  return `<div class="gcard admin-card"><div class="gh"><b>Quản trị hệ thống</b></div>${msgHtml(admMsg)}<div class="seg">${tabs}</div>${body}</div>`;}
+  return `<div class="gcard admin-card" style="--gk:#c92a2a"><div class="gh"><b>🛡 Quản trị hệ thống</b></div>${msgHtml(admMsg)}<div class="seg">${tabs}</div>${body}</div>`;}
 function groupDetailHtml(g,d,dis){
   const orgs=d.orgs?(d.orgs.length?d.orgs.map(o=>`<div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${esc(o.email)}<div class="hint" style="min-height:0">${o.signed_in?'đã đăng nhập':'chưa đăng nhập lần nào'} · thêm ${fd(o.added_at)}</div></div><button type="button" class="btn ghost small" data-q="orgrm" data-id="${esc(g.id)}" data-e="${esc(o.email)}"${dis}>Gỡ</button></div>`).join(''):'<div class="hint" style="min-height:0">Chưa có người tổ chức.</div>'):'<div class="hint">Đang tải…</div>';
   const c=d.code;

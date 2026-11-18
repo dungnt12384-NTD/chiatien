@@ -12,8 +12,10 @@ html.phone #toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 html.pv #pvNote{display:block}
 html.loading .wrap>*:not(#pvNote){visibility:hidden}
 html.ro .tab[data-go="member"],html.ro .tab[data-go="advance"],html.ro .tab[data-go="room"],html.ro .tab[data-go="expense"]{display:none}
-html.ro .tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
+html.ro .tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
 html.ro.pv .tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+html.pv .tab[data-go="group"],html.nosb .tab[data-go="group"]{display:none}
+html.nosb:not(.ro) .tabs{grid-template-columns:repeat(7,minmax(0,1fr))}
 html.ro.pv .tab[data-go="trip"]{display:none}
 html.ro #tripNewBtn,html.ro #tripEditBtn,html.ro #tripEditor,html.ro #tripForm,html.ro #btnSample,html.ro #btnClear,html.ro details.legacy,html.ro #sbBkUp,html.ro #syncNow{display:none!important}
 html.pv .syncpill,html.pv #fundBar,html.pv .foot{display:none!important}
@@ -197,7 +199,7 @@ body{background:color-mix(in srgb,var(--tc,var(--bg)) 8%,var(--bg))}
 tr.clk{cursor:pointer}
 tr.clk:hover td{background:var(--surface2)}
 tr.det td{padding:0;background:var(--surface2);white-space:normal;text-align:left}
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;overflow:visible;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;overflow:visible;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
 .tabs::-webkit-scrollbar{display:none}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
 .tab{--c:var(--c-member);min-width:0;justify-content:center;display:flex;align-items:center;gap:7px;height:42px;padding:0 6px;border-radius:10px;border:0;background:transparent;color:var(--fg);font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
@@ -514,7 +516,7 @@ html.phone .tripbar{padding:7px 12px;font-size:12.5px;gap:1px 10px}
 html.phone .tripbar>span:first-child{display:none}
 html.phone .tripbar b{font-size:15px}
 /* thanh menu dưới đáy */
-html.phone .tabs{position:fixed;top:auto;left:0;right:0;bottom:0;z-index:60;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;overflow:visible;border-radius:0;border-width:1px 0 0;padding:4px 2px calc(4px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+html.phone .tabs{position:fixed;top:auto;left:0;right:0;bottom:0;z-index:60;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:0;overflow:visible;border-radius:0;border-width:1px 0 0;padding:4px 2px calc(4px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.08)}
 html.phone .tab{position:relative;flex-direction:column;justify-content:center;gap:1px;height:50px;padding:2px 0;min-width:0;border-radius:9px;font-size:10px;line-height:1.1;font-weight:700;text-align:center}
 html.phone .tab svg{width:20px;height:20px}
 html.phone .tab .tl{display:none}
@@ -656,15 +658,25 @@ html.empty #tabs,html.empty #tripBar,html.empty #tripTabs,html.empty #tripEditBt
 html.empty .sec{text-align:left}
 html.empty .sec-h .grow,html.empty .sec-h h2,html.empty .sub,html.empty .field label,html.empty .hint,html.empty .note,html.empty .sec-b{text-align:left!important;align-items:stretch}
 html.empty #copyFrom,html.empty label[for="copyFrom"]{display:none}
-#admPage{position:fixed;inset:0;z-index:90;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:max(16px,env(safe-area-inset-top)) 14px 40px}
-#admPage[hidden]{display:none}
-.admwrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-html.phone #admPage .row>.btn,html.phone #authBody .row>.btn{flex:0 0 auto}
-html.phone #admPage .row>.btn[type=submit],html.phone #authBody .row>.btn[type=submit]{flex:0 0 auto}
-html.phone #admPage .field,html.phone #authBody .field{flex:1 1 150px}
-html.phone #admPage .field.sm,html.phone #authBody .field.sm{flex:0 0 96px}
-#admPage .rcard .field.sm{flex:0 0 96px}
-#admPage .row,.dlg #authBody .row{justify-content:flex-start}
+html.phone #grpMain .row>.btn,html.phone #authBody .row>.btn{flex:0 0 auto}
+html.phone #grpMain .row>.btn[type=submit]{flex:0 0 auto}
+html.phone #grpMain .field,html.phone #authBody .field{flex:1 1 150px}
+html.phone #grpMain .field.sm,html.phone #authBody .field.sm{flex:0 0 96px}
+#grpMain .field.sm{flex:0 0 96px}
+#grpMain .row,.dlg #authBody .row{justify-content:flex-start}
+html.phone .tab .tls{font-size:9.5px;letter-spacing:-.35px}
+html.phone .tab{padding-left:0;padding-right:0}
+#grpMain{display:flex;flex-direction:column;gap:18px}
+.gcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.gcard.cur{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent)}
+.gcard .gh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.gcard .gh b{font-size:17px;overflow-wrap:anywhere}
+.badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--surface2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.badge.on{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent);border-color:transparent}
+#grpMain .rcard{padding:14px;gap:10px;background:var(--surface2)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;background:var(--surface2);padding:5px;border-radius:14px;border:1px solid var(--line)}
+.seg button{height:44px;border:0;border-radius:10px;background:transparent;font-weight:600;font-size:15px;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
 /* hộp thoại */
 .dlg{border-radius:18px;padding:22px}
 .dlg h3{font-size:18px}.dlg p{font-size:15px}
@@ -910,6 +922,11 @@ td{font-size:15px}
   </section>
 
   <!-- BÁO CÁO -->
+  <section class="sec" data-tab="group" hidden>
+    <div class="sec-h"><div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg></div><div class="grow"><h2>Nhóm</h2><p>Quản lý nhóm, thành viên, mã mời và quản trị</p></div></div>
+    <div class="sec-b"><div id="grpMain"></div></div>
+  </section>
+
   <section class="sec report" data-tab="report">
     <div class="sec-h">
       <div class="ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/></svg></div>
@@ -949,6 +966,7 @@ td{font-size:15px}
 <script>
 (function(){
 const PV_TOKEN=(new URLSearchParams(location.search).get('v')||'').replace(/[^0-9a-zA-Z]/g,'')||null;
+if(!window.supabase)document.documentElement.classList.add('nosb');
 const KEY=PV_TOKEN?'ctn-pv-v1':'chia-tien-nhom-v1',KEY2=PV_TOKEN?'ctn-pv-v2':'chia-tien-nhom-v2';
 const $=s=>document.querySelector(s);
 const uid=()=>Math.random().toString(36).slice(2,9);
@@ -1052,7 +1070,7 @@ function alignHeaders(){document.querySelectorAll('table:not(.matrix)').forEach(
     if(th.style.textAlign!==al)th.style.textAlign=al;rows.forEach(r=>{const c=r.children[i];if(c&&c.style.textAlign!==al&&!c.classList.contains('num'))c.style.textAlign=al;});});});}
 {let q=false;new MutationObserver(()=>{if(q)return;q=true;requestAnimationFrame(()=>{q=false;labelTables();alignHeaders();applyFocus();});}).observe(document.documentElement,{childList:true,subtree:true});}
 document.addEventListener('click',e=>{const f=e.target.closest&&e.target.closest('.fund');if(f&&isPhone())f.classList.toggle('open');});
-const TAB_SHORT={trip:'Chuyến',member:'Người đi',advance:'Đã đóng',expense:'Khoản chi',room:'Phòng',result:'Tổng kết',report:'Báo cáo'};
+const TAB_SHORT={trip:'Chuyến',member:'Người đi',advance:'Đã đóng',expense:'Khoản chi',room:'Phòng',result:'Tổng kết',report:'Báo cáo',group:'Nhóm'};
 const TAB_DEF=[
  ['trip','Chuyến đi','<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'],
  ['member','Thành viên','<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
@@ -1060,7 +1078,8 @@ const TAB_DEF=[
  ['room','Tiền phòng','<path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M12 4v6M2 18h20"/>'],
  ['expense','Khoản chi','<path d="M4 2v20l3-2 2 2 3-2 3 2 2-2 3 2V2l-3 2-2-2-3 2-3-2-2 2Z"/><path d="M8 8h8M8 12h8M8 16h5"/>'],
  ['result','Tổng kết','<path d="M12 3v18M5 7h14"/><path d="M5 7l-3 8a3 3 0 0 0 6 0Z"/><path d="M19 7l-3 8a3 3 0 0 0 6 0Z"/>'],
- ['report','Báo cáo','<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/>']];
+ ['report','Báo cáo','<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/>'],
+ ['group','Nhóm','<circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/><path d="M19 6.5a2.5 2.5 0 0 1 0 5" opacity=".5"/>']];
 let curTab='trip';
 try{const t=localStorage.getItem(KEY+'-tab');if(TAB_DEF.some(x=>x[0]===t))curTab=t;}catch(e){}
 function renderFund(c){
@@ -1086,7 +1105,7 @@ function syncTopBars0(){const tb=$('#tripBar');if(tb)tb.hidden=false;}
 function syncTopBars(){
   const tb=$('#tripBar');if(tb)tb.hidden=false;
   try{renderFund(compute());}catch(e){}}
-function showTab(k,jump){const prevTab=curTab;curTab=k;
+function showTab(k,jump){const prevTab=curTab;curTab=k;if(k==='group'&&typeof renderGroupTab==='function'){try{renderGroupTab();}catch(e){}}
   if(k==='trip'&&prevTab!=='trip'){tripEditorOpen=false;tripFormOpen=false;try{if(typeof syncTripUi==='function')syncTripUi();}catch(e){}}
   try{localStorage.setItem(KEY+'-tab',k);}catch(e){}
   document.querySelectorAll('[data-tab]').forEach(el=>{el.hidden=el.dataset.tab!==k;});
@@ -2649,20 +2668,17 @@ function authHtml(){
     <div class="field"><label for="auCode">Mã trong email</label><input type="text" id="auCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456" style="letter-spacing:.3em;font-size:20px;text-align:center"></div>
     <button type="button" class="btn" data-au="verify"${dis}>Xác nhận</button>
     <div class="row"><button type="button" class="btn ghost small" data-au="sendcode"${dis}>Gửi lại mã</button><button type="button" class="btn ghost small" data-au="back">Đổi email</button></div>`;
-  if(authStep==='group')return `<p style="color:var(--muted);font-size:14px">Chọn nhóm của bạn, tạo nhóm mới, hoặc vào nhóm bằng mã mời.</p>${msg}
-    ${sbGroups.length?`<div class="sub">Nhóm của bạn</div>${sbGroups.map(g=>{const own=g.role==='owner',cur=!!(sbGroup&&sbGroup.id===g.id),e=grpEdit&&grpEdit.id===g.id?grpEdit.mode:'';
-      const lab=esc(g.name)+(own?' (chủ nhóm)':(g.role==='viewer'?' (chỉ xem)':''));
-      if(e==='rename')return `<div class="rcard"><div class="field"><label for="auRen">Tên mới của nhóm</label><input type="text" id="auRen" maxlength="40" value="${esc(g.name)}"></div><div class="row"><button type="button" class="btn small" data-au="renameok" data-id="${esc(g.id)}"${dis}>Lưu tên</button><button type="button" class="btn ghost small" data-au="grpcancel">Huỷ</button></div></div>`;
-      if(e==='delete')return `<div class="rcard"><div class="note" role="alert">Xoá nhóm <b>${esc(g.name)}</b> sẽ xoá vĩnh viễn <b>toàn bộ chuyến, thành viên và link chia sẻ</b> của nhóm, không khôi phục được. Hãy tải bản sao lưu trước.</div><div class="field"><label for="auDel">Gõ lại đúng tên nhóm để xác nhận</label><input type="text" id="auDel" maxlength="40" autocomplete="off" placeholder="${esc(g.name)}"></div><div class="row"><button type="button" class="btn small" style="background:var(--neg)" data-au="delok" data-id="${esc(g.id)}"${dis}>Xoá vĩnh viễn</button><button type="button" class="btn ghost small" data-au="grpcancel">Không xoá</button></div></div>`;
-      return `<div class="rcard"><button type="button" class="chip tog" aria-pressed="${cur}" data-au="pick" data-id="${esc(g.id)}" style="width:100%;justify-content:flex-start"><span class="n" style="padding:4px 10px">${lab}${cur?' · đang dùng':''}</span></button>
-      <div class="row">${own?`<button type="button" class="btn ghost small" data-au="rename" data-id="${esc(g.id)}">Đổi tên</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-au="delgrp" data-id="${esc(g.id)}">Xoá nhóm</button>`:`<button type="button" class="btn ghost small" style="color:var(--neg)" data-au="leave" data-id="${esc(g.id)}">Rời nhóm</button>`}</div></div>`;}).join('')}`:''}
-    <div class="sub">Tạo nhóm mới</div>
+  if(authStep==='group')return `${msg}
+    ${sbGroups.length?sbGroups.map(g=>{const own=g.role==='owner',cur=!!(sbGroup&&sbGroup.id===g.id);
+      return `<div class="gcard${cur?' cur':''}"><div class="gh"><b>${esc(g.name)}</b><span class="badge${own?' on':''}">${own?'Chủ nhóm':(g.role==='viewer'?'Chỉ xem':'Người nhập')}</span>${cur?'<span class="badge on">Đang dùng</span>':''}</div>
+      <div class="row">${cur?'':`<button type="button" class="btn small" data-au="pick" data-id="${esc(g.id)}">Dùng nhóm này</button>`}${own?`<button type="button" class="btn ghost small" data-au="manage" data-id="${esc(g.id)}">Quản lý nhóm</button>`:`<button type="button" class="btn ghost small" style="color:var(--neg)" data-au="leave" data-id="${esc(g.id)}">Rời nhóm</button>`}</div></div>`;}).join(''):'<div class="gcard"><div class="hint">Bạn chưa thuộc nhóm nào. Tạo nhóm mới hoặc vào nhóm bằng mã mời.</div></div>'}
+    <div class="gcard"><div class="sub">Tạo nhóm mới</div>
     ${sbCan.allowed?`<div class="row"><div class="field"><input type="text" id="auGName" maxlength="40" placeholder="Ví dụ: Hội bạn đi Đà Lạt" aria-label="Tên nhóm"></div><button type="button" class="btn" data-au="create"${dis}>Tạo nhóm</button></div>`
-      :`<div class="note" role="alert">${sbCan.permitted===false?'Tài khoản của bạn chưa được cấp quyền tạo nhóm. Hãy nhập mã mời để vào nhóm có sẵn, hoặc nhờ quản trị viên cấp quyền.':'Bạn đã tạo đủ '+(sbCan.limit!=null?sbCan.limit:'')+' nhóm cho phép. Xoá nhóm không dùng nữa hoặc nhờ quản trị viên tăng hạn mức.'}</div>`}
-    <div class="sub">Vào nhóm có sẵn</div>
-    <div class="row"><div class="field"><input type="text" id="auGCode" maxlength="20" autocapitalize="off" placeholder="Mã mời do chủ nhóm gửi" aria-label="Mã mời"></div><button type="button" class="btn ghost" data-au="join"${dis}>Vào nhóm</button></div>`;
+      :`<div class="note" role="alert">${sbCan.permitted===false?'Tài khoản của bạn chưa được cấp quyền tạo nhóm. Hãy nhập mã mời để vào nhóm có sẵn, hoặc nhờ quản trị viên cấp quyền.':'Bạn đã tạo đủ '+(sbCan.limit!=null?sbCan.limit:'')+' nhóm cho phép. Xoá nhóm không dùng nữa hoặc nhờ quản trị viên tăng hạn mức.'}</div>`}</div>
+    <div class="gcard"><div class="sub">Vào nhóm có sẵn</div>
+    <div class="row"><div class="field"><input type="text" id="auGCode" maxlength="20" autocapitalize="off" placeholder="Mã mời do chủ nhóm gửi" aria-label="Mã mời"></div><button type="button" class="btn ghost" data-au="join"${dis}>Vào nhóm</button></div></div>`;
   if(authStep==='members')return membersHtml(msg,dis);
-  if(authStep==='audit')return `${msg}<div class="sub">Lịch sử nhóm ${esc(mg?mg.name:'')}</div><div class="rcard">${auditHtml(mgAudit,false)}</div>${mgAuditMore?'<button type="button" class="btn ghost" data-au="auditmore">Xem thêm</button>':''}<button type="button" class="btn ghost small" data-au="toMembers">← Quay lại</button>`;
+  if(authStep==='audit')return `${msg}<div class="gcard"><div class="sub">Lịch sử nhóm ${esc(mg?mg.name:'')}</div>${auditHtml(mgAudit,false)}${mgAuditMore?'<button type="button" class="btn ghost" data-au="auditmore">Xem thêm</button>':''}</div>`;
   if(authStep==='share'){
     const t=trip(),synced=syncedSet.has(t.id);
     return `${msg}<p style="color:var(--muted);font-size:14px">Link xem công khai của chuyến <b>${esc(t.name)}</b>: ai có link đều xem được báo cáo và tổng kết, <b>không cần đăng nhập</b> và <b>không sửa được</b>. Thu hồi link bất cứ lúc nào.</p>
@@ -2677,11 +2693,14 @@ async function afterGroupGone(g,msg){
   if(sbGroup&&sbGroup.id===g.id){disconnectGroup();sbGroup=null;lsDel(LS_GROUP);dropSyncedLocal();applyRole();render();setSync('off','Chưa chọn nhóm, dữ liệu chỉ lưu trên máy này');}
   authStep='group';authNote='OK:'+msg;renderAuth();paintAccount();}
 function renderAuth(){
+  if(tabStep()){$('#authModal').hidden=true;renderGroupTab();return;}
   $('#authTitle').textContent={group:'Nhóm',code:'Nhập mã 6 số',members:'Quản lý nhóm',audit:'Lịch sử nhóm',share:'Chia sẻ link xem'}[authStep]||'Đăng nhập';
   $('#authBody').innerHTML=authHtml()+`<div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost small" data-au="close">${authStep==='group'&&!sbGroup?'Để sau':'Đóng'}</button></div>`;
   const f=$(authStep==='login'?'#auEmail':authStep==='code'?'#auCode':authStep==='group'?'#auGName':'#none');if(f&&!/Android|iPhone|iPad/i.test(navigator.userAgent))f.focus();}
-function openAuth(step){authStep=step||'login';authNote='';$('#authModal').hidden=false;renderAuth();}
-function closeAuth(){const m=$('#authModal');if(m)m.hidden=true;authBusy=false;authNote='';authDelMg=false;if(admOpen)admLoad();}
+const tabStep=()=>!!sbSession&&['group','members','audit'].includes(authStep)&&!document.documentElement.classList.contains('empty')&&!PV_TOKEN;
+function showAuth(){if(tabStep()){$('#authModal').hidden=true;grpView='mine';if(curTab!=='group')showTab('group',true);}else showAuth();}
+function openAuth(step){authStep=step||'login';authNote='';showAuth();}
+function closeAuth(){const m=$('#authModal');if(m)m.hidden=true;authBusy=false;authNote='';authDelMg=false;if(sbSession&&['members','audit','share'].includes(authStep)&&authStep!=='share')authStep='group';if(curTab==='group')renderGroupTab();if(admOpen)admLoad();}
 const authFail=t=>{authBusy=false;authNote=t;renderAuth();};
 const okEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 /* ---- nhật ký, quản lý thành viên/chặn, trang quản trị tổng ---- */
@@ -2710,75 +2729,95 @@ async function loadCodes(g){
   g.codes=r?{edit:r.edit_code,view:r.view_code}:null;}
 async function openMembers(g){
   g=g||sbGroup;if(!g||!(g.role==='owner'||sbAdmin))return;
-  mg=g;authStep='members';authNote=authNote&&/^OK:/.test(authNote)?authNote:'';roster=[];mgInfo=null;mgBans=[];$('#authModal').hidden=false;renderAuth();
+  mg=g;authStep='members';authNote=authNote&&/^OK:/.test(authNote)?authNote:'';roster=[];mgInfo=null;mgBans=[];showAuth();
   const [r1,r2,r3]=await Promise.all([sb.rpc('group_roster',{gid:g.id}),sb.rpc('group_info',{gid:g.id}),sb.rpc('list_bans',{gid:g.id})]);
   if(r1.error)authNote='Chưa tải được danh sách: '+r1.error.message;else roster=r1.data||[];
   mgInfo=(r2.data&&r2.data[0])||null;mgBans=r3.data||[];
   await loadCodes(g);renderAuth();}
 async function openGroupAudit(g,more){
-  g=g||mg;if(!g)return;mg=g;authStep='audit';if(!more){mgAudit=[];authNote='';}$('#authModal').hidden=false;renderAuth();
+  g=g||mg;if(!g)return;mg=g;authStep='audit';if(!more){mgAudit=[];authNote='';}showAuth();
   const before=more&&mgAudit.length?mgAudit[mgAudit.length-1].id:null;
   const {data,error}=await sb.rpc('group_audit',{gid:g.id,p_limit:50,p_before:before});
   if(error){authNote='Chưa tải được lịch sử: '+error.message;}else{mgAudit=mgAudit.concat(data||[]);mgAuditMore=(data||[]).length>=50;}
   renderAuth();}
+let grpView='mine',grpFrom='';
 function membersHtml(msg,dis){
   const g=mg,c=g&&g.codes,inf=mgInfo,me=sbSession&&sbSession.user.id;
   const rows=roster.length?roster.map(r=>`<div class="rcard"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(r.email||'(không có email)')}</b>${r.user_id===me?' <small>(bạn)</small>':''}<div class="hint" style="min-height:0">vào nhóm ${fd(r.joined_at)}</div></div>${r.role==='owner'?'<span class="hint" style="min-height:0;white-space:nowrap">chủ nhóm</span>':`<select data-rrole data-id="${esc(r.user_id)}" aria-label="Quyền" style="width:auto;flex:none"><option value="editor"${r.role==='editor'?' selected':''}>Người nhập</option><option value="viewer"${r.role==='viewer'?' selected':''}>Chỉ xem</option></select>`}</div>
       ${r.role==='owner'?'':`<div class="row"><button type="button" class="btn ghost small" data-au="rmember" data-id="${esc(r.user_id)}">Xoá khỏi nhóm</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-au="rban" data-id="${esc(r.user_id)}">Xoá và chặn</button></div>`}</div>`).join(''):'<div class="hint">Đang tải…</div>';
   const bans=mgBans.length?mgBans.map(b=>`<div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(b.email)}</b><div class="hint" style="min-height:0">${fd(b.banned_at)}${b.reason?' · '+esc(b.reason):''}</div></div><button type="button" class="btn ghost small" data-au="unban" data-v="${esc(b.email)}">Bỏ chặn</button></div>`).join(''):'<div class="hint" style="min-height:0">Chưa chặn ai.</div>';
   const jOn=!inf||inf.join_enabled;
-  return `${msg}<div class="hint" style="min-height:0">${inf?`Nhóm <b>${esc(g.name)}</b> · tạo bởi <b>${esc(inf.creator_email||'?')}</b> · ${fd(inf.created_at)}`:'Đang tải…'}</div>
-    <div class="sub">Thành viên (${roster.length})</div>${rows}
+  return `${msg}<div class="gcard"><div class="gh"><b>${esc(g.name)}</b></div><div class="hint" style="min-height:0">${inf?`Tạo bởi <b>${esc(inf.creator_email||'?')}</b> · ${fd(inf.created_at)}`:'Đang tải…'}</div>
+    </div><div class="gcard"><div class="sub">Thành viên (${roster.length})</div>${rows}
     <div class="hint" style="min-height:0"><b>Chủ nhóm</b>: toàn quyền, quản lý thành viên, mã, link. <b>Người nhập</b>: thêm/sửa khoản chi và chuyến. <b>Chỉ xem</b>: xem báo cáo, tổng kết.</div>
-    <div class="sub">Vào nhóm bằng mã</div>
+    </div><div class="gcard"><div class="sub">Vào nhóm bằng mã</div>
     <div class="row" style="align-items:center"><span style="flex:1 1 auto">${jOn?'Đang <b>cho phép</b> người mới vào bằng mã.':'Đang <b>tạm khoá</b>: không ai vào mới được bằng mã.'}</span><button type="button" class="btn ghost small" data-au="joinset" data-v="${jOn?'0':'1'}"${dis}>${jOn?'Tạm khoá':'Mở lại'}</button></div>
     ${c?`<div class="row" style="align-items:center"><span style="min-width:96px">Người nhập</span><b class="num" style="letter-spacing:.05em">${esc(c.edit)}</b>${cpBtn(c.edit)}</div>
     <div class="row" style="align-items:center"><span style="min-width:96px">Chỉ xem</span><b class="num" style="letter-spacing:.05em">${esc(c.view)}</b>${cpBtn(c.view)}</div>
     <div class="hint" style="min-height:0"><b>Đổi mã không ảnh hưởng người đã vào nhóm</b>: họ vẫn ở lại và dùng bình thường. Chỉ những ai chưa vào mà đang giữ mã cũ sẽ không vào được nữa.</div>
     <button type="button" class="btn ghost small" data-au="resetcodes"${dis}>Đổi mã mời (vô hiệu mã cũ)</button>`:'<div class="hint">Đang tải…</div>'}
-    <div class="sub">Danh sách chặn (${mgBans.length})</div>${bans}
+    </div><div class="gcard"><div class="sub">Danh sách chặn (${mgBans.length})</div>${bans}
     <div class="row"><div class="field"><input type="text" id="auBan" inputmode="email" autocapitalize="off" placeholder="Email cần chặn" aria-label="Email cần chặn"></div><button type="button" class="btn ghost" data-au="banmail"${dis}>Chặn</button></div>
-    <div class="sub">Quản trị nhóm</div>
+    </div><div class="gcard"><div class="sub">Quản trị nhóm</div>
     <div class="row"><div class="field"><input type="text" id="mgRen" maxlength="40" value="${esc(g.name)}" aria-label="Tên nhóm"></div><button type="button" class="btn ghost" data-au="mgren"${dis}>Đổi tên</button></div>
     <div class="row"><button type="button" class="btn ghost small" data-au="audit">Xem lịch sử của nhóm</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-au="mgdelask">Xoá nhóm…</button></div>
-    ${authDelMg?`<div class="rcard"><div class="note" role="alert">Xoá nhóm <b>${esc(g.name)}</b> sẽ xoá vĩnh viễn toàn bộ chuyến, thành viên và link chia sẻ, không khôi phục được.</div><div class="field"><label for="mgDel">Gõ lại đúng tên nhóm để xác nhận</label><input type="text" id="mgDel" maxlength="40" autocomplete="off" placeholder="${esc(g.name)}"></div><div class="row"><button type="button" class="btn small" style="background:var(--neg)" data-au="mgdel"${dis}>Xoá vĩnh viễn</button><button type="button" class="btn ghost small" data-au="mgdelno">Không xoá</button></div></div>`:''}`;}
+    ${authDelMg?`<div class="rcard"><div class="note" role="alert">Xoá nhóm <b>${esc(g.name)}</b> sẽ xoá vĩnh viễn toàn bộ chuyến, thành viên và link chia sẻ, không khôi phục được.</div><div class="field"><label for="mgDel">Gõ lại đúng tên nhóm để xác nhận</label><input type="text" id="mgDel" maxlength="40" autocomplete="off" placeholder="${esc(g.name)}"></div><div class="row"><button type="button" class="btn small" style="background:var(--neg)" data-au="mgdel"${dis}>Xoá vĩnh viễn</button><button type="button" class="btn ghost small" data-au="mgdelno">Không xoá</button></div></div>`:''}</div>`;}
 let authDelMg=false;
 
 /* trang quản trị tổng (chỉ tài khoản quản trị) */
 let admTab='groups',admGroups=[],admUsers=[],admSet={default_max_groups:3},admAudit=[],admAuditMore=false,admEntity='',admMsg='',admBusy=false,admOpen=false;
-const admEl=()=>document.getElementById('admPage');
 function admErr(e){return e&&e.message?e.message:String(e||'');}
 async function admLoad(){
   const [g,u,s,a]=await Promise.all([sb.rpc('admin_groups'),sb.rpc('admin_users'),sb.rpc('admin_settings'),sb.rpc('admin_audit',{p_limit:50,p_entity:admEntity||null})]);
   if(g.error||u.error){admMsg='Không tải được: '+admErr(g.error||u.error);}
   admGroups=g.data||[];admUsers=u.data||[];if(s.data)admSet=s.data;admAudit=a.data||[];admAuditMore=(a.data||[]).length>=50;admRender();}
+function renderGroupTab(){
+  const el=document.getElementById('grpMain');if(!el)return;
+  if(!window.supabase){el.innerHTML='<div class="note info">Không tải được thư viện đồng bộ nên chưa dùng được nhóm.</div>';return;}
+  if(!sbSession){el.innerHTML='<div class="gcard"><div class="hint" style="min-height:0">Đăng nhập để dùng chung dữ liệu với nhóm trên nhiều thiết bị.</div><button type="button" class="btn" data-acct="login">Đăng nhập</button></div>';return;}
+  const dis=authBusy?' disabled':'';
+  let head='';
+  if(sbAdmin)head=`<div class="seg"><button type="button" data-g="mine" aria-pressed="${grpView==='mine'}">Nhóm của tôi</button><button type="button" data-g="admin" aria-pressed="${grpView==='admin'}">Quản trị tổng</button></div>`;
+  let body;
+  if(grpView==='admin')body=admHtml();
+  else{
+    const back=authStep==='members'?`<button type="button" class="btn ghost small" data-g="back" style="align-self:flex-start">← ${grpFrom==='admin'?'Về quản trị tổng':'Danh sách nhóm'}</button>`
+      :authStep==='audit'?`<button type="button" class="btn ghost small" data-g="toMembers" style="align-self:flex-start">← Quay lại quản lý nhóm</button>`:'';
+    if(!['group','members','audit'].includes(authStep))authStep='group';
+    body=back+authHtml();}
+  const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
+  el.innerHTML=head+body;
+  if(keep&&val!=null){const n=document.getElementById(keep);if(n&&n.tagName==='INPUT'){n.value=val;}}}
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-g]');if(!b)return;ev.preventDefault();
+  const v=b.dataset.g;
+  if(v==='mine'){grpView='mine';grpFrom='';authStep='group';authNote='';renderGroupTab();}
+  else if(v==='admin'){admOpen=true;grpView='admin';renderGroupTab();admLoad();}
+  else if(v==='back'){authNote='';if(grpFrom==='admin'){grpFrom='';grpView='admin';authStep='group';renderGroupTab();admLoad();}else{authStep='group';renderGroupTab();}}
+  else if(v==='toMembers'){openMembers(mg);}});
 async function loadCan(){try{const r=await sb.rpc('can_create_group');if(r.data)sbCan=r.data;}catch(e){}}
 async function openAdmin(){
-  if(!sbAdmin)return;admOpen=true;admMsg='';let el=admEl();
-  if(!el){el=document.createElement('div');el.id='admPage';document.body.appendChild(el);}
-  el.hidden=false;document.documentElement.style.overflow='hidden';admRender();await admLoad();}
-function closeAdmin(){admOpen=false;const el=admEl();if(el)el.hidden=true;document.documentElement.style.overflow='';}
-function admRender(){
-  const el=admEl();if(!el||el.hidden)return;
+  if(!sbAdmin)return;admOpen=true;admMsg='';grpView='admin';grpFrom='';showTab('group',true);renderGroupTab();await admLoad();}
+function closeAdmin(){admOpen=false;grpView='mine';}
+function admHtml(){
   const dis=admBusy?' disabled':'';
   const tabs=[['groups','Nhóm'],['users','Tài khoản'],['audit','Nhật ký']].map(t=>`<button type="button" class="chip tog" aria-pressed="${admTab===t[0]}" data-adm="tab" data-v="${t[0]}"><span class="n" style="padding:4px 12px">${t[1]}</span></button>`).join('');
   let body='';
-  if(admTab==='groups')body=admGroups.length?admGroups.map(g=>`<div class="rcard"><div><b style="font-size:16px;overflow-wrap:anywhere">${esc(g.name)}</b>${g.join_enabled?'':' <span class="hint" style="min-height:0;color:var(--warn)">· đang khoá mã</span>'}</div>
+  if(admTab==='groups')body=admGroups.length?admGroups.map(g=>`<div class="gcard"><div><b style="font-size:16px;overflow-wrap:anywhere">${esc(g.name)}</b>${g.join_enabled?'':' <span class="hint" style="min-height:0;color:var(--warn)">· đang khoá mã</span>'}</div>
       <div class="hint" style="min-height:0">Tạo bởi <b>${esc(g.creator_email||'?')}</b> · ${fd(g.created_at)}</div>
       <div class="hint" style="min-height:0">${g.members} thành viên · ${g.trips} chuyến${g.last_activity?' · hoạt động gần nhất '+fdt(g.last_activity):''}</div>
       <div class="row"><button type="button" class="btn small" data-adm="manage" data-id="${esc(g.id)}">Quản lý</button><button type="button" class="btn ghost small" data-adm="gaudit" data-id="${esc(g.id)}">Lịch sử</button><button type="button" class="btn ghost small" data-adm="open" data-id="${esc(g.id)}">Mở xem/sửa dữ liệu</button></div></div>`).join(''):'<div class="hint">Chưa có nhóm nào.</div>';
   else if(admTab==='users')body=`<div class="rcard"><div class="sub">Số nhóm tối đa mỗi người được tạo (mặc định)</div><div class="row"><div class="field sm"><input type="text" id="admDef" inputmode="numeric" value="${admSet.default_max_groups}" aria-label="Hạn mức mặc định"></div><button type="button" class="btn small" data-adm="setdef"${dis}>Lưu</button></div><div class="hint" style="min-height:0">Áp dụng cho mọi tài khoản không có hạn mức riêng.</div>
       <div class="sub">Quyền tạo nhóm mặc định</div><div class="row" style="align-items:center"><span style="flex:1 1 auto">${admSet.default_can_create?'Tài khoản mới <b>được</b> tạo nhóm.':'Tài khoản mới <b>không được</b> tạo nhóm (phải được cấp riêng).'}</span><button type="button" class="btn ghost small" data-adm="defcan" data-v="${admSet.default_can_create?'0':'1'}"${dis}>${admSet.default_can_create?'Đổi: không cho':'Đổi: cho phép'}</button></div></div>`+
-    admUsers.map(u=>`<div class="rcard"><div style="overflow-wrap:anywhere"><b>${esc(u.email||'')}</b>${u.is_admin?' <span class="hint" style="min-height:0;color:var(--accent)">· quản trị viên</span>':''}</div>
+    admUsers.map(u=>`<div class="gcard"><div style="overflow-wrap:anywhere"><b>${esc(u.email||'')}</b>${u.is_admin?' <span class="hint" style="min-height:0;color:var(--accent)">· quản trị viên</span>':''}</div>
       <div class="hint" style="min-height:0">Đăng nhập gần nhất ${u.last_sign_in_at?fdt(u.last_sign_in_at):'—'} · đang chủ ${u.owned} nhóm · tham gia ${u.joined} nhóm</div>
       ${u.is_admin?'<div class="hint" style="min-height:0">Quản trị viên: toàn quyền, được tạo nhóm không giới hạn và quản lý mọi nhóm.</div>':`<div class="row" style="align-items:center"><span style="flex:1 1 auto">Tạo nhóm: <b style="color:${u.can_create?'var(--pos)':'var(--neg)'}">${u.can_create?'được phép':'bị cấm'}</b>${u.can_custom?'':' <span class="hint" style="min-height:0">(mặc định)</span>'}</span><button type="button" class="btn ghost small" data-adm="cansw" data-v="${esc(u.email)}" data-b="${u.can_create?'0':'1'}"${dis}>${u.can_create?'Cấm tạo nhóm':'Cho phép tạo nhóm'}</button>${u.can_custom?`<button type="button" class="btn ghost small" data-adm="canclr" data-v="${esc(u.email)}"${dis}>Về mặc định</button>`:''}</div>
       <div class="row" style="align-items:center"><span class="hint" style="min-height:0">Số nhóm tối đa</span><div class="field sm" style="flex:0 0 84px"><input type="text" inputmode="numeric" data-admq="${esc(u.email)}" value="${u.quota}" aria-label="Hạn mức của ${esc(u.email)}"></div><button type="button" class="btn small" data-adm="setq" data-v="${esc(u.email)}"${dis}>Lưu</button>${u.custom?`<button type="button" class="btn ghost small" data-adm="clrq" data-v="${esc(u.email)}"${dis}>Về mặc định</button>`:'<span class="hint" style="min-height:0">(mặc định)</span>'}</div>`}
       <div class="row"><button type="button" class="btn ghost small" data-adm="${u.is_admin?'unadmin':'admin'}" data-v="${esc(u.email)}"${dis}>${u.is_admin?'Thu quyền quản trị':'Cấp quyền quản trị'}</button></div></div>`).join('')+
     `<div class="rcard"><div class="sub">Đặt hạn mức cho email chưa đăng nhập</div><div class="row"><div class="field"><input type="text" id="admNewMail" inputmode="email" autocapitalize="off" placeholder="email@gmail.com" aria-label="Email"></div><div class="field sm" style="flex:0 0 84px"><input type="text" id="admNewQ" inputmode="numeric" placeholder="số nhóm" aria-label="Số nhóm"></div><button type="button" class="btn small" data-adm="setnew"${dis}>Đặt</button></div></div>`;
   else body=`<div class="field"><label for="admEnt">Lọc theo</label><select id="admEnt"><option value="">Tất cả</option><option value="group"${admEntity==='group'?' selected':''}>Nhóm</option><option value="trip"${admEntity==='trip'?' selected':''}>Chuyến đi</option><option value="member"${admEntity==='member'?' selected':''}>Thành viên</option><option value="quota"${admEntity==='quota'?' selected':''}>Hạn mức</option><option value="admin"${admEntity==='admin'?' selected':''}>Quản trị viên</option></select></div><div class="rcard">${auditHtml(admAudit,true)}</div>${admAuditMore?'<button type="button" class="btn ghost" data-adm="more">Xem thêm</button>':''}`;
-  el.innerHTML=`<div class="admwrap"><div class="row" style="align-items:center;justify-content:space-between;flex-wrap:nowrap"><h2 style="font-size:20px">Quản trị tổng</h2><button type="button" class="btn ghost small" data-adm="close">Đóng</button></div>
-    ${admMsg?`<div class="note${/^OK:/.test(admMsg)?' info':''}" role="alert">${esc(admMsg.replace(/^OK:/,''))}</div>`:''}
-    <div class="chips">${tabs}</div>${body}</div>`;}
+  return `${admMsg?`<div class="note${/^OK:/.test(admMsg)?' info':''}" role="alert">${esc(admMsg.replace(/^OK:/,''))}</div>`:''}
+    <div class="chips">${tabs}</div>${body}`;}
+function admRender(){if(curTab==='group'&&grpView==='admin')renderGroupTab();}
 async function admAct(act,btn){
   const v=btn&&btn.dataset.v,id=btn&&btn.dataset.id;
   const run=async(fn,okMsg)=>{admBusy=true;admMsg='';admRender();const {error}=await fn();admBusy=false;
@@ -2786,8 +2825,8 @@ async function admAct(act,btn){
     await admLoad();admMsg='OK:'+okMsg;admRender();return true;};
   if(act==='close'){closeAdmin();return;}
   if(act==='tab'){admTab=v;admMsg='';admRender();return;}
-  if(act==='manage'){const g=admGroups.find(x=>x.id===id);if(g)openMembers({id:g.id,name:g.name,role:'admin',codes:null});return;}
-  if(act==='gaudit'){const g=admGroups.find(x=>x.id===id);if(g)openGroupAudit({id:g.id,name:g.name,role:'admin',codes:null});return;}
+  if(act==='manage'){const g=admGroups.find(x=>x.id===id);if(g){grpView='mine';grpFrom='admin';openMembers({id:g.id,name:g.name,role:'admin',codes:null});}return;}
+  if(act==='gaudit'){const g=admGroups.find(x=>x.id===id);if(g){grpView='mine';grpFrom='admin';openGroupAudit({id:g.id,name:g.name,role:'admin',codes:null});}return;}
   if(act==='setdef'){const n=parseInt(($('#admDef').value||'').replace(/\D/g,''),10);if(isNaN(n)){admMsg='Nhập một số.';admRender();return;}
     await run(()=>sb.rpc('admin_set_default_quota',{n}),'Đã lưu hạn mức mặc định.');return;}
   if(act==='setq'){const inp=document.querySelector(`[data-admq="${CSS.escape(v)}"]`);const n=parseInt((inp&&inp.value||'').replace(/\D/g,''),10);if(isNaN(n)){admMsg='Nhập một số.';admRender();return;}
@@ -2812,7 +2851,7 @@ document.addEventListener('change',async ev=>{const s=ev.target;if(!s||s.id!=='a
   const {data}=await sb.rpc('admin_audit',{p_limit:50,p_entity:admEntity||null});admAudit=data||[];admAuditMore=(data||[]).length>=50;admRender();});
 
 async function openShare(){
-  if(!sbGroup||!canWriteRole())return;authStep='share';authNote='';shareTok=null;$('#authModal').hidden=false;renderAuth();
+  if(!sbGroup||!canWriteRole())return;authStep='share';authNote='';shareTok=null;showAuth();
   const t=trip();const {data}=await sb.from('trip_shares').select('token').eq('trip_id',t.id).maybeSingle();
   shareTok=data?data.token:null;renderAuth();}
 async function copyText(v,btn){try{await navigator.clipboard.writeText(v);if(btn){const o=btn.textContent;btn.textContent='Đã sao chép';setTimeout(()=>{btn.textContent=o;},1500);}}catch(e){const i=$('#shLink');if(i){i.select();}}}
@@ -2839,6 +2878,7 @@ async function authAction(act,btn){
     const {error}=await sb.auth.verifyOtp({email:authEmail,token:code,type:'email'});
     if(error){authBusy=false;authStep='code';authFail(/expired|invalid/i.test(error.message)?'Mã sai hoặc đã hết hạn. Bấm "Gửi lại mã" để lấy mã mới.':'Chưa xác nhận được: '+error.message);}
     return;}
+  if(act==='manage'){const g=sbGroups.find(x=>x.id===btn.dataset.id);if(g){grpFrom='';openMembers(g);}return;}
   if(act==='pick'){const g=sbGroups.find(x=>x.id===btn.dataset.id);if(g){closeAuth();connectGroup(g);}return;}
   if(act==='rename'||act==='delgrp'){grpEdit={id:btn.dataset.id,mode:act==='rename'?'rename':'delete'};authNote='';renderAuth();const f=$(act==='rename'?'#auRen':'#auDel');if(f)f.focus();return;}
   if(act==='grpcancel'){grpEdit=null;authNote='';renderAuth();return;}

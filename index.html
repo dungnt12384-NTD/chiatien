@@ -868,120 +868,153 @@ button.tog[aria-pressed="true"]{border-color:var(--gold)!important;background:va
 .pill,.badge{background:var(--gold-bg)!important;color:#6b4d12!important}
 .rcard.cur{background:var(--gold-bg)!important;border-color:var(--gold)!important}.badge.on{background:var(--ink)!important;color:var(--gold)!important}
 </style>
-<style id="portal">
-/* ===== v18 PHONG CÁCH PORTAL (đồng bộ portal BDPOC): navy + xanh dương, Segoe UI, bo 8px.
-   KHÔNG còn màu riêng theo chuyến: mọi tab/chuyến dùng chung một bảng màu. Đổi màu: sửa biến ở :root dưới đây. ===== */
-:root{--nav:#1a3c6e;--nav-2:#0f2747;--nav-soft:#e8edf5;--blue:#1a73e8;--blue-d:#1558b0;
-  --ink:#1a3c6e;--ink2:#0f2747;--gold:#1a73e8;--gold-bg:#e8edf5;
-  --bg:#f4f6fa;--surface:#fff;--surface2:#f7f9fc;--line:#dbe2ec;--fg:#1f2937;--muted:#5f6b7a;
-  --accent:#1a73e8;--pos:#188038;--neg:#d93025;--pos-bg:#e8f5e9;--neg-bg:#fdecea;
-  --font:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;--radius:8px;
-  --shadow:0 1px 2px rgba(15,39,71,.05)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--nav:#9db8e6;--nav-2:#0b1a30;--nav-soft:#16233a;--blue:#5b9cf0;--blue-d:#7db0f5;
-  --ink:#0f2747;--ink2:#1a3c6e;--gold:#5b9cf0;--gold-bg:#1c2c47;--bg:#0c1524;--surface:#132038;--surface2:#182843;--line:#2a3b58;--fg:#e8edf5;--muted:#a3b0c4;--accent:#5b9cf0;--pos-bg:#12301d;--neg-bg:#3b1715}}
-:root[data-theme="dark"]{--nav:#9db8e6;--nav-2:#0b1a30;--nav-soft:#16233a;--blue:#5b9cf0;--blue-d:#7db0f5;
-  --ink:#0f2747;--ink2:#1a3c6e;--gold:#5b9cf0;--gold-bg:#1c2c47;--bg:#0c1524;--surface:#132038;--surface2:#182843;--line:#2a3b58;--fg:#e8edf5;--muted:#a3b0c4;--accent:#5b9cf0;--pos-bg:#12301d;--neg-bg:#3b1715}
-html body{background:var(--bg)!important;font-family:var(--font);font-size:13.5px}
-/* thanh chuyến = đầu trang portal */
-html .tripbar{background:linear-gradient(180deg,#1a3c6e 0%,#0f2747 100%)!important;color:#fff;border:0;border-radius:8px;box-shadow:none;padding:10px 16px;text-transform:none}
-html .tripbar .crumb{color:#fff}
-/* thanh tab kiểu portal: nền xanh nhạt, gạch navy, tab chọn = navy */
-html .tabs{background:#e8edf5;border:0!important;border-bottom:2px solid #1a3c6e!important;border-radius:8px 8px 0 0;padding:8px 8px 0;box-shadow:none;gap:4px}
-html .tab{background:#dbe3ef;color:#1a3c6e;border:1px solid #b8c4d8!important;border-bottom:0!important;border-radius:6px 6px 0 0;font-weight:700;letter-spacing:.02em}
-html .tab svg{stroke:#1a3c6e!important}
-html .tab:hover{background:#cdd8ea}
-html .tab b{background:rgba(26,60,110,.12)!important;color:#1a3c6e!important}
-html .tab[aria-selected="true"],html .tab[aria-selected="true"]:hover{background:#1a3c6e!important;color:#fff!important;border-color:#1a3c6e!important;box-shadow:none!important}
-html .tab[aria-selected="true"] svg{stroke:#fff!important}
-html .tab[aria-selected="true"] b{background:rgba(255,255,255,.22)!important;color:#fff!important}
-:root[data-theme="dark"] html .tab,:root[data-theme="dark"] .tab{background:#1c2c47;color:#cfe0ff}
-html.phone .tabs{border-radius:0;padding:5px 4px}
-/* mục (.box của portal): viền xám, không vạch vàng, tiêu đề chữ hoa navy */
-html .sec{border:1px solid var(--line);border-top:1px solid var(--line)!important;border-radius:8px;box-shadow:var(--shadow);background:var(--surface)}
-html .sec-h{background:linear-gradient(180deg,#fbfcfe,#f4f7fb)!important;border-bottom:1px solid var(--line);border-radius:8px 8px 0 0}
-:root[data-theme="dark"] .sec-h{background:var(--surface2)!important}
-html .sec-h h2{color:var(--nav)!important;text-transform:uppercase;font-size:14px;font-weight:700;letter-spacing:.015em}
-:root[data-theme="dark"] .sec-h h2{color:var(--fg)!important}
-html .sec-h .ico,html .ico{background:#1a3c6e!important;color:#fff;border-radius:6px}
-html .sec-h .ico svg,html .ico svg{stroke:#fff!important}
-/* số liệu */
-html .stat,html .rcard,html .kpi{background:var(--surface)!important;border:1px solid var(--line)!important;border-left:1px solid var(--line)!important;border-radius:8px}
-html .stat b,html .kpi b{color:var(--nav)}
-:root[data-theme="dark"] .stat b,:root[data-theme="dark"] .kpi b{color:var(--fg)}
-html .rcard.cur{background:var(--gold-bg)!important;border-color:var(--blue)!important}
-/* nút: chính xanh dương, phụ xám, nguy hiểm đỏ, xác nhận xanh lá */
-html .btn{background:var(--blue);color:#fff;border:1px solid var(--blue);border-radius:5px;font-weight:600}
-html .btn:hover{background:var(--blue-d)}
-html .btn.ghost{background:#eef2f8;color:#475569;border:1px solid #c3cedd}
-html .btn.ghost:hover{background:#e2e8f2}
-html .btn.gray{background:#5f6368;border-color:#5f6368;color:#fff}
-html .btn.success{background:var(--pos);border-color:var(--pos);color:#fff}
-html .btn.del,html .btn.danger{background:var(--neg);border-color:var(--neg);color:#fff}
-:root[data-theme="dark"] .btn{color:#fff}
-:root[data-theme="dark"] .btn.ghost{background:#1c2c47;color:#cfe0ff;border-color:#2a3b58}
-/* ô nhập */
-html input,html select,html textarea{border-color:#c3cedd;border-radius:5px}
-html input:focus,html select:focus,html textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,115,232,.16)}
-/* tab con, ngày, nút bật tắt */
-html .day[aria-selected="true"],html .subtab[aria-selected="true"],html .subtab[aria-pressed="true"],html .subtab.kind[aria-pressed="true"],html .mdlg .subtab[aria-pressed="true"]{background:var(--nav)!important;border-color:var(--nav)!important;color:#fff!important;box-shadow:none}
-:root[data-theme="dark"] .day[aria-selected="true"],:root[data-theme="dark"] .subtab[aria-selected="true"],:root[data-theme="dark"] .subtab[aria-pressed="true"]{background:var(--blue)!important;border-color:var(--blue)!important}
-html .subtab{border-color:#c3cedd}
-html button.tog[aria-pressed="true"]{border-color:var(--blue)!important;background:var(--gold-bg)!important}
-/* nút chọn chuyến: không còn dải màu riêng */
-html .trip{border-left:1px solid var(--line);background:var(--surface)}
-html .trip[aria-selected="true"]{background:var(--nav)!important;border-color:var(--nav)!important;color:#fff!important;box-shadow:none!important}
-html .trip[aria-selected="true"] small{color:#cfd6e6!important}
-/* bảng: tiêu đề xám xanh như portal */
-html .t2 thead th,html .matrix thead th,html table thead th{background:#e5ebf4!important;color:var(--nav)!important;border-color:var(--line)!important;font-weight:700}
-:root[data-theme="dark"] .t2 thead th,:root[data-theme="dark"] .matrix thead th,:root[data-theme="dark"] table thead th{background:#1c2c47!important;color:#cfe0ff!important}
-html .matrix tr.tot td{background:var(--gold-bg);border-top:2px solid var(--nav)}
-html .pill,html .badge{background:#dbeafe!important;color:#1d4ed8!important}
-html .badge.on{background:var(--nav)!important;color:#fff!important}
-html .ggroup,html .grow.on,html .gi.on,html [class*="gitem"].on{background:var(--gold-bg)!important;border-left-color:var(--blue)!important}
-html .gcard{border-left-color:var(--blue)!important}
-html .gcard>summary,html .gcard>.gh{background:var(--nav)!important;color:#fff!important}
-:root[data-theme="dark"] .gcard>summary,:root[data-theme="dark"] .gcard>.gh{background:#1a3c6e!important}
-/* ===== v19: mỗi MỤC/TAB một màu riêng cố định (không theo màu chuyến), icon khối 3D ===== */
+<style id="app">
+/* ===== v20 GIAO DIỆN ỨNG DỤNG (PWA) =====
+   - Mỗi tab/mục MỘT màu riêng cố định (--k), KHÔNG theo màu chuyến. Icon khối 3D.
+   - Điện thoại: thẻ đầu chuyến + thanh điều hướng đáy kiểu app. Máy tính: cột giữa 820px, thanh tab dạng segmented dính trên.
+   - Đổi màu thương hiệu: --brand. Đổi màu từng tab: bảng --k bên dưới. Khối này nằm CUỐI, ghi đè các lớp cũ (v1–v17). */
+:root{--brand:#2563eb;--brand-d:#1d4ed8;--brand-bg:#e8f0fe;--on:#fff;
+  --bg:#eef2f7;--surface:#fff;--surface2:#f5f7fb;--line:#e2e8f0;--fg:#0f172a;--muted:#64748b;
+  --ink:#16325c;--ink2:#0f2747;--gold:#2563eb;--gold-bg:#e8f0fe;--accent:#2563eb;
+  --pos:#15803d;--neg:#dc2626;--pos-bg:#e7f6ec;--neg-bg:#fdecec;
+  --font:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;--radius:16px;
+  --glass:rgba(255,255,255,.86);
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.06);
+  --shadow-up:0 -1px 0 rgba(15,23,42,.05),0 -8px 24px rgba(15,23,42,.08)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--brand:#60a5fa;--brand-d:#93c5fd;--brand-bg:#172a4a;
+  --bg:#0b1220;--surface:#131c2e;--surface2:#1a2540;--line:#26334d;--fg:#e6ebf5;--muted:#94a3b8;
+  --ink:#0f2747;--ink2:#1a3c6e;--gold:#60a5fa;--gold-bg:#172a4a;--accent:#60a5fa;--pos:#4ade80;--neg:#f87171;--pos-bg:#12301d;--neg-bg:#3b1715;
+  --glass:rgba(19,28,46,.88);--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);--shadow-up:0 -8px 24px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--brand:#60a5fa;--brand-d:#93c5fd;--brand-bg:#172a4a;
+  --bg:#0b1220;--surface:#131c2e;--surface2:#1a2540;--line:#26334d;--fg:#e6ebf5;--muted:#94a3b8;
+  --ink:#0f2747;--ink2:#1a3c6e;--gold:#60a5fa;--gold-bg:#172a4a;--accent:#60a5fa;--pos:#4ade80;--neg:#f87171;--pos-bg:#12301d;--neg-bg:#3b1715;
+  --glass:rgba(19,28,46,.88);--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);--shadow-up:0 -8px 24px rgba(0,0,0,.35)}
+
+/* ---- màu riêng từng tab / mục ---- */
+.tab,.sec{--k:#2563eb}
+.tab[data-go="group"],.sec[data-tab="group"]{--k:#0891b2}
 .tab[data-go="trip"],.sec[data-tab="trip"]{--k:#2563eb}
 .tab[data-go="member"],.sec[data-tab="member"]{--k:#0d9488}
 .tab[data-go="advance"],.sec[data-tab="advance"]{--k:#d97706}
-.tab[data-go="expense"],.sec[data-tab="expense"]{--k:#ea580c}
 .tab[data-go="room"],.sec[data-tab="room"]{--k:#7c3aed}
+.tab[data-go="expense"],.sec[data-tab="expense"]{--k:#ea580c}
 .tab[data-go="result"],.sec[data-tab="result"]{--k:#16a34a}
 .tab[data-go="report"],.sec[data-tab="report"]{--k:#db2777}
-.tab[data-go="group"],.sec[data-tab="group"]{--k:#0891b2}
-.tab,.sec{--k:#1a73e8}
-.tab[data-go="trip"],.sec[data-tab="trip"]{--k:#2563eb}
-.tab[data-go="member"],.sec[data-tab="member"]{--k:#0d9488}
-.tab[data-go="advance"],.sec[data-tab="advance"]{--k:#d97706}
-.tab[data-go="expense"],.sec[data-tab="expense"]{--k:#ea580c}
-.tab[data-go="room"],.sec[data-tab="room"]{--k:#7c3aed}
-.tab[data-go="result"],.sec[data-tab="result"]{--k:#16a34a}
-.tab[data-go="report"],.sec[data-tab="report"]{--k:#db2777}
-.tab[data-go="group"],.sec[data-tab="group"]{--k:#0891b2}
-html .tab svg,html .sec-h .ico,html .ico{
-  background:linear-gradient(145deg,color-mix(in srgb,var(--k) 62%,#fff) 0%,var(--k) 50%,color-mix(in srgb,var(--k) 70%,#000) 100%)!important;
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -2px 0 rgba(0,0,0,.2),0 2px 0 color-mix(in srgb,var(--k) 55%,#000),0 4px 8px rgba(0,0,0,.22)}
-html .tab svg{width:26px;height:26px;padding:5px;border-radius:9px;stroke:#fff!important;stroke-width:2.2;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
-html .sec-h .ico{border-radius:12px}
-html .sec-h .ico svg,html .ico svg{stroke:#fff!important;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
-html .tab{--c:var(--k);color:#1f2937;border-bottom:0!important;position:relative}
-html .tab:hover{background:color-mix(in srgb,var(--k) 12%,#fff)}
-html .tab b{background:color-mix(in srgb,var(--k) 18%,#fff)!important;color:color-mix(in srgb,var(--k) 80%,#000)!important}
-/* tab đang chọn: khối màu riêng của tab, nổi lên; icon đảo thành nền trắng nét màu */
+
+/* ---- nền, cột nội dung ---- */
+html body{background:var(--bg)!important;color:var(--fg);font-family:var(--font)}
+html:not(.phone) body{padding-top:20px}
+html:not(.phone) .wrap{max-width:820px;gap:16px}
+html.phone .wrap{gap:12px}
+
+/* ---- icon khối 3D (tab + tiêu đề mục) ---- */
+html .tab svg,html .sec-h .ico{
+  background:linear-gradient(145deg,color-mix(in srgb,var(--k) 58%,#fff) 0%,var(--k) 52%,color-mix(in srgb,var(--k) 68%,#000) 100%)!important;
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(0,0,0,.18),0 2px 0 color-mix(in srgb,var(--k) 50%,#000),0 4px 10px color-mix(in srgb,var(--k) 35%,transparent)!important}
+html .tab svg{width:28px;height:28px;padding:6px;border-radius:9px;stroke:#fff!important;stroke-width:2.2;fill:none;flex:none;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));transition:transform .18s ease}
+html .sec-h .ico{width:42px!important;height:42px!important;border-radius:13px!important;color:#fff;flex:none}
+html .sec-h .ico svg{stroke:#fff!important;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+
+/* ---- thẻ đầu: tên chuyến ---- */
+html .tripbar{background:linear-gradient(135deg,#16325c 0%,#1d4ed8 100%)!important;color:#fff!important;border:0!important;
+  border-radius:20px!important;padding:16px 18px!important;gap:2px 8px!important;font-size:13px;box-shadow:0 10px 24px rgba(29,78,216,.22)!important}
+html .tripbar>b{order:2;flex-basis:100%;font-size:22px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+html .tripbar>.num{order:3;opacity:.85}
+html .tripbar>span{opacity:.75}
+html .tripbar .crumb{color:#fff!important;opacity:.85;text-decoration:none!important;font-weight:600}
+html .tripbar .crumb:hover{opacity:1;text-decoration:underline!important}
+html.phone .tripbar{padding:14px 16px!important;border-radius:18px!important}
+html.phone .tripbar>b{font-size:19px}
+
+/* ---- thanh tab máy tính: segmented, dính trên ---- */
+html .tabs{background:var(--glass)!important;-webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px);
+  border:1px solid var(--line)!important;border-radius:18px!important;padding:6px!important;gap:4px!important;box-shadow:var(--shadow)!important;top:8px}
+html .tab{background:transparent!important;border:0!important;border-radius:13px!important;color:var(--muted)!important;
+  font-weight:600;box-shadow:none!important;min-height:52px;height:auto}
+html .tab:hover{background:var(--surface2)!important;color:var(--fg)!important}
 html .tab[aria-selected="true"],html .tab[aria-selected="true"]:hover{
-  background:linear-gradient(180deg,color-mix(in srgb,var(--k) 78%,#fff),var(--k) 55%,color-mix(in srgb,var(--k) 78%,#000))!important;
-  color:#fff!important;border-color:color-mix(in srgb,var(--k) 70%,#000)!important;
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.45),0 3px 8px rgba(0,0,0,.22)!important}
-html .tab[aria-selected="true"] svg{background:#fff!important;stroke:var(--k)!important;filter:none;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12),0 2px 5px rgba(0,0,0,.25)}
-html .tab[aria-selected="true"] b{background:rgba(255,255,255,.25)!important;color:#fff!important}
-:root[data-theme="dark"] .tab{color:#e8edf5;background:#1c2c47}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tab{color:#e8edf5;background:#1c2c47}}
-/* thẻ mục: vạch trên theo màu mục */
-html .sec{border-top:3px solid var(--k)!important}
-html .sec-h h2{color:color-mix(in srgb,var(--k) 70%,#0f2747)!important}
-html.phone .tab svg{width:24px;height:24px;padding:4px}
-/* ô chọn màu chuyến đã bỏ */
+  background:color-mix(in srgb,var(--k) 12%,var(--surface))!important;color:color-mix(in srgb,var(--k) 78%,var(--fg))!important;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--k) 30%,transparent)!important}
+html .tab[aria-selected="true"] svg{transform:translateY(-1px) scale(1.06)}
+html .tab b{background:color-mix(in srgb,var(--k) 16%,var(--surface))!important;color:color-mix(in srgb,var(--k) 80%,var(--fg))!important}
+html .tab[aria-selected="true"] b{background:var(--k)!important;color:#fff!important}
+
+/* ---- thanh điều hướng đáy (điện thoại) ---- */
+html.phone .tabs{position:fixed!important;top:auto!important;left:0;right:0;bottom:0;border:0!important;border-top:1px solid var(--line)!important;
+  border-radius:20px 20px 0 0!important;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))!important;gap:0!important;box-shadow:var(--shadow-up)!important}
+html.phone .tab{height:60px;min-height:0;padding:3px 0!important;gap:4px;border-radius:14px!important;font-size:10px}
+html.phone .tab svg{width:30px;height:30px;padding:6px;border-radius:10px}
+html.phone .tab .tls{font-size:10px;font-weight:600;letter-spacing:-.2px}
+html.phone .tab[aria-selected="true"],html.phone .tab[aria-selected="true"]:hover{background:transparent!important;box-shadow:none!important}
+html.phone .tab[aria-selected="true"] svg{transform:translateY(-2px) scale(1.12)}
+html.phone .tab[aria-selected="true"] .tls{font-weight:800}
+html.phone .tab[aria-selected="true"]::after{content:"";position:absolute;bottom:0;left:32%;right:32%;height:3px;border-radius:3px;background:var(--k)}
+html.phone .tab b{top:0!important;right:calc(50% - 25px)!important}
+
+/* ---- thẻ mục ---- */
+html .sec{background:var(--surface)!important;border:1px solid var(--line)!important;border-top:1px solid var(--line)!important;
+  border-radius:20px!important;box-shadow:var(--shadow)!important;overflow:hidden}
+html .sec-h{background:transparent!important;border-bottom:0!important;padding:18px 20px 6px!important;gap:12px!important;align-items:center}
+html .sec-h h2{color:var(--fg)!important;font-size:18px!important;font-weight:700!important;text-transform:none!important;letter-spacing:-.01em!important}
+html .sec-h p{color:var(--muted)!important;font-size:13px}
+html .sec-b{padding:12px 20px 20px!important}
+html.phone .sec{border-radius:18px!important}
+html.phone .sec-h{padding:14px 16px 4px!important}
+html.phone .sec-h .ico{width:38px!important;height:38px!important;border-radius:12px!important}
+html.phone .sec-h h2{font-size:17px!important}
+html.phone .sec-b{padding:10px 16px 16px!important}
+
+/* ---- thẻ con, ghi chú, quỹ ---- */
+html .gcard{background:var(--surface)!important;border:1px solid var(--line)!important;border-left:1px solid var(--line)!important;
+  border-radius:16px!important;box-shadow:none!important;overflow:hidden}
+html .gcard>summary,html .gcard>.gh{background:var(--surface2)!important;color:var(--fg)!important;border-bottom:1px solid var(--line)}
+html .gcard>summary *,html .gcard>.gh *{color:inherit}
+html .note{border-radius:14px!important}
+html .fund{border-radius:16px!important;box-shadow:var(--shadow)}
+
+/* ---- nút ---- */
+html .btn{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 82%,#fff),var(--brand))!important;color:#fff!important;
+  border:1px solid var(--brand-d)!important;border-radius:12px!important;font-weight:600!important;min-height:42px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px color-mix(in srgb,var(--brand) 30%,transparent)!important;transition:filter .15s,transform .05s}
+html .btn:hover{filter:brightness(1.06)}
+html .btn:active{transform:translateY(1px)}
+html .btn.ghost{background:var(--surface)!important;color:var(--fg)!important;border:1px solid var(--line)!important;box-shadow:0 1px 2px rgba(15,23,42,.05)!important}
+html .btn.ghost:hover{background:var(--surface2)!important;filter:none}
+html .btn.gray{background:#64748b!important;border-color:#475569!important}
+html .btn.success{background:linear-gradient(180deg,#22c55e,#16a34a)!important;border-color:#15803d!important}
+html .btn.del,html .btn.danger{background:var(--neg-bg)!important;color:var(--neg)!important;border:1px solid color-mix(in srgb,var(--neg) 35%,transparent)!important;box-shadow:none!important}
+
+/* ---- ô nhập ---- */
+html input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),html select,html textarea{
+  border:1px solid var(--line)!important;border-radius:12px!important;background:var(--surface2);color:var(--fg);min-height:44px}
+html input:focus,html select:focus,html textarea:focus{outline:none!important;border-color:var(--brand)!important;background:var(--surface);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 20%,transparent)!important}
+
+/* ---- chọn chuyến, ngày, tab con, bật/tắt ---- */
+html .trip{background:var(--surface2)!important;border:1px solid var(--line)!important;border-radius:14px!important;color:var(--fg)!important;box-shadow:none!important}
+html .trip[aria-selected="true"]{background:var(--brand-bg)!important;border-color:var(--brand)!important;color:var(--brand-d)!important;box-shadow:inset 0 0 0 1px var(--brand)!important}
+html .trip[aria-selected="true"] small{color:var(--muted)!important}
+html .day,html .subtab{border-radius:99px!important;border:1px solid var(--line)!important}
+html .day[aria-selected="true"],html .subtab[aria-selected="true"],html .subtab[aria-pressed="true"],html .subtab.kind[aria-pressed="true"],html .mdlg .subtab[aria-pressed="true"]{
+  background:var(--brand)!important;border-color:var(--brand)!important;color:#fff!important;box-shadow:0 2px 6px color-mix(in srgb,var(--brand) 30%,transparent)!important}
+html button.tog[aria-pressed="true"]{border-color:var(--brand)!important;background:var(--brand-bg)!important}
+
+/* ---- số liệu ---- */
+html .stat,html .kpi,html .rcard,html .sum{background:var(--surface)!important;border:1px solid var(--line)!important;border-left:1px solid var(--line)!important;border-radius:16px!important}
+html .stat b,html .kpi b{color:var(--fg)!important}
+html .rcard.cur{background:var(--brand-bg)!important;border-color:var(--brand)!important}
+
+/* ---- bảng ---- */
+html .t2 thead th,html .matrix thead th,html table thead th{background:var(--surface2)!important;color:var(--muted)!important;border-color:var(--line)!important;
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+html .tablewrap{border-radius:14px!important;border:1px solid var(--line)}
+html .matrix tr.tot td{background:var(--brand-bg)!important;border-top:2px solid var(--brand)!important;font-weight:700}
+html .pill,html .badge{background:var(--surface2)!important;color:var(--muted)!important}
+html .badge.on{background:var(--brand)!important;color:#fff!important}
+html .ggroup,html .grow.on,html .gi.on,html [class*="gitem"].on{background:var(--brand-bg)!important;border-left-color:var(--brand)!important}
+
+/* ---- bỏ hẳn chọn màu chuyến ---- */
 #tripColors,#newTripColors,.swatches{display:none!important}
 </style>
 

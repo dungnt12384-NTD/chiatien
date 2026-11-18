@@ -2591,7 +2591,7 @@ function connectGroup(g){
 }
 async function afterAuth(){
   closeAuth();setSync('connecting');paintAccount();
-  try{const r=await sb.rpc('is_admin');sbAdmin=r.data===true;}catch(e){sbAdmin=false;}paintAccount();
+  try{const r=await sb.rpc('is_admin');sbAdmin=r.data===true;}catch(e){sbAdmin=false;}await loadCan();paintAccount();
   if(!(await loadGroups()))return;
   if(!sbGroups.length){paintAccount();openAuth('group');return;}
   const last=lsGet(LS_GROUP);connectGroup(sbGroups.find(g=>g.id===last)||sbGroups[0]);}
@@ -2657,7 +2657,8 @@ function authHtml(){
       return `<div class="rcard"><button type="button" class="chip tog" aria-pressed="${cur}" data-au="pick" data-id="${esc(g.id)}" style="width:100%;justify-content:flex-start"><span class="n" style="padding:4px 10px">${lab}${cur?' · đang dùng':''}</span></button>
       <div class="row">${own?`<button type="button" class="btn ghost small" data-au="rename" data-id="${esc(g.id)}">Đổi tên</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-au="delgrp" data-id="${esc(g.id)}">Xoá nhóm</button>`:`<button type="button" class="btn ghost small" style="color:var(--neg)" data-au="leave" data-id="${esc(g.id)}">Rời nhóm</button>`}</div></div>`;}).join('')}`:''}
     <div class="sub">Tạo nhóm mới</div>
-    <div class="row"><div class="field"><input type="text" id="auGName" maxlength="40" placeholder="Ví dụ: Hội bạn đi Đà Lạt" aria-label="Tên nhóm"></div><button type="button" class="btn" data-au="create"${dis}>Tạo nhóm</button></div>
+    ${sbCan.allowed?`<div class="row"><div class="field"><input type="text" id="auGName" maxlength="40" placeholder="Ví dụ: Hội bạn đi Đà Lạt" aria-label="Tên nhóm"></div><button type="button" class="btn" data-au="create"${dis}>Tạo nhóm</button></div>`
+      :`<div class="note" role="alert">${sbCan.permitted===false?'Tài khoản của bạn chưa được cấp quyền tạo nhóm. Hãy nhập mã mời để vào nhóm có sẵn, hoặc nhờ quản trị viên cấp quyền.':'Bạn đã tạo đủ '+(sbCan.limit!=null?sbCan.limit:'')+' nhóm cho phép. Xoá nhóm không dùng nữa hoặc nhờ quản trị viên tăng hạn mức.'}</div>`}
     <div class="sub">Vào nhóm có sẵn</div>
     <div class="row"><div class="field"><input type="text" id="auGCode" maxlength="20" autocapitalize="off" placeholder="Mã mời do chủ nhóm gửi" aria-label="Mã mời"></div><button type="button" class="btn ghost" data-au="join"${dis}>Vào nhóm</button></div>`;
   if(authStep==='members')return membersHtml(msg,dis);
@@ -2672,7 +2673,7 @@ function authHtml(){
   return '';}
 async function afterGroupGone(g,msg){
   authBusy=false;
-  await loadGroups();
+  await loadGroups();await loadCan();
   if(sbGroup&&sbGroup.id===g.id){disconnectGroup();sbGroup=null;lsDel(LS_GROUP);dropSyncedLocal();applyRole();render();setSync('off','Chưa chọn nhóm, dữ liệu chỉ lưu trên máy này');}
   authStep='group';authNote='OK:'+msg;renderAuth();paintAccount();}
 function renderAuth(){
@@ -2684,7 +2685,7 @@ function closeAuth(){const m=$('#authModal');if(m)m.hidden=true;authBusy=false;a
 const authFail=t=>{authBusy=false;authNote=t;renderAuth();};
 const okEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 /* ---- nhật ký, quản lý thành viên/chặn, trang quản trị tổng ---- */
-let mg=null,mgInfo=null,mgBans=[],mgAudit=[],mgAuditMore=false,sbAdmin=false;
+let sbCan={allowed:true},mg=null,mgInfo=null,mgBans=[],mgAudit=[],mgAuditMore=false,sbAdmin=false;
 const fdt=v=>{try{return new Date(v).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return v||'';}};
 const fd=v=>{if(!v)return '—';try{return new Date(v).toLocaleDateString('vi-VN');}catch(e){return v||'';}};
 const ROLE_VN={owner:'chủ nhóm',editor:'người nhập',viewer:'chỉ xem'};
@@ -2698,7 +2699,7 @@ function fmtAudit(a,showGroup){
     'trip/create':`tạo chuyến <b>${n}</b>`,'trip/rename':`đổi tên chuyến <b>${esc(d.from||'')}</b> thành <b>${esc(d.to||'')}</b>`,'trip/delete':`xoá chuyến <b>${n}</b>`,'trip/restore':`khôi phục chuyến <b>${n}</b>`,'trip/edit':`sửa chuyến <b>${n}</b>`,
     'member/join':`<b>${n}</b> vào nhóm (${ROLE_VN[d.role]||d.role})`,'member/role':`đổi quyền của <b>${n}</b>: ${ROLE_VN[d.from]||d.from} → ${ROLE_VN[d.to]||d.to}`,
     'member/kick':`xoá <b>${n}</b> khỏi nhóm`,'member/leave':`<b>${n}</b> rời nhóm`,'member/ban':`chặn <b>${n}</b> vào nhóm`,'member/unban':`bỏ chặn <b>${n}</b>`,
-    'quota/quota':d.max==null?`đưa hạn mức của <b>${n}</b> về mặc định`:`đặt hạn mức tạo nhóm của <b>${n}</b> là ${d.max}`,'quota/default_quota':`đổi hạn mức mặc định thành ${d.max} nhóm/người`,
+    'quota/quota':d.max==null?`đưa hạn mức của <b>${n}</b> về mặc định`:`đặt hạn mức tạo nhóm của <b>${n}</b> là ${d.max}`,'quota/default_quota':`đổi hạn mức mặc định thành ${d.max} nhóm/người`,'quota/can_create':`${d.allow===false?'cấm':d.allow?'cho phép':'đưa về mặc định'} <b>${n}</b> tạo nhóm`,'quota/default_can_create':`đặt mặc định ${d.allow?'cho phép':'không cho phép'} tài khoản mới tạo nhóm`,
     'admin/admin_add':`cấp quyền quản trị cho <b>${n}</b>`,'admin/admin_remove':`thu quyền quản trị của <b>${n}</b>`};
   return `<div class="rmrow"><div style="font-size:14px;overflow-wrap:anywhere"><b>${who}</b> ${m[K]||esc(K)}${g}</div><div class="hint" style="min-height:0">${fdt(a.at)}</div></div>`;}
 const auditHtml=(rows,showGroup)=>rows.length?rows.map(a=>fmtAudit(a,showGroup)).join(''):'<div class="hint">Chưa có ghi nhận nào.</div>';
@@ -2751,6 +2752,7 @@ async function admLoad(){
   const [g,u,s,a]=await Promise.all([sb.rpc('admin_groups'),sb.rpc('admin_users'),sb.rpc('admin_settings'),sb.rpc('admin_audit',{p_limit:50,p_entity:admEntity||null})]);
   if(g.error||u.error){admMsg='Không tải được: '+admErr(g.error||u.error);}
   admGroups=g.data||[];admUsers=u.data||[];if(s.data)admSet=s.data;admAudit=a.data||[];admAuditMore=(a.data||[]).length>=50;admRender();}
+async function loadCan(){try{const r=await sb.rpc('can_create_group');if(r.data)sbCan=r.data;}catch(e){}}
 async function openAdmin(){
   if(!sbAdmin)return;admOpen=true;admMsg='';let el=admEl();
   if(!el){el=document.createElement('div');el.id='admPage';document.body.appendChild(el);}
@@ -2764,12 +2766,14 @@ function admRender(){
   if(admTab==='groups')body=admGroups.length?admGroups.map(g=>`<div class="rcard"><div><b style="font-size:16px;overflow-wrap:anywhere">${esc(g.name)}</b>${g.join_enabled?'':' <span class="hint" style="min-height:0;color:var(--warn)">· đang khoá mã</span>'}</div>
       <div class="hint" style="min-height:0">Tạo bởi <b>${esc(g.creator_email||'?')}</b> · ${fd(g.created_at)}</div>
       <div class="hint" style="min-height:0">${g.members} thành viên · ${g.trips} chuyến${g.last_activity?' · hoạt động gần nhất '+fdt(g.last_activity):''}</div>
-      <div class="row"><button type="button" class="btn small" data-adm="manage" data-id="${esc(g.id)}">Quản lý</button><button type="button" class="btn ghost small" data-adm="gaudit" data-id="${esc(g.id)}">Lịch sử</button></div></div>`).join(''):'<div class="hint">Chưa có nhóm nào.</div>';
-  else if(admTab==='users')body=`<div class="rcard"><div class="sub">Số nhóm tối đa mỗi người được tạo (mặc định)</div><div class="row"><div class="field sm"><input type="text" id="admDef" inputmode="numeric" value="${admSet.default_max_groups}" aria-label="Hạn mức mặc định"></div><button type="button" class="btn small" data-adm="setdef"${dis}>Lưu</button></div><div class="hint" style="min-height:0">Áp dụng cho mọi tài khoản không có hạn mức riêng. Đặt 0 để không ai tạo được nhóm.</div></div>`+
+      <div class="row"><button type="button" class="btn small" data-adm="manage" data-id="${esc(g.id)}">Quản lý</button><button type="button" class="btn ghost small" data-adm="gaudit" data-id="${esc(g.id)}">Lịch sử</button><button type="button" class="btn ghost small" data-adm="open" data-id="${esc(g.id)}">Mở xem/sửa dữ liệu</button></div></div>`).join(''):'<div class="hint">Chưa có nhóm nào.</div>';
+  else if(admTab==='users')body=`<div class="rcard"><div class="sub">Số nhóm tối đa mỗi người được tạo (mặc định)</div><div class="row"><div class="field sm"><input type="text" id="admDef" inputmode="numeric" value="${admSet.default_max_groups}" aria-label="Hạn mức mặc định"></div><button type="button" class="btn small" data-adm="setdef"${dis}>Lưu</button></div><div class="hint" style="min-height:0">Áp dụng cho mọi tài khoản không có hạn mức riêng.</div>
+      <div class="sub">Quyền tạo nhóm mặc định</div><div class="row" style="align-items:center"><span style="flex:1 1 auto">${admSet.default_can_create?'Tài khoản mới <b>được</b> tạo nhóm.':'Tài khoản mới <b>không được</b> tạo nhóm (phải được cấp riêng).'}</span><button type="button" class="btn ghost small" data-adm="defcan" data-v="${admSet.default_can_create?'0':'1'}"${dis}>${admSet.default_can_create?'Đổi: không cho':'Đổi: cho phép'}</button></div></div>`+
     admUsers.map(u=>`<div class="rcard"><div style="overflow-wrap:anywhere"><b>${esc(u.email||'')}</b>${u.is_admin?' <span class="hint" style="min-height:0;color:var(--accent)">· quản trị viên</span>':''}</div>
       <div class="hint" style="min-height:0">Đăng nhập gần nhất ${u.last_sign_in_at?fdt(u.last_sign_in_at):'—'} · đang chủ ${u.owned} nhóm · tham gia ${u.joined} nhóm</div>
-      <div class="row" style="align-items:center"><span class="hint" style="min-height:0">Được tạo tối đa</span><div class="field sm" style="flex:0 0 84px"><input type="text" inputmode="numeric" data-admq="${esc(u.email)}" value="${u.quota}" aria-label="Hạn mức của ${esc(u.email)}"></div><span class="hint" style="min-height:0">nhóm${u.custom?'':' (mặc định)'}</span></div>
-      <div class="row"><button type="button" class="btn small" data-adm="setq" data-v="${esc(u.email)}"${dis}>Lưu hạn mức</button>${u.custom?`<button type="button" class="btn ghost small" data-adm="clrq" data-v="${esc(u.email)}"${dis}>Về mặc định</button>`:''}<button type="button" class="btn ghost small" data-adm="${u.is_admin?'unadmin':'admin'}" data-v="${esc(u.email)}"${dis}>${u.is_admin?'Thu quyền quản trị':'Cấp quyền quản trị'}</button></div></div>`).join('')+
+      ${u.is_admin?'<div class="hint" style="min-height:0">Quản trị viên: toàn quyền, được tạo nhóm không giới hạn và quản lý mọi nhóm.</div>':`<div class="row" style="align-items:center"><span style="flex:1 1 auto">Tạo nhóm: <b style="color:${u.can_create?'var(--pos)':'var(--neg)'}">${u.can_create?'được phép':'bị cấm'}</b>${u.can_custom?'':' <span class="hint" style="min-height:0">(mặc định)</span>'}</span><button type="button" class="btn ghost small" data-adm="cansw" data-v="${esc(u.email)}" data-b="${u.can_create?'0':'1'}"${dis}>${u.can_create?'Cấm tạo nhóm':'Cho phép tạo nhóm'}</button>${u.can_custom?`<button type="button" class="btn ghost small" data-adm="canclr" data-v="${esc(u.email)}"${dis}>Về mặc định</button>`:''}</div>
+      <div class="row" style="align-items:center"><span class="hint" style="min-height:0">Số nhóm tối đa</span><div class="field sm" style="flex:0 0 84px"><input type="text" inputmode="numeric" data-admq="${esc(u.email)}" value="${u.quota}" aria-label="Hạn mức của ${esc(u.email)}"></div><button type="button" class="btn small" data-adm="setq" data-v="${esc(u.email)}"${dis}>Lưu</button>${u.custom?`<button type="button" class="btn ghost small" data-adm="clrq" data-v="${esc(u.email)}"${dis}>Về mặc định</button>`:'<span class="hint" style="min-height:0">(mặc định)</span>'}</div>`}
+      <div class="row"><button type="button" class="btn ghost small" data-adm="${u.is_admin?'unadmin':'admin'}" data-v="${esc(u.email)}"${dis}>${u.is_admin?'Thu quyền quản trị':'Cấp quyền quản trị'}</button></div></div>`).join('')+
     `<div class="rcard"><div class="sub">Đặt hạn mức cho email chưa đăng nhập</div><div class="row"><div class="field"><input type="text" id="admNewMail" inputmode="email" autocapitalize="off" placeholder="email@gmail.com" aria-label="Email"></div><div class="field sm" style="flex:0 0 84px"><input type="text" id="admNewQ" inputmode="numeric" placeholder="số nhóm" aria-label="Số nhóm"></div><button type="button" class="btn small" data-adm="setnew"${dis}>Đặt</button></div></div>`;
   else body=`<div class="field"><label for="admEnt">Lọc theo</label><select id="admEnt"><option value="">Tất cả</option><option value="group"${admEntity==='group'?' selected':''}>Nhóm</option><option value="trip"${admEntity==='trip'?' selected':''}>Chuyến đi</option><option value="member"${admEntity==='member'?' selected':''}>Thành viên</option><option value="quota"${admEntity==='quota'?' selected':''}>Hạn mức</option><option value="admin"${admEntity==='admin'?' selected':''}>Quản trị viên</option></select></div><div class="rcard">${auditHtml(admAudit,true)}</div>${admAuditMore?'<button type="button" class="btn ghost" data-adm="more">Xem thêm</button>':''}`;
   el.innerHTML=`<div class="admwrap"><div class="row" style="align-items:center;justify-content:space-between;flex-wrap:nowrap"><h2 style="font-size:20px">Quản trị tổng</h2><button type="button" class="btn ghost small" data-adm="close">Đóng</button></div>
@@ -2788,6 +2792,10 @@ async function admAct(act,btn){
     await run(()=>sb.rpc('admin_set_default_quota',{n}),'Đã lưu hạn mức mặc định.');return;}
   if(act==='setq'){const inp=document.querySelector(`[data-admq="${CSS.escape(v)}"]`);const n=parseInt((inp&&inp.value||'').replace(/\D/g,''),10);if(isNaN(n)){admMsg='Nhập một số.';admRender();return;}
     await run(()=>sb.rpc('admin_set_quota',{p_email:v,n}),'Đã lưu hạn mức cho '+v+'.');return;}
+  if(act==='defcan'){await run(()=>sb.rpc('admin_set_default_can_create',{b:v==='1'}),'Đã đổi quyền tạo nhóm mặc định.');return;}
+  if(act==='cansw'){await run(()=>sb.rpc('admin_set_can_create',{p_email:v,b:btn.dataset.b==='1'}),btn.dataset.b==='1'?'Đã cho phép '+v+' tạo nhóm.':'Đã cấm '+v+' tạo nhóm.');return;}
+  if(act==='canclr'){await run(()=>sb.rpc('admin_set_can_create',{p_email:v,b:null}),'Đã đưa quyền tạo nhóm của '+v+' về mặc định.');return;}
+  if(act==='open'){const g=admGroups.find(x=>x.id===id);if(g){closeAdmin();closeAuth();connectGroup({id:g.id,name:g.name,role:'owner',codes:null});}return;}
   if(act==='clrq'){await run(()=>sb.rpc('admin_set_quota',{p_email:v,n:null}),'Đã đưa '+v+' về mức mặc định.');return;}
   if(act==='setnew'){const em=($('#admNewMail').value||'').trim(),n=parseInt(($('#admNewQ').value||'').replace(/\D/g,''),10);
     if(!em||isNaN(n)){admMsg='Nhập email và số nhóm.';admRender();return;}
@@ -2856,8 +2864,8 @@ async function authAction(act,btn){
     if(!n){authFail('Nhập tên nhóm.');return;}
     authBusy=true;renderAuth();
     const {data,error}=await sb.rpc('create_group',{gname:n});
-    if(error){authFail(/group limit/i.test(error.message)?'Mỗi người chỉ tạo được tối đa 3 nhóm. Hãy xoá nhóm không dùng nữa rồi tạo lại.':'Chưa tạo được nhóm: '+error.message);return;}
-    await loadGroups();const g=sbGroups.find(x=>x.id===data.id)||sbGroups[0];closeAuth();if(g)connectGroup(g);return;}
+    if(error){authFail(/create forbidden/i.test(error.message)?'Tài khoản của bạn chưa được cấp quyền tạo nhóm. Hãy nhờ quản trị viên.':/group limit/i.test(error.message)?'Mỗi người chỉ tạo được tối đa 3 nhóm. Hãy xoá nhóm không dùng nữa rồi tạo lại.':'Chưa tạo được nhóm: '+error.message);return;}
+    await loadGroups();await loadCan();const g=sbGroups.find(x=>x.id===data.id)||sbGroups[0];closeAuth();if(g)connectGroup(g);return;}
   if(act==='join'){const c=($('#auGCode').value||'').trim();
     if(!c){authFail('Nhập mã mời.');return;}
     authBusy=true;renderAuth();
@@ -2935,7 +2943,7 @@ function paintAccount(){
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-acct]');if(!b)return;
   const a=b.dataset.acct;
   if(a==='login')openAuth('login');
-  else if(a==='group'){loadGroups().then(()=>{paintAccount();openAuth('group');});}
+  else if(a==='group'){Promise.all([loadGroups(),loadCan()]).then(()=>{paintAccount();openAuth('group');});}
   else if(a==='members')openMembers();
   else if(a==='share')openShare();
   else if(a==='admin')openAdmin();

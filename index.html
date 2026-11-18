@@ -2630,6 +2630,7 @@ async function initSync(){
 }
 
 /* ---- hộp đăng nhập / nhóm / thành viên / chia sẻ ---- */
+let grpEdit=null;
 const note=()=>authNote?`<div class="note${/^OK:/.test(authNote)?' info':''}" style="--c:var(--accent)" role="alert">${esc(authNote.replace(/^OK:/,''))}</div>`:'';
 const cpBtn=v=>`<button type="button" class="btn ghost small" data-au="copy" data-v="${esc(v)}">Sao chép</button>`;
 function authHtml(){
@@ -2644,7 +2645,12 @@ function authHtml(){
     <button type="button" class="btn" data-au="verify"${dis}>Xác nhận</button>
     <div class="row"><button type="button" class="btn ghost small" data-au="sendcode"${dis}>Gửi lại mã</button><button type="button" class="btn ghost small" data-au="back">Đổi email</button></div>`;
   if(authStep==='group')return `<p style="color:var(--muted);font-size:14px">Chọn nhóm của bạn, tạo nhóm mới, hoặc vào nhóm bằng mã mời.</p>${msg}
-    ${sbGroups.length?`<div class="sub">Nhóm của bạn</div><div class="chips">${sbGroups.map(g=>`<button type="button" class="chip tog" aria-pressed="${!!(sbGroup&&sbGroup.id===g.id)}" data-au="pick" data-id="${esc(g.id)}"><span class="n" style="padding:4px 10px">${esc(g.name)}${g.role==='owner'?' (chủ nhóm)':(g.role==='viewer'?' (chỉ xem)':'')}</span></button>`).join('')}</div>`:''}
+    ${sbGroups.length?`<div class="sub">Nhóm của bạn</div>${sbGroups.map(g=>{const own=g.role==='owner',cur=!!(sbGroup&&sbGroup.id===g.id),e=grpEdit&&grpEdit.id===g.id?grpEdit.mode:'';
+      const lab=esc(g.name)+(own?' (chủ nhóm)':(g.role==='viewer'?' (chỉ xem)':''));
+      if(e==='rename')return `<div class="rcard"><div class="field"><label for="auRen">Tên mới của nhóm</label><input type="text" id="auRen" maxlength="40" value="${esc(g.name)}"></div><div class="row"><button type="button" class="btn small" data-au="renameok" data-id="${esc(g.id)}"${dis}>Lưu tên</button><button type="button" class="btn ghost small" data-au="grpcancel">Huỷ</button></div></div>`;
+      if(e==='delete')return `<div class="rcard"><div class="note" role="alert">Xoá nhóm <b>${esc(g.name)}</b> sẽ xoá vĩnh viễn <b>toàn bộ chuyến, thành viên và link chia sẻ</b> của nhóm, không khôi phục được. Hãy tải bản sao lưu trước.</div><div class="field"><label for="auDel">Gõ lại đúng tên nhóm để xác nhận</label><input type="text" id="auDel" maxlength="40" autocomplete="off" placeholder="${esc(g.name)}"></div><div class="row"><button type="button" class="btn small" style="background:var(--neg)" data-au="delok" data-id="${esc(g.id)}"${dis}>Xoá vĩnh viễn</button><button type="button" class="btn ghost small" data-au="grpcancel">Không xoá</button></div></div>`;
+      return `<div class="rcard"><button type="button" class="chip tog" aria-pressed="${cur}" data-au="pick" data-id="${esc(g.id)}" style="width:100%;justify-content:flex-start"><span class="n" style="padding:4px 10px">${lab}${cur?' · đang dùng':''}</span></button>
+      <div class="row">${own?`<button type="button" class="btn ghost small" data-au="rename" data-id="${esc(g.id)}">Đổi tên</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-au="delgrp" data-id="${esc(g.id)}">Xoá nhóm</button>`:`<button type="button" class="btn ghost small" style="color:var(--neg)" data-au="leave" data-id="${esc(g.id)}">Rời nhóm</button>`}</div></div>`;}).join('')}`:''}
     <div class="sub">Tạo nhóm mới</div>
     <div class="row"><div class="field"><input type="text" id="auGName" maxlength="40" placeholder="Ví dụ: Hội bạn đi Đà Lạt" aria-label="Tên nhóm"></div><button type="button" class="btn" data-au="create"${dis}>Tạo nhóm</button></div>
     <div class="sub">Vào nhóm có sẵn</div>
@@ -2666,6 +2672,11 @@ function authHtml(){
       <div class="row"><button type="button" class="btn" data-au="copy" data-v="${esc(shareUrl(shareTok))}">Sao chép link</button><button type="button" class="btn ghost" data-au="revoke"${dis}>Thu hồi link</button></div>`
     :`<button type="button" class="btn" data-au="mkshare"${synced?'':' disabled'}${dis}>Tạo link xem</button>`}`;}
   return '';}
+async function afterGroupGone(g,msg){
+  authBusy=false;
+  await loadGroups();
+  if(sbGroup&&sbGroup.id===g.id){disconnectGroup();sbGroup=null;lsDel(LS_GROUP);dropSyncedLocal();applyRole();render();setSync('off','Chưa chọn nhóm, dữ liệu chỉ lưu trên máy này');}
+  authStep='group';authNote='OK:'+msg;renderAuth();paintAccount();}
 function renderAuth(){
   $('#authTitle').textContent={group:'Nhóm',code:'Nhập mã 6 số',members:'Thành viên và mã mời',share:'Chia sẻ link xem'}[authStep]||'Đăng nhập';
   $('#authBody').innerHTML=authHtml()+`<div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost small" data-au="close">${authStep==='group'&&!sbGroup?'Để sau':'Đóng'}</button></div>`;
@@ -2708,11 +2719,31 @@ async function authAction(act,btn){
     if(error){authBusy=false;authStep='code';authFail(/expired|invalid/i.test(error.message)?'Mã sai hoặc đã hết hạn. Bấm "Gửi lại mã" để lấy mã mới.':'Chưa xác nhận được: '+error.message);}
     return;}
   if(act==='pick'){const g=sbGroups.find(x=>x.id===btn.dataset.id);if(g){closeAuth();connectGroup(g);}return;}
+  if(act==='rename'||act==='delgrp'){grpEdit={id:btn.dataset.id,mode:act==='rename'?'rename':'delete'};authNote='';renderAuth();const f=$(act==='rename'?'#auRen':'#auDel');if(f)f.focus();return;}
+  if(act==='grpcancel'){grpEdit=null;authNote='';renderAuth();return;}
+  if(act==='renameok'){const n=($('#auRen').value||'').trim().replace(/\s+/g,' ');
+    if(!n){authFail('Nhập tên nhóm.');return;}
+    authBusy=true;renderAuth();
+    const {error}=await sb.rpc('rename_group',{gid:btn.dataset.id,new_name:n});
+    if(error){authFail('Chưa đổi được tên: '+error.message);return;}
+    grpEdit=null;await loadGroups();if(sbGroup){const g=sbGroups.find(x=>x.id===sbGroup.id);if(g){g.codes=sbGroup.codes;sbGroup=g;}}
+    authBusy=false;authNote='OK:Đã đổi tên nhóm.';renderAuth();paintAccount();return;}
+  if(act==='delok'){const g=sbGroups.find(x=>x.id===btn.dataset.id);if(!g)return;
+    if(($('#auDel').value||'').trim().replace(/\s+/g,' ')!==g.name){authFail('Tên gõ lại chưa đúng. Gõ đúng tên nhóm để xoá.');return;}
+    authBusy=true;renderAuth();
+    const {error}=await sb.rpc('delete_group',{gid:g.id});
+    if(error){authFail('Chưa xoá được nhóm: '+error.message);return;}
+    grpEdit=null;await afterGroupGone(g,'Đã xoá nhóm "'+g.name+'".');return;}
+  if(act==='leave'){const g=sbGroups.find(x=>x.id===btn.dataset.id);if(!g)return;
+    ask(`Rời nhóm "${g.name}"? Bạn sẽ không còn xem được dữ liệu của nhóm. Muốn vào lại cần mã mời.`,{title:'Rời nhóm?',ok:'Rời nhóm',noLabel:'Ở lại',danger:true},async()=>{
+      const {error}=await sb.rpc('leave_group',{gid:g.id});
+      if(error){authNote='Chưa rời được: '+error.message;renderAuth();return;}
+      await afterGroupGone(g,'Đã rời nhóm "'+g.name+'".');});return;}
   if(act==='create'){const n=($('#auGName').value||'').trim().replace(/\s+/g,' ');
     if(!n){authFail('Nhập tên nhóm.');return;}
     authBusy=true;renderAuth();
     const {data,error}=await sb.rpc('create_group',{gname:n});
-    if(error){authFail('Chưa tạo được nhóm: '+error.message);return;}
+    if(error){authFail(/group limit/i.test(error.message)?'Mỗi người chỉ tạo được tối đa 3 nhóm. Hãy xoá nhóm không dùng nữa rồi tạo lại.':'Chưa tạo được nhóm: '+error.message);return;}
     await loadGroups();const g=sbGroups.find(x=>x.id===data.id)||sbGroups[0];closeAuth();if(g)connectGroup(g);return;}
   if(act==='join'){const c=($('#auGCode').value||'').trim();
     if(!c){authFail('Nhập mã mời.');return;}

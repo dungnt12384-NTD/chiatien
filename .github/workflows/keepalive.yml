@@ -1,10 +1,14 @@
 # Giữ cho dự án Supabase miễn phí không bị tạm dừng vì lâu không hoạt động.
 # Supabase tạm dừng dự án sau khoảng 1 tuần không có yêu cầu nào, nên gọi 3 ngày một lần cho chắc.
+# GitHub tự tắt lịch chạy của kho công khai sau 60 ngày không có hoạt động, nên workflow này
+# cũng tự gia hạn lịch của chính nó mỗi lần chạy (bước cuối), không cần ai bấm gì.
 name: keepalive
 on:
   schedule:
     - cron: '17 3 */3 * *'
   workflow_dispatch:
+permissions:
+  actions: write
 jobs:
   ping:
     runs-on: ubuntu-latest
@@ -22,3 +26,7 @@ jobs:
           done
           echo "Supabase không phản hồi đúng, kiểm tra dự án có bị tạm dừng không" >&2
           exit 1
+      - name: Gia hạn lịch chạy của chính workflow này (tránh bị GitHub tự tắt sau 60 ngày)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/keepalive.yml/enable"

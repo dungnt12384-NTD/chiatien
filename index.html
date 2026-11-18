@@ -793,7 +793,7 @@ td,th{border-bottom:1.5px solid var(--line)}
 .gcard .sub{color:var(--fg);font-weight:700}
 [data-q="logout"]{background:var(--surface)!important;color:var(--neg)!important;border:1.5px solid var(--neg)!important}
 details.gcard:not([open]){padding:0!important;gap:0}details.gcard:not([open])>summary{margin:0}
-details.gcard>summary::after{content:'▾';float:right;font-size:18px}details.gcard[open]>summary::after{content:'▴'}
+details.gcard>summary::after{content:'';float:right;width:18px;height:18px;margin-top:2px;background:currentColor;-webkit-mask:var(--chev-mask) center/contain no-repeat;mask:var(--chev-mask) center/contain no-repeat;transition:transform .2s}details.gcard[open]>summary::after{transform:rotate(180deg)}
 details.gcard>summary{list-style:none}details.gcard>summary::-webkit-details-marker{display:none}
 /* ===== v17 giao diện sang trọng: nền ngà, mực xanh đen, vàng đồng; màu chuyến chỉ làm điểm nhấn ===== */
 :root{--ink:#14213a;--ink2:#1d2f52;--gold:#b58a3c;--gold-bg:#f6edd9;
@@ -1165,20 +1165,66 @@ html .g-logo{background:var(--pv-grad)!important;box-shadow:0 12px 30px -10px rg
 html .g-hero h1{font-family:var(--head-font);font-weight:800;text-transform:uppercase;background:var(--pv-text);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 html #gate .gcard{background:var(--card)!important;border:1px solid var(--card-br)!important;box-shadow:var(--card-sh)!important}
 </style>
+<style id="layout">
+/* ===== v24 BỐ CỤC TỔNG THỂ (đặt CUỐI, sau khối ios và brand) =====
+   - Máy tính / iPad (không phải html.phone): đầu trang + thanh tab tràn hết chiều ngang, thanh tab THẲNG (không bo),
+     dính trên cùng khi cuộn; tab đang chọn = nền nhạt màu tab + vạch thẳng 3px ở đáy. Nội dung là cột giữa --col.
+   - Điện thoại (html.phone): thanh tab THẲNG sát đáy, sát 2 mép; tab đang chọn có vạch 3px ở đỉnh.
+   - Icon: mọi icon là khối đặc kiểu SF Symbols (.si cho icon trong chữ/nút, .sx cho icon nút nhỏ, .chev mũi tên). */
+:root{--col:820px;
+  --chev-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5.3 8.3a1 1 0 0 1 1.4 0L12 13.6l5.3-5.3a1 1 0 1 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4Z'/%3E%3C/svg%3E")}
+
+/* ---- icon thống nhất ---- */
+.si{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.2em;fill:currentColor!important;stroke:none!important;flex:none}
+.btn .si,button .si,.gh .si{margin-right:.32em}
+.sx{fill:currentColor!important;stroke:none!important}
+html .chev{fill:currentColor!important;stroke:none!important;color:var(--muted)}
+html .g-logo svg{fill:#fff!important;stroke:none!important;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+html .fi svg{fill:var(--fc)!important;stroke:none!important}
+
+/* ---- chống tràn ngang khi phần tử tràn mép (100vw) ---- */
+html,html body{overflow-x:clip}
+
+/* ---- MÁY TÍNH / iPAD ---- */
+html:not(.phone) body{padding-top:0!important}
+html:not(.phone) .tripbar{margin-inline:calc(50% - 50vw)!important;padding:28px max(20px,calc(50vw - var(--col) / 2)) 18px!important;border-radius:0!important}
+html:not(.phone) .tabs{position:sticky!important;top:0!important;z-index:50!important;margin-inline:calc(50% - 50vw)!important;margin-top:-18px!important;
+  width:auto!important;max-width:none!important;border-radius:0!important;border:0!important;
+  border-top:1px solid var(--line)!important;border-bottom:1px solid var(--line)!important;
+  padding:0 max(8px,calc(50vw - var(--col) / 2 - 8px))!important;gap:0!important;box-shadow:0 8px 20px rgba(31,29,122,.07)!important}
+html:not(.phone) .tab,html:not(.phone) .tab:hover{border-radius:0!important;box-shadow:none!important}
+html:not(.phone) .tab{height:68px!important;padding:9px 2px 7px!important;background:transparent!important}
+html:not(.phone) .tab:hover{background:var(--fill)!important}
+html:not(.phone) .tab[aria-selected="true"],html:not(.phone) .tab[aria-selected="true"]:hover{background:color-mix(in srgb,var(--k) 10%,transparent)!important;box-shadow:none!important}
+html:not(.phone) .tab[aria-selected="true"]::after{content:"";position:absolute;left:10%;right:10%;bottom:-1px;height:3px;background:var(--k)}
+html:not(.phone) .tab svg{width:28px!important;height:28px!important}
+html:not(.phone) .tab .tls{font-size:13px!important}
+
+/* ---- ĐIỆN THOẠI ---- */
+html.phone .tabs{left:0!important;right:0!important;bottom:0!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;
+  padding:0 2px env(safe-area-inset-bottom,0px)!important;gap:0!important;box-shadow:0 -6px 18px rgba(31,29,122,.08)!important}
+html.phone .tab,html.phone .tab:hover{border-radius:0!important;box-shadow:none!important;background:transparent!important}
+html.phone .tab{height:66px!important;padding:9px 2px 4px!important}
+html.phone .tab[aria-selected="true"],html.phone .tab[aria-selected="true"]:hover{background:color-mix(in srgb,var(--k) 10%,transparent)!important}
+html.phone .tab[aria-selected="true"]::after{content:"";position:absolute;left:16%;right:16%;top:0;height:3px;background:var(--k);display:block!important}
+html.phone .tab b{top:4px!important}
+html.phone body{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))!important}
+html.phone #toast{bottom:calc(82px + env(safe-area-inset-bottom,0px))!important}
+</style>
 
 
 <div class="wrap">
   <div id="bootNote">Đang mở…</div>
   <section id="gate" aria-labelledby="gTitle">
-    <div class="g-hero"><div class="g-logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 7h14"/><path d="M5 7l-3 8a3 3 0 0 0 6 0Z"/><path d="M19 7l-3 8a3 3 0 0 0 6 0Z"/></svg></div>
+    <div class="g-hero"><div class="g-logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M3.5 6h17A1.5 1.5 0 0 1 22 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 16.5v-9A1.5 1.5 0 0 1 3.5 6ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM5.5 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm13 4a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg></div>
       <h1 id="gTitle">Chia Tiền Nhóm</h1><p>Ghi chi tiêu chuyến đi chơi, tự chia tiền công bằng và chốt sổ với thủ quỹ, ai cũng xem được minh bạch.</p></div>
     <div class="gcard g-code"><div class="gh"><b>Vào chuyến đi</b></div><div class="hint" style="min-height:0">Nhập mã chuyến leader gửi cho bạn. Không cần tài khoản.</div>
       <div class="row"><div class="field"><label for="gCode" class="sr">Mã chuyến</label><input type="text" id="gCode" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="CH-XXXXXXXX" aria-label="Mã chuyến"></div><button type="button" class="btn" data-gt="code">Vào</button></div>
       <div id="gCodeMsg"></div></div>
     <ul class="g-feat">
-      <li><span class="fi" style="--fc:#2f9e44"><svg viewBox="0 0 24 24"><path d="M4 2v20l3-2 2 2 3-2 3 2 2-2 3 2V2l-3 2-2-2-3 2-3-2-2 2Z"/><path d="M8 8h8M8 12h8"/></svg></span><div><b>Ghi chi tiêu theo ngày</b><span>Ăn uống, phòng, xe… ai chi, ai tham gia, ai đi kèm.</span></div></li>
-      <li><span class="fi" style="--fc:#1971c2"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 7h14"/><path d="M5 7l-3 8a3 3 0 0 0 6 0Z"/><path d="M19 7l-3 8a3 3 0 0 0 6 0Z"/></svg></span><div><b>Tự chia tiền, chốt sổ</b><span>Biết ngay mỗi người nộp thêm hay nhận lại bao nhiêu.</span></div></li>
-      <li><span class="fi" style="--fc:#e8590c"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></span><div><b>Minh bạch, riêng tư</b><span>Xem lịch sử ai sửa gì, báo sai khi thấy chưa đúng.</span></div></li>
+      <li><span class="fi" style="--fc:#00a04b"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5 2.2 7 3.6 9 2.2l2 1.4 2-1.4 2 1.4 2-1.4 2 1.4v16.8l-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4V2.2ZM8.75 8a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3.5a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3.5a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-3.5Z"/></svg></span><div><b>Ghi chi tiêu theo ngày</b><span>Ăn uống, phòng, xe… ai chi, ai tham gia, ai đi kèm.</span></div></li>
+      <li><span class="fi" style="--fc:#0a6ad6"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M11 4.06A8.5 8.5 0 1 0 19.94 13H11V4.06ZM13 2.05A9 9 0 0 1 21.95 11H13V2.05Z"/></svg></span><div><b>Tự chia tiền, chốt sổ</b><span>Biết ngay mỗi người nộp thêm hay nhận lại bao nhiêu.</span></div></li>
+      <li><span class="fi" style="--fc:#2e3a87"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2.2 4.5 5v6.1c0 4.6 3.2 8.8 7.5 10.7 4.3-1.9 7.5-6.1 7.5-10.7V5L12 2.2Zm3.7 7.5a1 1 0 0 1 0 1.4l-4.2 4.2a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4l1.3 1.3 3.5-3.5a1 1 0 0 1 1.4 0Z"/></svg></span><div><b>Minh bạch, riêng tư</b><span>Xem lịch sử ai sửa gì, báo sai khi thấy chưa đúng.</span></div></li>
     </ul>
     <details class="gcard"><summary>Tôi là người tổ chức chuyến đi</summary><div id="gLogin" class="rb"></div></details>
     <p class="g-foot"><button type="button" class="linkbtn" data-gt="privacy">Quyền riêng tư</button></p>
@@ -1201,13 +1247,13 @@ html #gate .gcard{background:var(--card)!important;border:1px solid var(--card-b
         <button class="btn ghost" type="button" id="tripEdit">Sửa tên</button>
         <button class="btn" type="button" id="tripSave" hidden>Lưu tên</button>
         <button class="btn ghost" type="button" id="tripCancel" hidden>Huỷ</button>
-        <button class="btn ghost" type="button" id="tripDup">⧉ Nhân bản chuyến này</button>
+        <button class="btn ghost" type="button" id="tripDup"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M9 2h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM4 7a1 1 0 0 1 1 1v9a3 3 0 0 0 3 3h8a1 1 0 1 1 0 2H8a5 5 0 0 1-5-5V8a1 1 0 0 1 1-1Z"/></svg> Nhân bản chuyến này</button>
         <button class="btn ghost" type="button" id="tripDel">Xoá chuyến này</button>
       </div>
       <div class="row" hidden style="align-items:center"><span class="sub">Màu của chuyến</span><div class="swatches" id="tripColors" role="group" aria-label="Màu của chuyến"></div></div>
       </div>
       <div id="tripExtra"></div>
-      <div class="row"><button class="btn" type="button" id="tripNewBtn">+ Tạo chuyến mới</button><button class="btn ghost" type="button" id="tripEditBtn" aria-expanded="false">✎ Sửa chuyến</button></div>
+      <div class="row"><button class="btn" type="button" id="tripNewBtn">+ Tạo chuyến mới</button><button class="btn ghost" type="button" id="tripEditBtn" aria-expanded="false"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M15.6 3.6a2.2 2.2 0 0 1 3.1 0l1.7 1.7a2.2 2.2 0 0 1 0 3.1L9.2 19.6 4 21a.8.8 0 0 1-1-1l1.4-5.2L15.6 3.6Z"/></svg> Sửa chuyến</button></div>
       <form class="row" id="tripForm" autocomplete="off" style="display:none">
         <div class="field" style="flex-basis:260px"><label for="newTripName">Tạo chuyến mới</label><input type="text" id="newTripName" placeholder="Ví dụ: Đà Lạt 20/12" maxlength="50"></div>
         <div class="field" style="flex-basis:260px"><label for="copyFrom">Chép thành viên từ chuyến</label><select id="copyFrom"></select></div>
@@ -1232,7 +1278,7 @@ html #gate .gcard{background:var(--card)!important;border:1px solid var(--card-b
           <input type="text" id="memberName" placeholder="Ví dụ: Nguyễn Tuấn" maxlength="40"></div>
         <button class="btn" type="submit">Thêm thành viên</button>
       </form>
-      <div class="row"><button type="button" class="btn ghost small" id="memberCopy">⧉ Chép thành viên từ chuyến khác</button></div>
+      <div class="row"><button type="button" class="btn ghost small" id="memberCopy"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M9 2h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM4 7a1 1 0 0 1 1 1v9a3 3 0 0 0 3 3h8a1 1 0 1 1 0 2H8a5 5 0 0 1-5-5V8a1 1 0 0 1 1-1Z"/></svg> Chép thành viên từ chuyến khác</button></div>
       <div id="memberBulk"></div>
       <div class="hint" id="memberMsg"></div>
       <div class="field"><label for="memberSearch">Tìm tên trong danh sách</label><input type="text" id="memberSearch" placeholder="Gõ tên để tìm (không cần dấu)" autocomplete="off"></div>
@@ -1341,7 +1387,7 @@ html #gate .gcard{background:var(--card)!important;border:1px solid var(--card-b
             <button type="button" class="btn ghost small" data-act="copyRooms">Chép phòng của ngày ...</button>
             <button type="button" class="btn ghost small" data-act="swapToggle" id="swapBtn">⇄ Đổi phòng</button>
           </div>
-          <div id="swapFloat" hidden><button type="button" class="btn danger" data-act="swapCancel" id="swapCancel">↩ Huỷ đổi phòng</button><button type="button" class="btn success" data-act="swapToggle" id="swapDone">✓ Xong đổi phòng</button></div>
+          <div id="swapFloat" hidden><button type="button" class="btn danger" data-act="swapCancel" id="swapCancel"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M9.7 4.3a1 1 0 0 1 0 1.4L7.4 8H14a6 6 0 0 1 0 12h-3a1 1 0 1 1 0-2h3a4 4 0 0 0 0-8H7.4l2.3 2.3a1 1 0 1 1-1.4 1.4l-4-4a1 1 0 0 1 0-1.4l4-4a1 1 0 0 1 1.4 0Z"/></svg> Huỷ đổi phòng</button><button type="button" class="btn success" data-act="swapToggle" id="swapDone"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M20.3 5.3a1.2 1.2 0 0 1 0 1.7l-10.5 10.5a1.2 1.2 0 0 1-1.7 0L3.7 13.1a1.2 1.2 0 1 1 1.7-1.7l3.55 3.55 9.65-9.65a1.2 1.2 0 0 1 1.7 0Z"/></svg> Xong đổi phòng</button></div>
           <div id="swapBar"></div>
           <div id="roomUn"></div>
           <div class="hint" id="roomSum"></div>
@@ -1400,8 +1446,8 @@ html #gate .gcard{background:var(--card)!important;border:1px solid var(--card-b
       </div>
       <div id="grpMain"></div>
       <div class="gcard" id="grpBackup">
-        <div class="gh"><b>💾 Sao lưu</b></div>
-        <div class="row"><button class="btn ghost" type="button" id="sbBkDown">⬇ Tải bản sao lưu (file)</button><button class="btn ghost" type="button" id="sbBkUp">⬆ Khôi phục từ file</button><input type="file" id="sbBkFile" accept=".json,application/json" hidden></div>
+        <div class="gh"><b><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm2 2v4h10V6H7Zm9 9.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/></svg> Sao lưu</b></div>
+        <div class="row"><button class="btn ghost" type="button" id="sbBkDown"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 3a1 1 0 0 1 1 1v8.6l2.3-2.3a1 1 0 1 1 1.4 1.4l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 1.4-1.4l2.3 2.3V4a1 1 0 0 1 1-1ZM4 14a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3a1 1 0 1 1 2 0v3a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-3a1 1 0 0 1 1-1Z"/></svg> Tải bản sao lưu (file)</button><button class="btn ghost" type="button" id="sbBkUp">⬆ Khôi phục từ file</button><input type="file" id="sbBkFile" accept=".json,application/json" hidden></div>
         <div class="hint" id="sbBkInfo" style="min-height:0"></div>
       <details class="legacy"><summary>Nhập dữ liệu từ bản cũ (hiếm dùng)</summary>
       <div class="sub">Hoặc chuyển bằng mã: ở máy có dữ liệu</div>
@@ -1464,9 +1510,9 @@ const $=s=>document.querySelector(s);
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Math.round(n).toLocaleString('vi-VN')+' ₫';
-const X='<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-const PEN='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
-const OK='<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>';
+const X='<svg class="sx" viewBox="0 0 24 24"><path d="M6.2 4.8 12 10.6l5.8-5.8a1 1 0 0 1 1.4 1.4L13.4 12l5.8 5.8a1 1 0 0 1-1.4 1.4L12 13.4l-5.8 5.8a1 1 0 0 1-1.4-1.4l5.8-5.8-5.8-5.8a1 1 0 0 1 1.4-1.4Z"/></svg>';
+const PEN='<svg class="sx" viewBox="0 0 24 24"><path d="M15.6 3.6a2.2 2.2 0 0 1 3.1 0l1.7 1.7a2.2 2.2 0 0 1 0 3.1L9.2 19.6 4 21a.8.8 0 0 1-1-1l1.4-5.2L15.6 3.6Z"/></svg>';
+const OK='<svg class="sx" viewBox="0 0 24 24"><path d="M20.3 5.3a1.2 1.2 0 0 1 0 1.7l-10.5 10.5a1.2 1.2 0 0 1-1.7 0L3.7 13.1a1.2 1.2 0 1 1 1.7-1.7l3.55 3.55 9.65-9.65a1.2 1.2 0 0 1 1.7 0Z"/></svg>';
 let renamingId=null,editingTrip=false;const openAdv=new Set();
 const GRIP='<svg viewBox="0 0 14 18"><circle cx="4" cy="3" r="1.6"/><circle cx="10" cy="3" r="1.6"/><circle cx="4" cy="9" r="1.6"/><circle cx="10" cy="9" r="1.6"/><circle cx="4" cy="15" r="1.6"/><circle cx="10" cy="15" r="1.6"/></svg>';
 
@@ -1634,7 +1680,7 @@ function syncTripUi(){fillCopyFrom();
   if(tripFormOpen){if(!newTripColor)newTripColor=nextColor();const nc=$('#newTripColors');if(nc)nc.innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${newTripColor===c}" aria-label="Chọn màu ${c}" data-act="newColor" data-color="${c}"></button>`).join('');}
   if(fm)fm.style.display=tripFormOpen?'flex':'none';
   if(nb)nb.style.display=tripFormOpen?'none':'';
-  const eb=$('#tripEditBtn');if(eb){eb.style.display=tripFormOpen?'none':'';const o=tripEditorOpen&&!tripFormOpen;eb.textContent=o?'✕ Đóng sửa chuyến':'✎ Sửa chuyến';eb.setAttribute('aria-expanded',o);eb.classList.toggle('success',o);eb.classList.toggle('ghost',!o);}}
+  const eb=$('#tripEditBtn');if(eb){eb.style.display=tripFormOpen?'none':'';const o=tripEditorOpen&&!tripFormOpen;eb.innerHTML=o?'<svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M6.2 4.8 12 10.6l5.8-5.8a1 1 0 0 1 1.4 1.4L13.4 12l5.8 5.8a1 1 0 0 1-1.4 1.4L12 13.4l-5.8 5.8a1 1 0 0 1-1.4-1.4l5.8-5.8-5.8-5.8a1 1 0 0 1 1.4-1.4Z"/></svg> Đóng sửa chuyến':'<svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M15.6 3.6a2.2 2.2 0 0 1 3.1 0l1.7 1.7a2.2 2.2 0 0 1 0 3.1L9.2 19.6 4 21a.8.8 0 0 1-1-1l1.4-5.2L15.6 3.6Z"/></svg> Sửa chuyến';eb.setAttribute('aria-expanded',o);eb.classList.toggle('success',o);eb.classList.toggle('ghost',!o);}}
 function renderTrips(){syncTripUi();try{renderTripExtra();}catch(e){}
   $('#tripTabs').innerHTML=R.trips.map(t=>`<button type="button" class="trip" role="tab" aria-selected="${t.id===R.current}" data-act="pickTrip" data-id="${t.id}"><b>${esc(t.name)}</b><small class="num">${t.data.members.length} người · ${fmt(tripTotal(t))}</small></button>`).join('');
   const tn=$('#tripName');if(!editingTrip)tn.value=trip().name;
@@ -1734,8 +1780,8 @@ function dpeople(d){const set=new Set();S.expenses.filter(e=>e.dayId===d.id).for
 function curPresent(ad){return(presDraft&&presDay===ad.id?presDraft:ad.present).filter(mem);}
 function renderMemberBulk(){const el=$('#memberBulk');if(!el)return;
   if(!S.members.length){el.innerHTML='';if(memberSel)memberSel=null;return;}
-  el.innerHTML=memberSel?`<div class="row"><button type="button" class="btn ghost small" data-act="msAll">Chọn tất cả</button><button type="button" class="btn ghost small" data-act="msNone">Bỏ chọn</button><button type="button" class="btn small del" style="margin-left:0" data-act="msDel"${memberSel.size?'':' disabled'}>🗑 Xoá đã chọn (${memberSel.size})</button><button type="button" class="btn ghost small" data-act="msMode">Xong</button></div><div class="hint" style="min-height:0">Bấm vào tên để chọn hoặc bỏ chọn (viền đỏ là đã chọn).</div>`
-    :`<div class="row"><button type="button" class="btn ghost small" data-act="msMode">☑ Chọn nhiều để xoá</button><button type="button" class="btn small del" style="margin-left:0" data-act="msDelAll">🗑 Xoá hết thành viên</button></div>`;}
+  el.innerHTML=memberSel?`<div class="row"><button type="button" class="btn ghost small" data-act="msAll">Chọn tất cả</button><button type="button" class="btn ghost small" data-act="msNone">Bỏ chọn</button><button type="button" class="btn small del" style="margin-left:0" data-act="msDel"${memberSel.size?'':' disabled'}><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M9 2a1 1 0 0 0-1 1v1H4.5a1 1 0 0 0 0 2h15a1 1 0 1 0 0-2H16V3a1 1 0 0 0-1-1H9Zm-3.5 6 1 12.2A2 2 0 0 0 8.5 22h7a2 2 0 0 0 2-1.8l1-12.2h-13Z"/></svg> Xoá đã chọn (${memberSel.size})</button><button type="button" class="btn ghost small" data-act="msMode">Xong</button></div><div class="hint" style="min-height:0">Bấm vào tên để chọn hoặc bỏ chọn (viền đỏ là đã chọn).</div>`
+    :`<div class="row"><button type="button" class="btn ghost small" data-act="msMode">☑ Chọn nhiều để xoá</button><button type="button" class="btn small del" style="margin-left:0" data-act="msDelAll"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M9 2a1 1 0 0 0-1 1v1H4.5a1 1 0 0 0 0 2h15a1 1 0 1 0 0-2H16V3a1 1 0 0 0-1-1H9Zm-3.5 6 1 12.2A2 2 0 0 0 8.5 22h7a2 2 0 0 0 2-1.8l1-12.2h-13Z"/></svg> Xoá hết thành viên</button></div>`;}
 function delMembers(ids){
   ids=ids.filter(mem);if(!ids.length)return;
   const set=new Set(ids),used=ids.filter(usedBy),n=ids.length;
@@ -1901,7 +1947,7 @@ function renderAdvances(c,keep){
     return;}
   $('#advList').innerHTML=S.members.length?'<div class="items">'+units.map(u=>{
     const m=u.main,ls=S.advances.filter(a=>a.member===m.id),info=advUnitInfo(u),open=openAdv.has(m.id);
-    return `<div class="am-wrap"><button type="button" class="am" data-act="togAdv" data-id="${m.id}" aria-expanded="${open}"><span class="amtop">${avatar(m.id)}<span class="mid"><span class="t">${esc(m.name)}${S.holder===m.id?' <small style="color:var(--c-advance)">· thủ quỹ</small>':''}</span><span class="s">${info.sub}</span></span>${info.pill}<svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span></button>`+
+    return `<div class="am-wrap"><button type="button" class="am" data-act="togAdv" data-id="${m.id}" aria-expanded="${open}"><span class="amtop">${avatar(m.id)}<span class="mid"><span class="t">${esc(m.name)}${S.holder===m.id?' <small style="color:var(--c-advance)">· thủ quỹ</small>':''}</span><span class="s">${info.sub}</span></span>${info.pill}<svg class="chev" viewBox="0 0 24 24"><path d="M5.3 8.3a1 1 0 0 1 1.4 0L12 13.6l5.3-5.3a1 1 0 1 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4Z"/></svg></span></button>`+
     (open?advPanel(m,ls,info):'')+`</div>`;}).join('')+'</div>'
     :'<div class="empty">Thêm thành viên ở mục trên để ghi tiền đóng trước.</div>';
 }
@@ -1953,14 +1999,14 @@ function renderBulkSum(){
 function renderBulk(){
   const us=advUnits();[...bulkSel].forEach(id=>{if(!us.some(u=>u.main.id===id))bulkSel.delete(id);});
   $('#bkChips').innerHTML=us.map(u=>{const m=u.main,paid=u.members.some(x=>advSumOf(x.id)>0);
-    return `<button type="button" class="chip tog" style="--c:var(--c-advance)" aria-pressed="${bulkSel.has(m.id)}" data-act="bkTog" data-id="${m.id}">${avatar(m.id)}<span class="n">${esc(m.name)}${advMode==='main'&&u.members.length>1?` +${u.members.length-1}`:''}</span>${paid?'<span class="ok" title="Đã đóng">✓</span>':''}</button>`;}).join('')||'<span class="hint">Chưa có thành viên.</span>';
+    return `<button type="button" class="chip tog" style="--c:var(--c-advance)" aria-pressed="${bulkSel.has(m.id)}" data-act="bkTog" data-id="${m.id}">${avatar(m.id)}<span class="n">${esc(m.name)}${advMode==='main'&&u.members.length>1?` +${u.members.length-1}`:''}</span>${paid?'<span class="ok" title="Đã đóng"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M20.3 5.3a1.2 1.2 0 0 1 0 1.7l-10.5 10.5a1.2 1.2 0 0 1-1.7 0L3.7 13.1a1.2 1.2 0 1 1 1.7-1.7l3.55 3.55 9.65-9.65a1.2 1.2 0 0 1 1.7 0Z"/></svg></span>':''}</button>`;}).join('')||'<span class="hint">Chưa có thành viên.</span>';
   $('#bkMulWrap').hidden=!(advMode==='main'&&us.some(u=>u.members.length>1));
   $('#bkNote').placeholder=nextBatchName();
   const names=[...new Set(S.advances.map(a=>(a.note||'').trim()).filter(Boolean))];
   $('#bkList').innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
   const groups=new Map();S.advances.forEach(a=>{const n=(a.note||'').trim();if(!(a.bulk||/^Thu chung/.test(n)))return;const g=groups.get(n)||{c:0,t:0,ids:new Set()};g.c++;g.t+=a.amount;g.ids.add(a.member);groups.set(n,g);});
   if(bkEdit&&!groups.has(bkEdit))bkEdit=null;
-  $('#bkHist').innerHTML=groups.size?`<div class="sub">Các đợt thu chung đã ghi</div>`+[...groups.entries()].map(([n,g])=>`<div class="s" style="font-size:13px;color:var(--muted)">• ${esc(n)}: ${g.ids.size} người · ${fmt(g.t)}</div><div class="row" style="align-items:center">`+(bkEdit===n?`<input type="text" inputmode="decimal" id="bkEditAmt" value="${esc(bkEditVal)}" placeholder="Số tiền mỗi người mới, vd 400k" style="flex:1 1 160px;height:34px" aria-label="Số tiền mỗi người mới"><button type="button" class="btn small" data-act="bkEditSave">Lưu</button><button type="button" class="btn ghost small" data-act="bkEditCancel">Huỷ</button>${advMode==='main'&&batchRecs(n).some(a=>bkGs(a)>1)?`<label class="chk" style="flex:1 1 100%"><input type="checkbox" id="bkEditMul"${bkEditMul?' checked':''}> Nhân theo số người trong nhóm (cả đi kèm)</label>`:''}`:`<button type="button" class="btn ghost small" data-act="bkEditOpen" data-id="${esc(n)}">✎ Sửa số tiền</button><button type="button" class="btn small del" style="margin-left:0" data-act="bkDelBatch" data-id="${esc(n)}">🗑 Xoá cả đợt</button>`)+`</div>`).join('')+`<div class="hint" style="min-height:0">Người nộp muộn: chọn họ rồi chọn lại đúng tên đợt ở ô "Tên đợt" để ghi vào cùng đợt.</div>`:'';
+  $('#bkHist').innerHTML=groups.size?`<div class="sub">Các đợt thu chung đã ghi</div>`+[...groups.entries()].map(([n,g])=>`<div class="s" style="font-size:13px;color:var(--muted)">• ${esc(n)}: ${g.ids.size} người · ${fmt(g.t)}</div><div class="row" style="align-items:center">`+(bkEdit===n?`<input type="text" inputmode="decimal" id="bkEditAmt" value="${esc(bkEditVal)}" placeholder="Số tiền mỗi người mới, vd 400k" style="flex:1 1 160px;height:34px" aria-label="Số tiền mỗi người mới"><button type="button" class="btn small" data-act="bkEditSave">Lưu</button><button type="button" class="btn ghost small" data-act="bkEditCancel">Huỷ</button>${advMode==='main'&&batchRecs(n).some(a=>bkGs(a)>1)?`<label class="chk" style="flex:1 1 100%"><input type="checkbox" id="bkEditMul"${bkEditMul?' checked':''}> Nhân theo số người trong nhóm (cả đi kèm)</label>`:''}`:`<button type="button" class="btn ghost small" data-act="bkEditOpen" data-id="${esc(n)}"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M15.6 3.6a2.2 2.2 0 0 1 3.1 0l1.7 1.7a2.2 2.2 0 0 1 0 3.1L9.2 19.6 4 21a.8.8 0 0 1-1-1l1.4-5.2L15.6 3.6Z"/></svg> Sửa số tiền</button><button type="button" class="btn small del" style="margin-left:0" data-act="bkDelBatch" data-id="${esc(n)}"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M9 2a1 1 0 0 0-1 1v1H4.5a1 1 0 0 0 0 2h15a1 1 0 1 0 0-2H16V3a1 1 0 0 0-1-1H9Zm-3.5 6 1 12.2A2 2 0 0 0 8.5 22h7a2 2 0 0 0 2-1.8l1-12.2h-13Z"/></svg> Xoá cả đợt</button>`)+`</div>`).join('')+`<div class="hint" style="min-height:0">Người nộp muộn: chọn họ rồi chọn lại đúng tên đợt ở ô "Tên đợt" để ghi vào cùng đợt.</div>`:'';
   renderBulkSum();}
 function addInst(mid){
   const ai=document.querySelector('[data-new-amt="'+mid+'"]'),ni=document.querySelector('[data-new-note="'+mid+'"]');if(!ai)return;
@@ -2024,7 +2070,7 @@ function renderNewRoom(){const el=$('#roomNew');if(!el)return;
   el.innerHTML=`<div class="room newroom" style="border:2px dashed var(--c-list)"><div class="rtn" style="font-weight:700">Phòng mới: ${esc('Phòng '+(formRooms.length+1))}</div>
     <input type="text" class="rtypein" data-nr-type value="${esc(nrDraft.type)}" placeholder="Loại phòng / ghi chú (vd: Deluxe 2 giường, view biển)" maxlength="80" aria-label="Loại phòng">
     <input type="text" inputmode="decimal" data-nr-price value="${esc(nrDraft.price)}" placeholder="Giá phòng (bắt buộc), vd 800k" aria-label="Giá phòng" style="${nrDraft.err?'border-color:var(--neg)':''}">
-    ${nrDraft.err?`<div class="note" id="nrErr">⚠ ${esc(nrDraft.err)}</div>`:`<div class="note info" style="--c:var(--c-list)">ℹ Nhập giá phòng rồi bấm Tạo phòng. Chưa có giá thì chưa tạo được phòng.</div>`}
+    ${nrDraft.err?`<div class="note" id="nrErr"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.1 14.1a2 2 0 0 1-1.7 3H3.9a2 2 0 0 1-1.7-3L10.3 3.4ZM12 8a1.1 1.1 0 0 0-1.1 1.2l.35 4.6a.75.75 0 0 0 1.5 0l.35-4.6A1.1 1.1 0 0 0 12 8Zm0 7.6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg> ${esc(nrDraft.err)}</div>`:`<div class="note info" style="--c:var(--c-list)"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 5a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7Zm-1.5 4h2.25a.75.75 0 0 1 .75.75V16h.75a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1 0-1.5H12v-3.5h-1.5a.75.75 0 0 1 0-1.5Z"/></svg> Nhập giá phòng rồi bấm Tạo phòng. Chưa có giá thì chưa tạo được phòng.</div>`}
     <div class="row"><button type="button" class="btn small" data-act="nrCreate">Tạo phòng</button><button type="button" class="btn ghost small" data-act="nrCancel">Huỷ</button></div></div>`;}
 document.addEventListener('input',e=>{const t=e.target;if(!nrDraft||!t||!t.dataset)return;
   if(t.dataset.nrType!==undefined)nrDraft.type=t.value;else if(t.dataset.nrPrice!==undefined)nrDraft.price=t.value;});
@@ -2066,25 +2112,25 @@ function renderRooms0(){
     const chkSet=new Set(r.chk||[]);
     const occV=r.people.filter(mem).map(id=>{const sel=swapSel&&swapSel.rid===r.id&&swapSel.id===id,on=chkSet.has(id);
       if(swapMode)return `<button type="button" class="chip tog${sel?' selsw':''}" aria-pressed="${!!sel}" data-act="swapPick" data-rid="${r.id}" data-id="${id}" style="padding:3px 8px 3px 4px">${avatar(id)}<span class="n">${nameNo(id)}</span></button>`;
-      return `<button type="button" class="chip chkchip${on?' on':''}" aria-pressed="${on}" data-act="chkIn" data-rid="${r.id}" data-id="${id}" title="Bấm để check-in (đã nhận phòng)" style="padding:3px 8px 3px 4px">${avatar(id)}<span class="n">${nameNo(id)}</span><span class="ck">${on?'✓ đã nhận':'chưa nhận'}</span></button>`;}).join('');
+      return `<button type="button" class="chip chkchip${on?' on':''}" aria-pressed="${on}" data-act="chkIn" data-rid="${r.id}" data-id="${id}" title="Bấm để check-in (đã nhận phòng)" style="padding:3px 8px 3px 4px">${avatar(id)}<span class="n">${nameNo(id)}</span><span class="ck">${on?'<svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M20.3 5.3a1.2 1.2 0 0 1 0 1.7l-10.5 10.5a1.2 1.2 0 0 1-1.7 0L3.7 13.1a1.2 1.2 0 1 1 1.7-1.7l3.55 3.55 9.65-9.65a1.2 1.2 0 0 1 1.7 0Z"/></svg> đã nhận':'chưa nhận'}</span></button>`;}).join('');
     const picker=pickRoom===r.id
-      ?`<div class="picker"><div class="sub">Chọn người ở phòng này (từ danh sách chưa ghép)</div>${r.solo?`<div class="hint" style="min-height:0">🔒 Phòng riêng: chỉ thêm được người đi kèm của người đang ở. ${pool.some(i=>!soloOk(r,i))?`<button type="button" class="btn ghost small" data-act="soloOpen" data-id="${r.id}">Cho ở chung (thiếu phòng)</button>`:''}</div>`:''}<div class="chips">`+(r.solo?pool.filter(i=>soloOk(r,i)):pool).map(id=>`<button type="button" class="chip tog" style="--c:var(--c-expense)" aria-pressed="false" data-act="roomPick" data-rid="${r.id}" data-id="${id}">${avatar(id)}<span class="n">${nameNo(id)}</span></button>`).join('')+`</div><button type="button" class="btn small" data-act="donePick">Xong</button></div>`
+      ?`<div class="picker"><div class="sub">Chọn người ở phòng này (từ danh sách chưa ghép)</div>${r.solo?`<div class="hint" style="min-height:0"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg> Phòng riêng: chỉ thêm được người đi kèm của người đang ở. ${pool.some(i=>!soloOk(r,i))?`<button type="button" class="btn ghost small" data-act="soloOpen" data-id="${r.id}">Cho ở chung (thiếu phòng)</button>`:''}</div>`:''}<div class="chips">`+(r.solo?pool.filter(i=>soloOk(r,i)):pool).map(id=>`<button type="button" class="chip tog" style="--c:var(--c-expense)" aria-pressed="false" data-act="roomPick" data-rid="${r.id}" data-id="${id}">${avatar(id)}<span class="n">${nameNo(id)}</span></button>`).join('')+`</div><button type="button" class="btn small" data-act="donePick">Xong</button></div>`
       :'';
     const addBtn=pickRoom===r.id?'':`<button type="button" class="btn ghost small" data-act="openPick" data-rid="${r.id}"${pool.length?'':' disabled'}>+ Thêm người${pool.length?` (${pool.length})`:''}</button>`;
     const open=swapMode||openRooms.has(r.id)||pickRoom===r.id||(rq&&r.people.some(i=>hit.has(i))),np=r.people.filter(mem).length,absN=r.people.filter(i=>mem(i)&&isAbs(i)).length;
-    const head=`<button type="button" class="rtoggle" data-act="togRoom" data-id="${r.id}" aria-expanded="${!!open}"><span class="rtn">${esc(r.name||'Phòng')}${!(r.price>0)?` <span class="rnoprice">⚠ chưa điền giá</span>`:''}${r.type?`<small class="rtype">${esc(r.type)}</small>`:''}</span><span class="rtm num">${np} người${r.price?` · ${fmt(r.price)}`:''}${np&&r.price?` · ${fmt(r.price/np)}/người`:''}${absN?` · <span class="rwarn">⚠ ${absN} người không có mặt</span>`:''}${r.solo?` · <span class="rprivate">🔒 phòng riêng</span>`:''}${np?` · <span class="rchk${(r.chk||[]).filter(i=>r.people.includes(i)).length===np?' ok':''}">${(r.chk||[]).filter(i=>r.people.includes(i)).length}/${np} đã nhận phòng</span>`:''}${np===1?` · <span class="rsolo">ℹ mới 1 người</span>`:(np===0?` · <span class="rempty">ℹ chưa có người</span>`:'')}</span><svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>`;
+    const head=`<button type="button" class="rtoggle" data-act="togRoom" data-id="${r.id}" aria-expanded="${!!open}"><span class="rtn">${esc(r.name||'Phòng')}${!(r.price>0)?` <span class="rnoprice"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.1 14.1a2 2 0 0 1-1.7 3H3.9a2 2 0 0 1-1.7-3L10.3 3.4ZM12 8a1.1 1.1 0 0 0-1.1 1.2l.35 4.6a.75.75 0 0 0 1.5 0l.35-4.6A1.1 1.1 0 0 0 12 8Zm0 7.6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg> chưa điền giá</span>`:''}${r.type?`<small class="rtype">${esc(r.type)}</small>`:''}</span><span class="rtm num">${np} người${r.price?` · ${fmt(r.price)}`:''}${np&&r.price?` · ${fmt(r.price/np)}/người`:''}${absN?` · <span class="rwarn"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.1 14.1a2 2 0 0 1-1.7 3H3.9a2 2 0 0 1-1.7-3L10.3 3.4ZM12 8a1.1 1.1 0 0 0-1.1 1.2l.35 4.6a.75.75 0 0 0 1.5 0l.35-4.6A1.1 1.1 0 0 0 12 8Zm0 7.6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg> ${absN} người không có mặt</span>`:''}${r.solo?` · <span class="rprivate"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg> phòng riêng</span>`:''}${np?` · <span class="rchk${(r.chk||[]).filter(i=>r.people.includes(i)).length===np?' ok':''}">${(r.chk||[]).filter(i=>r.people.includes(i)).length}/${np} đã nhận phòng</span>`:''}${np===1?` · <span class="rsolo"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 5a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7Zm-1.5 4h2.25a.75.75 0 0 1 .75.75V16h.75a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1 0-1.5H12v-3.5h-1.5a.75.75 0 0 1 0-1.5Z"/></svg> mới 1 người</span>`:(np===0?` · <span class="rempty"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 5a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7Zm-1.5 4h2.25a.75.75 0 0 1 .75.75V16h.75a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1 0-1.5H12v-3.5h-1.5a.75.75 0 0 1 0-1.5Z"/></svg> chưa có người</span>`:'')}</span><svg class="chev" viewBox="0 0 24 24"><path d="M5.3 8.3a1 1 0 0 1 1.4 0L12 13.6l5.3-5.3a1 1 0 1 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4Z"/></svg></button>`;
     if(!open)return `<div class="room${absN?' warnroom':(np===0?' emptyroom':(np===1?' soloroom':''))}" data-card="${r.id}">${head}</div>`;
     const cls=`room${absN?' warnroom':(np===0?' emptyroom':(np===1?' soloroom':''))}${!(r.price>0)&&np>0&&!absN?' noprice':''}`;
-    const notes=`${np===1?`<div class="rsolo" style="white-space:normal;font-weight:400">ℹ Phòng mới có 1 người. Có người mới tham gia thì ghép thêm vào đây, không cần mở thêm phòng.</div>`:(np===0?`<div class="rempty" style="white-space:normal;font-weight:400">ℹ Phòng chưa có người. Bấm Sửa rồi "+ Thêm người" để thêm người chưa ghép phòng thay vì để phòng trống.</div>`:'')}
-      ${absN?`<div class="rwarn" style="white-space:normal">⚠ Người viền vàng không còn trong danh sách ${esc(_dd?_dd.name:'ngày')}. Bấm Sửa để bỏ họ khỏi phòng (nút ✕) hoặc thêm lại vào điểm danh.</div>`:''}`;
+    const notes=`${np===1?`<div class="rsolo" style="white-space:normal;font-weight:400"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 5a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7Zm-1.5 4h2.25a.75.75 0 0 1 .75.75V16h.75a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1 0-1.5H12v-3.5h-1.5a.75.75 0 0 1 0-1.5Z"/></svg> Phòng mới có 1 người. Có người mới tham gia thì ghép thêm vào đây, không cần mở thêm phòng.</div>`:(np===0?`<div class="rempty" style="white-space:normal;font-weight:400"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 5a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7Zm-1.5 4h2.25a.75.75 0 0 1 .75.75V16h.75a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1 0-1.5H12v-3.5h-1.5a.75.75 0 0 1 0-1.5Z"/></svg> Phòng chưa có người. Bấm Sửa rồi "+ Thêm người" để thêm người chưa ghép phòng thay vì để phòng trống.</div>`:'')}
+      ${absN?`<div class="rwarn" style="white-space:normal"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.1 14.1a2 2 0 0 1-1.7 3H3.9a2 2 0 0 1-1.7-3L10.3 3.4ZM12 8a1.1 1.1 0 0 0-1.1 1.2l.35 4.6a.75.75 0 0 0 1.5 0l.35-4.6A1.1 1.1 0 0 0 12 8Zm0 7.6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg> Người viền vàng không còn trong danh sách ${esc(_dd?_dd.name:'ngày')}. Bấm Sửa để bỏ họ khỏi phòng (nút <svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M6.2 4.8 12 10.6l5.8-5.8a1 1 0 0 1 1.4 1.4L13.4 12l5.8 5.8a1 1 0 0 1-1.4 1.4L12 13.4l-5.8 5.8a1 1 0 0 1-1.4-1.4l5.8-5.8-5.8-5.8a1 1 0 0 1 1.4-1.4Z"/></svg>) hoặc thêm lại vào điểm danh.</div>`:''}`;
     const occShow=(swapMode||!ed)?occV:occ;
     const members=`<div class="chips">${occShow||'<span class="hint" style="min-height:0">Chưa có ai trong phòng</span>'}</div><div class="hint" data-room-per="${r.id}" style="min-height:0"></div>`;
-    if(!ed)return `<div class="${cls}" data-card="${r.id}">${head}${notes}${r.type?`<div class="s" style="font-size:13px"><b>Loại phòng:</b> ${esc(r.type)}</div>`:''}${members}<div class="row">${swapMode?(swapSel&&swapSel.rid!==r.id?`<button type="button" class="btn small" data-act="swapMove" data-rid="${r.id}">Chuyển ${esc(nameOf(swapSel.id))} sang phòng này</button>`:''):`<button type="button" class="btn ghost small" data-act="editRoom" data-id="${r.id}">Sửa</button>${np?`<button type="button" class="btn ghost small" data-act="chkAll" data-id="${r.id}">✓ Đã nhận đủ</button>`:''}`}</div></div>`;
+    if(!ed)return `<div class="${cls}" data-card="${r.id}">${head}${notes}${r.type?`<div class="s" style="font-size:13px"><b>Loại phòng:</b> ${esc(r.type)}</div>`:''}${members}<div class="row">${swapMode?(swapSel&&swapSel.rid!==r.id?`<button type="button" class="btn small" data-act="swapMove" data-rid="${r.id}">Chuyển ${esc(nameOf(swapSel.id))} sang phòng này</button>`:''):`<button type="button" class="btn ghost small" data-act="editRoom" data-id="${r.id}">Sửa</button>${np?`<button type="button" class="btn ghost small" data-act="chkAll" data-id="${r.id}"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M20.3 5.3a1.2 1.2 0 0 1 0 1.7l-10.5 10.5a1.2 1.2 0 0 1-1.7 0L3.7 13.1a1.2 1.2 0 1 1 1.7-1.7l3.55 3.55 9.65-9.65a1.2 1.2 0 0 1 1.7 0Z"/></svg> Đã nhận đủ</button>`:''}`}</div></div>`;
     return `<div class="${cls}" data-card="${r.id}">${head}
       <input type="text" class="rtypein" data-room-type="${r.id}" value="${esc(r.type||'')}" placeholder="Loại phòng / ghi chú (vd: Deluxe 2 giường, view biển)" maxlength="80" aria-label="Loại phòng">
-      <label class="chk solochk" title="Ở một mình, chỉ thêm được người đi kèm"><input type="checkbox" data-room-solo="${r.id}"${r.solo?' checked':''}> 🔒 Phòng riêng</label>
+      <label class="chk solochk" title="Ở một mình, chỉ thêm được người đi kèm"><input type="checkbox" data-room-solo="${r.id}"${r.solo?' checked':''}> <svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg> Phòng riêng</label>
       <div class="rhead"><input type="text" inputmode="decimal" data-room-price="${r.id}" value="${r.price?r.price.toLocaleString('vi-VN'):''}" placeholder="Giá phòng, vd 800k" aria-label="Giá phòng"></div>
-      ${!(r.price>0)?`<div class="note nopricenote">⚠ Chưa điền giá phòng. Có thể điền sau khi tổng kết; phòng chưa có giá chưa được tính tiền.</div>`:''}${notes}${members}${picker}<div class="row roomfoot">${addBtn}${pickRoom===r.id?'':`<button type="button" class="btn small" data-act="doneEdit" data-id="${r.id}">Xong sửa phòng</button>`}<button type="button" class="btn small del" data-act="delRoom" data-id="${r.id}" aria-label="Xoá ${esc(r.name)}">🗑 Xoá phòng</button></div></div>`;}).join('')
+      ${!(r.price>0)?`<div class="note nopricenote"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.1 14.1a2 2 0 0 1-1.7 3H3.9a2 2 0 0 1-1.7-3L10.3 3.4ZM12 8a1.1 1.1 0 0 0-1.1 1.2l.35 4.6a.75.75 0 0 0 1.5 0l.35-4.6A1.1 1.1 0 0 0 12 8Zm0 7.6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg> Chưa điền giá phòng. Có thể điền sau khi tổng kết; phòng chưa có giá chưa được tính tiền.</div>`:''}${notes}${members}${picker}<div class="row roomfoot">${addBtn}${pickRoom===r.id?'':`<button type="button" class="btn small" data-act="doneEdit" data-id="${r.id}">Xong sửa phòng</button>`}<button type="button" class="btn small del" data-act="delRoom" data-id="${r.id}" aria-label="Xoá ${esc(r.name)}"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M9 2a1 1 0 0 0-1 1v1H4.5a1 1 0 0 0 0 2h15a1 1 0 1 0 0-2H16V3a1 1 0 0 0-1-1H9Zm-3.5 6 1 12.2A2 2 0 0 0 8.5 22h7a2 2 0 0 0 2-1.8l1-12.2h-13Z"/></svg> Xoá phòng</button></div></div>`;}).join('')
     ):'<div class="empty">Chưa có phòng. Bấm "+ Thêm phòng".</div>';
   if(askOn&&!formRooms.length)$('#roomList').innerHTML='';
   $('#roomFind').innerHTML=rq?(ppl.filter(i=>hit.has(i)).map(i=>{const r=formRooms.find(x=>x.people.includes(i));return `<div class="s">• <b>${nameNo(i)}</b>: ${r?esc(r.name):'tự tìm phòng'}</div>`;}).join('')||'<div class="hint" style="min-height:0">Không thấy ai tên này trong danh sách ngày đang chọn.</div>'):'';
@@ -2107,7 +2153,7 @@ function updateRoomSummary(){
   const solo=formRooms.filter(r=>r.people.filter(mem).length===1),emptyR=formRooms.filter(r=>r.people.filter(mem).length===0);
   const btns=a=>a.map(r=>`<button type="button" class="btn ghost small" data-act="soloPick" data-id="${r.id}">${esc(r.name)}${r.type?` (${esc(r.type)})`:''}</button>`).join('');
   let h='';
-  if(pend.length)h+=`<div class="unbox warn"><div class="sub">⚠ Chưa ghép phòng = tự tìm phòng, không chia tiền phòng (${pend.length})</div><div class="chips">`+pend.map(i=>swapMode?`<button type="button" class="chip tog${swapSel&&!swapSel.rid&&swapSel.id===i?' selsw':''}" aria-pressed="${!!(swapSel&&!swapSel.rid&&swapSel.id===i)}" data-act="swapPick" data-rid="" data-id="${i}" style="padding:3px 8px 3px 4px">${avatar(i)}<span class="n">${nameNo(i)}</span></button>`:`<span class="chip pend-chip">${avatar(i)}<span class="n">${nameNo(i)}</span></span>`).join('')+`</div></div>`;
+  if(pend.length)h+=`<div class="unbox warn"><div class="sub"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.1 14.1a2 2 0 0 1-1.7 3H3.9a2 2 0 0 1-1.7-3L10.3 3.4ZM12 8a1.1 1.1 0 0 0-1.1 1.2l.35 4.6a.75.75 0 0 0 1.5 0l.35-4.6A1.1 1.1 0 0 0 12 8Zm0 7.6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg> Chưa ghép phòng = tự tìm phòng, không chia tiền phòng (${pend.length})</div><div class="chips">`+pend.map(i=>swapMode?`<button type="button" class="chip tog${swapSel&&!swapSel.rid&&swapSel.id===i?' selsw':''}" aria-pressed="${!!(swapSel&&!swapSel.rid&&swapSel.id===i)}" data-act="swapPick" data-rid="" data-id="${i}" style="padding:3px 8px 3px 4px">${avatar(i)}<span class="n">${nameNo(i)}</span></button>`:`<span class="chip pend-chip">${avatar(i)}<span class="n">${nameNo(i)}</span></span>`).join('')+`</div></div>`;
   else if(ppl.length)h+=`<div class="hint" style="color:var(--pos);min-height:0">Mọi người có mặt đều đã có phòng.</div>`;
   {const np1=formRooms.filter(r=>!(r.price>0));if(np1.length)h+=`<div class="unbox nopriceinfo"><div class="sub">Phòng chưa điền giá (${np1.length})</div><div class="s" style="font-size:13px">Không bắt buộc điền ngay, có thể điền sau khi tổng kết. Phòng chưa có giá chưa được tính tiền.</div><div class="row">${btns(np1)}</div></div>`;}
   if(emptyR.length)h+=`<div class="unbox emptyinfo"><div class="sub">Phòng chưa có người</div><div class="s" style="font-size:13px">${pend.length?'Đang có người chưa ghép phòng: thêm vào các phòng này thay vì để phòng trống.':'Chưa có ai trong các phòng này. Có người chưa ghép phòng thì thêm vào đây, không cần mở thêm phòng.'}</div><div class="row">${btns(emptyR)}</div></div>`;
@@ -2182,7 +2228,7 @@ function renderList(c){
     const rn=es.filter(e=>e.rooms&&e.rooms.length).length;
     const dupNote=rn>1?`<div class="note">${esc(d.name)} đang có ${rn} khoản tiền phòng, mỗi ngày chỉ nên có 1. <button class="btn small" type="button" style="--c:#c62828;background:#c62828;color:#fff;margin-left:6px" data-act="dedupeRooms" data-id="${d.id}">Giữ khoản mới nhất, xoá khoản cũ</button></div>`:'';
     const cl=!q&&!openDays.has(d.id);
-    return `<div style="display:flex;flex-direction:column;gap:8px"><button type="button" class="daytitle tg" data-act="togDay" data-id="${d.id}" aria-expanded="${!cl}"><h3>${esc(d.name)}</h3><span class="num">${q?`${es.length}/${all.length} khớp`:`${es.length} khoản`} · ${fmt(q?es.reduce((t,e)=>t+e.amount,0):(c.dayTotals[d.id]||0))}${q?'':` · ${dpeople(d).length} người`}${d.place?` · ${esc(d.place)}`:''}</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    return `<div style="display:flex;flex-direction:column;gap:8px"><button type="button" class="daytitle tg" data-act="togDay" data-id="${d.id}" aria-expanded="${!cl}"><h3>${esc(d.name)}</h3><span class="num">${q?`${es.length}/${all.length} khớp`:`${es.length} khoản`} · ${fmt(q?es.reduce((t,e)=>t+e.amount,0):(c.dayTotals[d.id]||0))}${q?'':` · ${dpeople(d).length} người`}${d.place?` · ${esc(d.place)}`:''}</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.3 8.3a1 1 0 0 1 1.4 0L12 13.6l5.3-5.3a1 1 0 1 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4Z"/></svg></button>
     ${cl?'':dupNote+`<div class="items" data-day="${d.id}">`+es.map(e=>{const n=parts(e).length;
       return `<div class="item" data-eid="${e.id}"><button type="button" class="grip" data-grip="${e.id}" aria-label="Kéo để đổi thứ tự, hoặc dùng phím mũi tên lên xuống">${GRIP}</button>${avatar(e.payer)}<div class="mid"><div class="t">${esc(e.desc)}</div>
       ${e.rooms&&e.rooms.length?`<div class="s">${nameNo(e.payer)} chi · ${e.rooms.length} phòng, tổng tiền phòng ${fmt(e.amount)}</div><div class="rlines">${roomLinesHtml(e)}</div>`:`<div class="s">${nameNo(e.payer)} chi · ${splitText(e)}${e.excluded.length?` · bỏ ${e.excluded.map(i=>nameNo(i)).join(', ')}`:''}</div>`}</div>
@@ -2303,7 +2349,7 @@ function roomsReportData(){const ms=displayMembers(),out=[];
 function roomsReportHtml(){const data=roomsReportData();
   if(!data.length)return '<div class="rsec"><h3>Báo cáo theo phòng</h3><div class="empty">Chưa có phòng nào. Thêm phòng ở tab Tiền phòng.</div></div>';
   return `<div class="rsec"><h3>Báo cáo theo phòng</h3><div class="hint" style="min-height:0">Mỗi ngày: số phòng, từng phòng có ai ở, giá phòng; cuối bảng là những người chưa xếp phòng.</div>${sumToggleHtml()}${repFoldBar}`+data.map(x=>`<div class="rcard" data-day="${x.d.id}"><div class="daytitle"><h3 style="color:var(--fg)">${esc(x.d.name)}</h3><span class="num">${x.rooms.length} phòng · ${fmt(x.total)}${x.d.place?` · ${esc(x.d.place)}`:''}</span></div><div class="tablewrap"><table class="t2"><thead><tr><th>Phòng</th><th>Loại phòng</th><th>Giá phòng</th><th>Số người</th><th>Giá mỗi người</th><th>Người ở</th></tr></thead><tbody>`+
-    x.rooms.map(r=>`<tr><td>${esc(r.name)}${r.solo?' 🔒':''}</td><td>${esc(r.type)}${r.solo?(r.type?' · ':'')+'phòng riêng':''}</td><td class="num">${r.price?fmt(r.price):'<span class="rnoprice">chưa điền giá</span>'}</td><td class="num">${r.people.length}</td><td class="num">${r.people.length&&r.price?fmt(r.per):'-'}</td><td>${peopleCellM(r.people)}</td></tr>`).join('')+
+    x.rooms.map(r=>`<tr><td>${esc(r.name)}${r.solo?' <svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg>':''}</td><td>${esc(r.type)}${r.solo?(r.type?' · ':'')+'phòng riêng':''}</td><td class="num">${r.price?fmt(r.price):'<span class="rnoprice">chưa điền giá</span>'}</td><td class="num">${r.people.length}</td><td class="num">${r.people.length&&r.price?fmt(r.per):'-'}</td><td>${peopleCellM(r.people)}</td></tr>`).join('')+
     `<tr class="tot"><td><b>Chưa xếp phòng</b></td><td></td><td></td><td class="num">${x.un.length}</td><td></td><td>${peopleCellM(x.un,'ai cũng đã có phòng')}</td></tr></tbody></table></div></div>`).join('')+`</div>`;}
 function matrixData(){const ms=displayMembers(),rows=[];
   S.days.forEach(d=>S.expenses.filter(e=>e.dayId===d.id).forEach(e=>{const sh={};shareLines(e).forEach(l=>{sh[l.id]=(sh[l.id]||0)+l.sh;});rows.push({e,d,sh});}));
@@ -2342,7 +2388,7 @@ function addClear(sel){const i=$(sel);if(!i||i.parentNode.classList.contains('sb
 })();
 function foldDayCards(el){el.querySelectorAll('.rcard[data-day]').forEach(card=>{const id=card.dataset.day,open=repOpenDays.has(id),t=card.querySelector('.daytitle');if(!t)return;
   t.classList.add('tg');t.setAttribute('role','button');t.tabIndex=0;t.dataset.act='repTogDay';t.dataset.id=id;t.setAttribute('aria-expanded',open);
-  t.insertAdjacentHTML('beforeend','<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');
+  t.insertAdjacentHTML('beforeend','<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.3 8.3a1 1 0 0 1 1.4 0L12 13.6l5.3-5.3a1 1 0 1 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4Z"/></svg>');
   if(!open)[...card.children].forEach(ch=>{if(ch!==t)ch.style.display='none';});});}
 const repFoldBar=`<div class="row"><button type="button" class="btn ghost small" data-act="repDaysAll">Hiện hết chi tiết</button><button type="button" class="btn ghost small" data-act="repDaysNone">Thu gọn (chỉ hiện ngày)</button></div>`;
 function renderReport(c){
@@ -3648,7 +3694,7 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
 function paidUi(id,n){
   if(!window.supabase||PV_TOKEN||!sbGroup||!n||id===S.holder||!syncedSet.has(R.current))return '';
   const rec=paidMap.get(id+'>holder'),v=Math.abs(n),w=n<0?'nộp':'nhận';
-  if(rec&&+rec.amount===v)return `<button type="button" class="paid on" data-act="paidTog" data-pd="${id}" data-n="${n}" title="Đánh dấu bởi ${esc(rec.marked_by||'')} lúc ${fdt(rec.at)}">✓ Đã ${w}</button>`;
+  if(rec&&+rec.amount===v)return `<button type="button" class="paid on" data-act="paidTog" data-pd="${id}" data-n="${n}" title="Đánh dấu bởi ${esc(rec.marked_by||'')} lúc ${fdt(rec.at)}"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M20.3 5.3a1.2 1.2 0 0 1 0 1.7l-10.5 10.5a1.2 1.2 0 0 1-1.7 0L3.7 13.1a1.2 1.2 0 1 1 1.7-1.7l3.55 3.55 9.65-9.65a1.2 1.2 0 0 1 1.7 0Z"/></svg> Đã ${w}</button>`;
   return (rec?`<small class="paid-old">đã ghi ${fmt(+rec.amount)}</small>`:'')+`<button type="button" class="paid" data-act="paidTog" data-pd="${id}" data-n="${n}">Đánh dấu đã ${w}</button>`;}
 document.addEventListener('click',async ev=>{const b=ev.target.closest&&ev.target.closest('[data-pd]');if(!b)return;ev.preventDefault();ev.stopPropagation();
   const id=b.dataset.pd,n=+b.dataset.n,on=!b.classList.contains('on'),m=mem(id),hd=S.holder&&mem(S.holder);

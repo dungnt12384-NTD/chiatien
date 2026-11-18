@@ -1,5 +1,5 @@
 /* Service worker: mở được khi mất mạng. Đổi VERSION mỗi lần phát hành để máy người dùng lấy bản mới. */
-const VERSION='v20';
+const VERSION='v21';
 const CACHE = 'chia-tien-' + VERSION;
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'vendor/supabase.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
@@ -23,7 +23,7 @@ self.addEventListener('fetch', e => {
   /* Trang chính: ưu tiên bản mới nhất khi có mạng, mất mạng thì dùng bản đã lưu */
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(req).then(res => {
+      fetch(req, { cache: 'no-cache' }).then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put('index.html', copy));
         return res;

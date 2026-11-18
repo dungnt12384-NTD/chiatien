@@ -1199,6 +1199,9 @@ html:not(.phone) .tab[aria-selected="true"],html:not(.phone) .tab[aria-selected=
 html:not(.phone) .tab[aria-selected="true"]::after{content:"";position:absolute;left:10%;right:10%;bottom:-1px;height:3px;background:var(--k)}
 html:not(.phone) .tab svg{width:28px!important;height:28px!important}
 html:not(.phone) .tab .tls{font-size:13px!important}
+/* trang vào (gate) ở máy tính/iPad: rộng hết cột, phóng to cho cân với giao diện sau khi vào */
+html:not(.phone) #gate{width:100%!important;max-width:560px!important;align-self:center;padding-top:28px!important}
+@media (min-width:720px){html:not(.phone) #gate{zoom:1.2}}
 
 /* ---- ĐIỆN THOẠI ---- */
 html.phone .tabs{left:0!important;right:0!important;bottom:0!important;border-radius:0!important;border:0!important;border-top:1px solid var(--line)!important;

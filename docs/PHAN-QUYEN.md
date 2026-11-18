@@ -47,3 +47,20 @@ Nhóm chưa có chuyến nào: chỉ hiện Quản trị và Chuyến đi (để
 | Cấp / thu quyền quản trị viên | ✘ | ✘ | ✘ | ✔ |
 | Nhật ký toàn hệ thống | ✘ | ✘ | ✘ | ✔ |
 | Mở xem/sửa dữ liệu nhóm không tham gia | ✘ | ✘ | ✘ | ✔ |
+
+## Luồng 3 cấp (bản v15)
+
+Đăng nhập → **Quản trị** (tài khoản, nhóm của tôi, quản trị tổng) → chọn nhóm → tab **Chuyến** → chọn chuyến → 6 tab làm việc (Người đi, Đã đóng, Phòng, Khoản chi, Tổng kết, Báo cáo).
+
+- Đầu trang hiện thanh **Nhóm › Chuyến**; bấm tên nhóm để quay về Quản trị. Mở lại sẽ tự vào nhóm và chuyến lần trước.
+- Tab Chuyến có khối **Nhóm** (Quản lý nhóm, Đổi nhóm) và khối **Chuyến này** (Thông tin và lịch sử, Link xem công khai, Thùng rác).
+- Gọi tên: **Thành viên nhóm** = tài khoản đăng nhập có quyền; **Người đi** = danh sách chia tiền của chuyến; **Link xem công khai** = không cần đăng nhập, chỉ đọc.
+
+| Thao tác | Người xem | Người nhập | Chủ nhóm | Quản trị viên |
+|---|---|---|---|---|
+| Tạo, sửa tên, đổi màu chuyến | ✘ | ✔ | ✔ | ✔ |
+| Xoá chuyến (vào Thùng rác 30 ngày) / khôi phục | ✘ | ✔ | ✔ | ✔ |
+| Xoá hẳn khỏi Thùng rác | ✘ | ✘ | ✔ | ✔ |
+| Thông tin và lịch sử chuyến, link xem công khai | ✘ | ✔ | ✔ | ✔ |
+
+Cơ sở dữ liệu: `supabase/006_thung_rac_chuyen.sql` (trash_trip, restore_trip, purge_trip, trip_trash, trip_info, trip_audit). "Tạo bởi" của chuyến lấy từ nhật ký; chuyến tạo trước khi có nhật ký hiện "không rõ".

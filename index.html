@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>
 #modal{z-index:120}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);max-width:min(92vw,420px);padding:10px 16px;border-radius:12px;background:var(--fg);color:var(--bg);font-size:14px;z-index:130;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+html.phone #toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 #pvNote{display:none}
 html.pv #pvNote{display:block}
 html.loading .wrap>*:not(#pvNote){visibility:hidden}
@@ -2324,7 +2327,7 @@ function setSync(st,note){syncState=st;syncNote=note||'';if(st==='ok')syncAt=Dat
 const pushQ=new Map();
 function schedulePush(t,delay){
   if(!dbRef||!dbCanWrite||t.sample||t.ph)return;
-  const id=t.id,q=pushQ.get(id)||{};clearTimeout(q.timer);
+  const id=t.id,q=pushQ.get(id)||{};clearTimeout(q.timer);t.unsynced=true;   /* có thay đổi trên máy này chưa gửi lên nhóm */
   q.timer=setTimeout(()=>doPush(id),delay===undefined?900:delay);pushQ.set(id,q);setSync('saving');}
 function syncIdle(){return ![...pushQ.values()].some(q=>q.busy||q.dirty);}
 async function doPush(id){
@@ -2334,7 +2337,7 @@ async function doPush(id){
   q.busy=true;
   try{
     await dbRef.doc('trips/'+id).set({name:t.name,color:t.color,updatedAt:t.updatedAt,data:JSON.parse(JSON.stringify(t.data))});
-    syncedSet.add(id);saveLocal();
+    syncedSet.add(id);if(!q.dirty)t.unsynced=false;saveLocal();
   }catch(e){
     q.busy=false;
     if(e&&e.code==='conflict'){handleConflict(id,e);return;}
@@ -2348,13 +2351,17 @@ function markDeleted(id){
   deletedSet.add(id);syncedSet.delete(id);saveLocal();
   if(dbRef&&dbCanWrite)dbRef.doc('trips/'+id).delete().then(()=>{deletedSet.delete(id);saveLocal();}).catch(()=>{});}
 function validTrip(r){const d=r&&r.data;return !!(r&&r.name&&d&&Array.isArray(d.members)&&Array.isArray(d.days)&&d.days.length&&Array.isArray(d.expenses)&&Array.isArray(d.advances));}
+/* thông báo nhỏ, tự tắt */
+let toastTm=null;
+function toast(m){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';el.setAttribute('role','status');document.body.appendChild(el);}
+  el.textContent=m;el.classList.add('on');clearTimeout(toastTm);toastTm=setTimeout(()=>el.classList.remove('on'),3500);}
 /* chuẩn hoá dữ liệu nhận về giống lúc mở chuyến, để việc chuẩn hoá không bị tính là người dùng vừa sửa */
 function normTrip(t){const keep=S;S=t.data;try{migrateAttend(S);syncPresent();normalizeRooms();}catch(e){}finally{S=keep;}}
 function handleSnap(snap){
   if(snap.metadata&&snap.metadata.fromCache)return;
   const remote=new Map();snap.docs.forEach(d=>{if(d.exists){const v=d.data();if(validTrip(v))remote.set(d.id,v);}});
   const rrev=new Map();snap.docs.forEach(d=>rrev.set(d.id,d.rev));
-  let changed=false;const adoptList=[];
+  let changed=false;const adoptList=[],adoptedNames=[];
   const adoptLocals=()=>{if(!adoptList.length)return;
     if(adoptOK===true){adoptList.forEach(t=>schedulePush(t,0));return;}
     if(adoptOK===null){adoptOK=false;const n=adoptList.length;
@@ -2366,8 +2373,9 @@ function handleSnap(snap){
     if(!t){const nt={id,name:r.name,color:r.color||nextColor(),data:JSON.parse(JSON.stringify(r.data)),updatedAt:ru};
       normTrip(nt);R.trips.push(nt);lastJson.set(id,snapJson(nt));syncedSet.add(id);setRev(id,rrev.get(id));changed=true;return;}
     const lu=t.updatedAt||0;
+    if(ru>lu&&t.unsynced&&dbCanWrite&&!t.sample&&!t.ph){handleConflict(id,{remote:{data:r,rev:rrev.get(id)}});syncedSet.add(id);return;}   /* người khác vừa sửa trong lúc máy này có thay đổi chưa gửi: không ghi đè im lặng */
     if(ru>lu){t.name=r.name;t.color=r.color||t.color;t.data=JSON.parse(JSON.stringify(r.data));t.updatedAt=ru;delete t.sample;delete t.ph;
-      normTrip(t);lastJson.set(id,snapJson(t));setRev(id,rrev.get(id));changed=true;}
+      normTrip(t);lastJson.set(id,snapJson(t));setRev(id,rrev.get(id));changed=true;if(!firstSnap)adoptedNames.push(t.name);}
     else if(ru<lu&&!t.sample&&!t.ph)schedulePush(t,0);
     else if(ru===lu)setRev(id,rrev.get(id));
     syncedSet.add(id);
@@ -2384,6 +2392,7 @@ function handleSnap(snap){
   if(!R.trips.some(t=>t.id===R.current))R.current=R.trips[0].id;
   saveLocal();
   if(changed){S=trip().data;if(editingTrip)setTripEdit(false);render();}
+  if(adoptedNames.length)toast('Vừa nhận cập nhật từ nhóm: '+adoptedNames.map(n=>'“'+n+'”').join(', '));
   firstSnap=false;
   if(syncIdle())setSync('ok');}
 /* ===== Supabase: đăng nhập, nhóm, vai trò, sao lưu, link chia sẻ ===== */
@@ -2434,7 +2443,7 @@ function handleConflict(id,e){
   const done=()=>conflictOpen.delete(id);
   ask(`Chuyến "${t.name}" vừa được người khác sửa trong lúc bạn đang sửa. Chọn bản muốn giữ.\n\n• "Lấy bản của nhóm": bỏ phần bạn vừa sửa trên chuyến này, dùng bản của nhóm.\n• "Giữ bản của tôi": ghi đè bản của nhóm bằng bản trên máy bạn.`,
     {title:'Có người vừa sửa chuyến này',ok:'Lấy bản của nhóm',noLabel:'Giữ bản của tôi',success:true},
-    ()=>{done();const v=r.data;
+    ()=>{done();const v=r.data;t.unsynced=false;
       if(validTrip(v)){t.name=v.name;t.color=v.color||t.color;t.data=JSON.parse(JSON.stringify(v.data));t.updatedAt=v.updatedAt||Date.now();
         lastJson.set(id,snapJson(t));setRev(id,r.rev);S=trip().data;saveLocal();render();}
       setSync('ok');},

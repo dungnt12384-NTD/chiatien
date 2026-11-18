@@ -16,6 +16,8 @@ html.gate #grpBackup,html.nogroup #grpBackup,html.pv #grpAcct,html.anon #grpBack
 html.ro.pv .tab[data-go="trip"]{display:none}
 html.pv #tripNewBtn,html.pv #tripEditBtn,html.pv #tripEditor,html.pv #tripForm,html.ro #btnSample,html.ro #btnClear,html:not(.admin) details.legacy,html:not(.admin) #sbBkUp{display:none!important}
 html.nocreate #tripDup,html.nolead #tripEditBtn,html.nolead #tripEditor,html.nocreate #tripNewBtn,html.nocreate #tripForm,html.nocreate #btnSample,html.nocreate #btnClear{display:none!important}
+.lk-hide{display:none!important}.lk-inert{pointer-events:none}
+.sec.lock #expAddRow,.sec.lock #memberBulk .row,.sec.lock .picker{display:none!important}
 .sec.lock form,.sec.lock .xbtn,.sec.lock [data-act^="edit"],.sec.lock [data-act^="del"],.sec.lock [data-act^="add"],.sec.lock .grip{display:none!important}
 .sec.lock .sec-h .grow h2::after{content:"Chỉ xem";font-size:12px;font-weight:700;margin-left:8px;padding:2px 8px;border-radius:99px;background:var(--surface2);color:var(--muted);border:1px solid var(--line);vertical-align:middle}
 html.closed .sec.lock .sec-h .grow h2::after{content:"Đã chốt sổ"}
@@ -773,6 +775,10 @@ th{background:color-mix(in srgb,var(--c) 16%,var(--surface2));color:var(--fg)}
 td,th{border-bottom:1.5px solid var(--line)}
 .tablewrap{border:1.5px solid var(--line)}
 .note{border:1.5px solid color-mix(in srgb,var(--c,var(--accent)) 45%,var(--line))}
+
+@media (min-width:1101px){.wrap{max-width:1180px}.tab{gap:5px;padding:0 4px}.tab .tl{overflow:visible;text-overflow:clip;white-space:nowrap;font-size:13.5px}.tab b{padding:0 6px}}
+.sec.lock .row:not(:has(> :not(.lk-hide))){display:none}
+.sec.lock #memberBulk:empty,.sec.lock #memberMsg:empty{display:none}
 </style>
 
 
@@ -2807,9 +2813,25 @@ function applyLocks(){
   h.toggle('nolead',sup&&(!canLead()||isClosed()));
   h.toggle('nocreate',sup&&!sbGroup.can_create);
   h.toggle('closed',sup&&isClosed());
-  LOCK_TABS.forEach(k=>{document.querySelectorAll(`section.sec[data-tab="${k}"]`).forEach(s=>s.classList.toggle('lock',!!PV_TOKEN||(sup&&!canEditTab(k))));});}
+  LOCK_TABS.forEach(k=>{document.querySelectorAll(`section.sec[data-tab="${k}"]`).forEach(s=>s.classList.toggle('lock',!!PV_TOKEN||(sup&&!canEditTab(k))));});
+  try{lockUi();lockDayRow();}catch(e){}}
 function lockMsg(){if(isClosed())return 'Chuyến đã chốt sổ, không sửa được. Leader có thể mở lại sổ.';
   const r=roleOf();return r.role==='helper'?'Bạn chưa được leader cấp quyền nhập ở mục này.':'Bạn chỉ có quyền xem chuyến này. Thấy sai thì bấm "Báo sai".';}
+/* tab chỉ xem: ẩn nút sửa, khoá ô nhập, để người xem không bấm nhầm vào thứ không dùng được */
+function lockUi(){
+  document.querySelectorAll('section.sec[data-tab]').forEach(sec=>{
+    const lk=sec.classList.contains('lock');
+    sec.querySelectorAll('button,input,select,textarea').forEach(e=>{
+      const act=e.dataset.act,ok=!lk||(act&&VIEW_ACTS.has(act))||e.hasAttribute('data-rp')||VIEW_IDS.has(e.id)||e.type==='hidden';
+      if(ok){if(e.classList.contains('lk-hide')||e.classList.contains('lk-inert'))e.classList.remove('lk-hide','lk-inert');if(e.dataset.lkd){e.disabled=false;delete e.dataset.lkd;}return;}
+      if(e.tagName==='BUTTON'){if(e.classList.contains('chip')||e.classList.contains('mchip'))e.classList.add('lk-inert');else e.classList.add('lk-hide');}
+      else if(!e.disabled){e.disabled=true;e.dataset.lkd='1';}
+    });
+  });
+}
+function lockDayRow(){const r=document.getElementById('dayDateRow'),d=document.getElementById('dayDate'),p=document.getElementById('dayPlace');if(!r||!d||!p)return;r.classList.toggle('lk-hide',!!r.closest('section.sec.lock')&&!d.value&&!p.value);}
+let lockRaf=0;
+new MutationObserver(()=>{if(lockRaf)return;lockRaf=requestAnimationFrame(()=>{lockRaf=0;try{lockUi();lockDayRow();}catch(e){}});}).observe(document.querySelector('.wrap'),{childList:true,subtree:true});
 /* chặn sửa ở tab không có quyền (lớp bảo vệ trên giao diện; máy chủ vẫn kiểm tra lại) */
 const VIEW_ACTS=new Set(['sumMode','repDay','togExp','repItemSort','amtMode','advMode','togSplit','togRoom','togPS','togDay','togBal','togAdv','roomsOpenAll','roomsCloseAll','repTab','repDaysNone','repDaysAll','pickTrip','goTab','expandAdv','expOpenAll','expCloseAll','collapseAdv','pickDay','paidTog']);
 const VIEW_IDS=new Set(['memberSearch','expSearch','rmDay','advSearch','roomSearch','repSearch']);

@@ -33,7 +33,7 @@ Mã nhóm (NH-XXXXXXXX) là tuỳ chọn, mặc định tắt, do quản trị v
 | Chưa đăng nhập | Trang đăng nhập |
 | Đã đăng nhập, chưa có nhóm | Quản trị (xin quyền tổ chức, nhập mã) |
 | Nhóm chưa có chuyến | Quản trị, Chuyến đi |
-| Còn lại | Đủ 8 tab. Tab nào không có quyền nhập thì hiện nhãn **Chỉ xem**, ẩn nút thêm/sửa/xoá |
+| Còn lại | Đủ 8 tab. Tab nào không có quyền nhập thì hiện nhãn **Chỉ xem**: ẩn mọi nút thêm/sửa/xoá, khoá ô nhập; vẫn dùng được tìm kiếm, đổi ngày, mở/đóng phòng và ngày, Báo sai |
 
 Tab đầu tiên tên là **Của tôi** với người vào bằng mã, **Quản trị** với người đăng nhập.
 

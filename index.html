@@ -29,8 +29,8 @@ html.ro .foot,.foot{display:none!important}
 </style>
 <style>details.legacy{border:1px dashed var(--line);border-radius:12px;padding:8px 12px}details.legacy>summary{cursor:pointer;font-size:13px;color:var(--muted)}details.legacy[open]{display:flex;flex-direction:column;gap:12px}:root{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>Chia Tiền Nhóm</title>
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eef6fd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#070d26" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1063,6 +1063,107 @@ html.phone .fund .l2{font-size:15px!important;white-space:normal!important}
 
 /* ---- bỏ hẳn chọn màu chuyến ---- */
 #tripColors,#newTripColors,.swatches{display:none!important}
+</style>
+<style id="brand">
+/* ===== v23 NHẬN DIỆN PETROVIETNAM / BIENDONG POC (đặt SAU khối ios, chỉ đổi màu/nền/họa tiết, giữ bố cục iOS) =====
+   Màu lấy từ logo và backdrop: xanh tím than #2e3a87 (chữ PETROVIETNAM), xanh lá #00a04b (lá, BIENDONG POC),
+   chữ tiêu đề chuyển sắc navy #1f1d7a -> xanh dương #0a6ad6, nền trời sáng có vệt sáng chéo, đường lượn xanh lá -> navy ở góc phải dưới.
+   Không gắn logo công ty vào trang (web công khai, việc cá nhân). */
+:root{--pv-navy:#2e3a87;--pv-navy-d:#1f1d7a;--pv-blue:#0a6ad6;--pv-sky:#1d9bf0;--pv-green:#00a04b;
+  --pv-grad:linear-gradient(135deg,#00a04b 0%,#0a8fd6 55%,#2e3a87 100%);
+  --pv-bar:linear-gradient(90deg,#00a04b,#0a6ad6 55%,#2e3a87);
+  --pv-text:linear-gradient(90deg,#1f1d7a 0%,#2e3a87 35%,#0a6ad6 100%);
+  --brand:#0a6ad6;--brand-d:#0754b0;--brand-bg:rgba(10,106,214,.1);
+  --bg:#eef5fc;--surface:#fff;--surface2:#f1f6fc;--fill:rgba(46,58,135,.07);--fill2:rgba(46,58,135,.13);
+  --line:rgba(46,58,135,.13);--fg:#141a46;--muted:#5a6488;
+  --pos:#00873f;--neg:#d0312d;--pos-bg:rgba(0,160,75,.1);--neg-bg:rgba(208,49,45,.1);
+  --glass:rgba(255,255,255,.74);--glass-br:rgba(255,255,255,.95);
+  --glass-sh:0 12px 32px rgba(31,29,122,.14),0 1px 3px rgba(31,29,122,.08),inset 0 1px 0 #fff;
+  --sel:#fff;--sel-sh:0 2px 10px rgba(31,29,122,.16);
+  --card:rgba(255,255,255,.86);--card-br:rgba(255,255,255,.95);--card-sh:0 1px 2px rgba(31,29,122,.05),0 10px 30px rgba(31,29,122,.09);
+  --kpi:linear-gradient(180deg,#f8fbff,#eef5fd);--head-font:'Be Vietnam Pro',var(--font);--h2:#2e3a87}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--brand:#4da3ff;--brand-d:#7dbbff;--brand-bg:rgba(77,163,255,.18);
+  --bg:#070d26;--surface:#141c42;--surface2:#1b2552;--fill:rgba(140,160,255,.12);--fill2:rgba(140,160,255,.2);
+  --line:rgba(140,160,255,.18);--fg:#eef2ff;--muted:#a3acd6;--pos:#2fd27a;--neg:#ff6b66;--pos-bg:rgba(47,210,122,.14);--neg-bg:rgba(255,107,102,.14);
+  --glass:rgba(20,28,66,.72);--glass-br:rgba(255,255,255,.1);--glass-sh:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);
+  --sel:rgba(255,255,255,.12);--sel-sh:none;--card:rgba(20,28,66,.84);--card-br:rgba(255,255,255,.06);--card-sh:0 10px 30px rgba(0,0,0,.35);
+  --kpi:linear-gradient(180deg,#1d2858,#18214b);--pv-text:linear-gradient(90deg,#c9d4ff 0%,#7dbbff 100%);--h2:#dfe5ff}}
+:root[data-theme="dark"]{--brand:#4da3ff;--brand-d:#7dbbff;--brand-bg:rgba(77,163,255,.18);
+  --bg:#070d26;--surface:#141c42;--surface2:#1b2552;--fill:rgba(140,160,255,.12);--fill2:rgba(140,160,255,.2);
+  --line:rgba(140,160,255,.18);--fg:#eef2ff;--muted:#a3acd6;--pos:#2fd27a;--neg:#ff6b66;--pos-bg:rgba(47,210,122,.14);--neg-bg:rgba(255,107,102,.14);
+  --glass:rgba(20,28,66,.72);--glass-br:rgba(255,255,255,.1);--glass-sh:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);
+  --sel:rgba(255,255,255,.12);--sel-sh:none;--card:rgba(20,28,66,.84);--card-br:rgba(255,255,255,.06);--card-sh:0 10px 30px rgba(0,0,0,.35);
+  --kpi:linear-gradient(180deg,#1d2858,#18214b);--pv-text:linear-gradient(90deg,#c9d4ff 0%,#7dbbff 100%);--h2:#dfe5ff}
+
+/* ---- màu từng tab theo dải màu thương hiệu (xanh lá -> xanh dương -> tím than) ---- */
+.tab[data-go="group"],.sec[data-tab="group"]{--k:#2e3a87}
+.tab[data-go="trip"],.sec[data-tab="trip"]{--k:#00a04b}
+.tab[data-go="member"],.sec[data-tab="member"]{--k:#0b9e8a}
+.tab[data-go="advance"],.sec[data-tab="advance"]{--k:#1d9bf0}
+.tab[data-go="room"],.sec[data-tab="room"]{--k:#4f46e5}
+.tab[data-go="expense"],.sec[data-tab="expense"]{--k:#0a6ad6}
+.tab[data-go="result"],.sec[data-tab="result"]{--k:#3faa2b}
+.tab[data-go="report"],.sec[data-tab="report"]{--k:#6d3fc7}
+
+/* ---- nền kiểu backdrop: trời sáng + vệt sáng chéo + đường lượn góc phải dưới ---- */
+html{background:var(--bg)}
+html body{background:transparent!important;font-family:var(--font)}
+html::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:linear-gradient(118deg,transparent 0 22%,rgba(255,255,255,.6) 30%,transparent 38%),
+    linear-gradient(62deg,transparent 0 60%,rgba(255,255,255,.45) 66%,transparent 72%),
+    radial-gradient(110% 55% at 88% 0%,#d3e9fb 0%,rgba(211,233,251,0) 62%),
+    linear-gradient(180deg,#ffffff 0%,#eef6fd 45%,#dcebfa 100%)}
+html::after{content:"";position:fixed;right:0;bottom:0;width:min(78vw,640px);height:min(34vw,250px);z-index:-1;pointer-events:none;opacity:.95;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 240' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%232e3a87'/%3E%3Cstop offset='.55' stop-color='%231f6fb0'/%3E%3Cstop offset='1' stop-color='%2300a04b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M150 240C350 226 510 172 600 52V240Z' fill='url(%23g)'/%3E%3Cpath d='M70 240C310 224 490 160 600 22' fill='none' stroke='url(%23g)' stroke-width='3' opacity='.55'/%3E%3Cpath d='M205 240C395 229 528 184 600 80' fill='none' stroke='%23fff' stroke-width='2.2' opacity='.85'/%3E%3Cpath d='M255 240C430 231 548 196 600 108' fill='none' stroke='%23fff' stroke-width='1.5' opacity='.7'/%3E%3C/svg%3E") no-repeat right bottom/100% 100%}
+html.phone::after{width:92vw;height:150px;opacity:.55}
+:root[data-theme="dark"]::before{background:radial-gradient(110% 55% at 85% 0%,rgba(29,155,240,.22),transparent 62%),radial-gradient(80% 50% at 0% 100%,rgba(0,160,75,.14),transparent 60%),linear-gradient(180deg,#0b1438,#070d26)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"])::before{background:radial-gradient(110% 55% at 85% 0%,rgba(29,155,240,.22),transparent 62%),radial-gradient(80% 50% at 0% 100%,rgba(0,160,75,.14),transparent 60%),linear-gradient(180deg,#0b1438,#070d26)}
+  :root:not([data-theme="light"])::after{opacity:.45}}
+:root[data-theme="dark"]::after{opacity:.45}
+
+/* ---- tiêu đề chuyến: chữ hoa đậm chuyển sắc navy -> xanh như backdrop ---- */
+html .tripbar .crumb{color:var(--pv-green)!important;font-weight:700!important;font-size:13px!important;text-transform:uppercase;letter-spacing:.06em}
+html .tripbar>span{text-transform:none}
+html .tripbar>b{font-family:var(--head-font);font-weight:800;text-transform:uppercase;letter-spacing:-.005em;font-size:30px;line-height:1.12;
+  background:var(--pv-text);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;padding-bottom:2px}
+html.phone .tripbar>b{font-size:27px}
+
+/* ---- thẻ mục: kính trắng, dải màu thương hiệu 3px ở trên ---- */
+html .sec{background:var(--pv-bar) top/100% 3px no-repeat,var(--card)!important;-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);
+  border:1px solid var(--card-br)!important;box-shadow:var(--card-sh)!important}
+html .sec-h h2{font-family:var(--head-font);font-weight:800!important;color:var(--h2)!important;letter-spacing:-.015em!important}
+html .sec .sub{font-family:var(--head-font);color:var(--h2)}
+/* icon mục: khối bóng 3D như logo số 6 */
+html .sec-h .ico{background:radial-gradient(120% 70% at 28% 0%,rgba(255,255,255,.6),rgba(255,255,255,0) 60%),
+    linear-gradient(150deg,color-mix(in srgb,var(--k) 60%,#fff) 0%,var(--k) 55%,color-mix(in srgb,var(--k) 62%,#1f1d7a) 100%)!important;
+  box-shadow:inset 0 0 0 .5px rgba(255,255,255,.4),inset 0 -2px 0 rgba(0,0,0,.15),0 2px 0 color-mix(in srgb,var(--k) 55%,#1f1d7a),0 6px 14px color-mix(in srgb,var(--k) 35%,transparent)!important}
+
+/* ---- nút: chính = chuyển sắc xanh lá -> xanh -> tím than như logo ---- */
+html .btn{background:var(--pv-grad)!important;box-shadow:0 4px 14px rgba(10,106,214,.28),inset 0 1px 0 rgba(255,255,255,.25)!important}
+html .btn.ghost{background:var(--fill)!important;color:var(--pv-navy)!important;box-shadow:none!important}
+:root[data-theme="dark"] .btn.ghost{color:var(--brand)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.ghost{color:var(--brand)!important}}
+html .btn.gray{background:var(--fill)!important;color:var(--fg)!important;box-shadow:none!important}
+html .btn.success{background:linear-gradient(180deg,#19b85e,#00a04b)!important}
+html .btn.del,html .btn.danger{background:var(--neg-bg)!important;color:var(--neg)!important;box-shadow:none!important}
+
+/* ---- chọn ngày, tab con: tím than; chuyến đang chọn: viền xanh ---- */
+html .day[aria-selected="true"],html .subtab[aria-selected="true"],html .subtab[aria-pressed="true"],html .subtab.kind[aria-pressed="true"],html .mdlg .subtab[aria-pressed="true"]{
+  background:var(--pv-navy)!important;color:#fff!important}
+:root[data-theme="dark"] .day[aria-selected="true"],:root[data-theme="dark"] .subtab[aria-selected="true"],:root[data-theme="dark"] .subtab[aria-pressed="true"]{background:var(--brand)!important}
+html .trip[aria-selected="true"]{background:var(--brand-bg)!important;color:var(--pv-navy)!important;box-shadow:inset 0 0 0 1.5px var(--brand)!important}
+:root[data-theme="dark"] .trip[aria-selected="true"]{color:var(--fg)!important}
+
+/* ---- số liệu, bảng ---- */
+html .kpi,html .stat,html .sum{background:var(--kpi)!important;border:1px solid var(--line)!important}
+html .kpi b,html .stat b{font-family:var(--head-font);font-weight:800;color:var(--h2)!important}
+html .t2 thead th,html .matrix thead th,html table thead th{background:var(--surface2)!important;color:var(--h2)!important}
+html .matrix tr.tot td{background:var(--brand-bg)!important;border-top:2px solid var(--brand)!important}
+
+/* ---- trang vào (gate) ---- */
+html .g-logo{background:var(--pv-grad)!important;box-shadow:0 12px 30px -10px rgba(10,106,214,.55)!important}
+html .g-hero h1{font-family:var(--head-font);font-weight:800;text-transform:uppercase;background:var(--pv-text);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+html #gate .gcard{background:var(--card)!important;border:1px solid var(--card-br)!important;box-shadow:var(--card-sh)!important}
 </style>
 
 

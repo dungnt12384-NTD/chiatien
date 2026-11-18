@@ -929,9 +929,10 @@ html .tabs{background:var(--glass)!important;-webkit-backdrop-filter:blur(24px) 
   border:.5px solid var(--glass-br)!important;border-radius:999px!important;padding:5px!important;gap:2px!important;box-shadow:var(--glass-sh)!important;top:12px}
 html .tab{background:transparent!important;border:0!important;border-radius:999px!important;color:var(--muted)!important;font-weight:600;box-shadow:none!important;transition:background .2s,color .2s}
 html .tab:hover{background:var(--fill)!important}
-html .tab svg{width:26px;height:26px;padding:0;background:none!important;box-shadow:none!important;border-radius:0;stroke:var(--k)!important;stroke-width:2;fill:none;flex:none;filter:none;transition:transform .2s}
+html .tab svg{width:26px;height:26px;padding:0;background:none!important;box-shadow:none!important;border-radius:0;stroke:none!important;fill:var(--k)!important;flex:none;filter:none;transition:transform .2s}
+html .tab svg .sf{fill:var(--k);stroke:none}
 html .tab[aria-selected="true"],html .tab[aria-selected="true"]:hover{background:var(--sel)!important;color:var(--k)!important;box-shadow:var(--sel-sh)!important}
-html .tab[aria-selected="true"] svg{transform:scale(1.08);stroke-width:2.3}
+html .tab[aria-selected="true"] svg{transform:scale(1.08)}
 html .tab b{background:var(--fill2)!important;color:var(--fg)!important;font-weight:600!important}
 html .tab[aria-selected="true"] b{background:var(--k)!important;color:#fff!important}
 /* máy tính: icon trên, nhãn ngắn dưới */
@@ -964,7 +965,9 @@ html.phone .sec-b{padding:10px 16px 16px!important}
 html .sec-h .ico{width:40px!important;height:40px!important;border-radius:11px!important;flex:none;
   background:radial-gradient(120% 70% at 30% 0%,rgba(255,255,255,.5),rgba(255,255,255,0) 62%),linear-gradient(180deg,color-mix(in srgb,var(--k) 78%,#fff),var(--k) 65%,color-mix(in srgb,var(--k) 86%,#000))!important;
   box-shadow:inset 0 0 0 .5px rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.12),0 4px 12px color-mix(in srgb,var(--k) 32%,transparent)!important}
-html .sec-h .ico svg{stroke:#fff!important;filter:drop-shadow(0 .5px .5px rgba(0,0,0,.25))}
+html .sec-h .ico{display:flex!important;align-items:center;justify-content:center}
+html .sec-h .ico svg{width:24px!important;height:24px!important;stroke:none!important;fill:#fff!important;filter:drop-shadow(0 .5px .5px rgba(0,0,0,.25))}
+html .sec-h .ico svg .sf{fill:#fff;stroke:none}
 html.phone .sec-h .ico{width:36px!important;height:36px!important;border-radius:10px!important}
 
 /* ---- thẻ con, ghi chú, quỹ ---- */
@@ -1015,6 +1018,44 @@ html .matrix tr.tot td{background:var(--brand-bg)!important;border-top:.5px soli
 html .pill,html .badge{background:var(--fill)!important;color:var(--muted)!important;border:0!important}
 html .badge.on{background:var(--brand)!important;color:#fff!important}
 html .ggroup,html .grow.on,html .gi.on,html [class*="gitem"].on{background:var(--brand-bg)!important;border-left-color:var(--brand)!important}
+
+/* ---- v22 ĐIỆN THOẠI: chữ & icon to, dễ bấm, KHÔNG ẩn nội dung ---- */
+html.phone body{font-size:17px}
+html.phone .tripbar{font-size:15px!important}
+html.phone .tripbar>b{font-size:32px}
+html.phone .tripbar>.num{font-size:15px}
+html.phone .tabs{left:8px!important;right:8px!important}
+html.phone .tab{height:66px!important;justify-content:flex-start!important;padding:6px 0 2px!important;gap:3px!important}
+html.phone .tab svg{width:28px!important;height:28px!important}
+html.phone .tab .tls{font-size:11px!important;font-weight:600;letter-spacing:-.2px!important;line-height:1.05;text-align:center;white-space:normal!important;
+  max-width:100%!important;overflow:hidden!important;text-overflow:clip!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+html.phone .tab b{top:2px!important;right:calc(50% - 25px)!important;font-size:11px!important;line-height:17px!important;min-width:17px}
+html.phone body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))!important}
+html.phone #toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+html.phone .sec-h{padding:18px 16px 4px!important}
+html.phone .sec-h .ico{width:44px!important;height:44px!important;border-radius:12px!important}
+html.phone .sec-h .ico svg{width:26px!important;height:26px!important}
+html.phone .sec-h h2{font-size:23px!important}
+html.phone .sec-h p{display:block!important;font-size:15px!important;line-height:1.4}
+html.phone .sec .sub{font-size:19px!important}
+html.phone .hint,html.phone span.hint,html.phone .hint b{font-size:15px!important;line-height:1.45}
+html.phone label,html.phone .field>label{font-size:15px!important}
+html.phone .note{font-size:16px!important;line-height:1.45}
+html.phone small{font-size:14px!important}
+html.phone .badge,html.phone .pill{font-size:13px!important}
+html.phone .kpis{grid-template-columns:1fr!important;gap:10px!important}
+html.phone .kpi{padding:14px 16px!important}
+html.phone .kpi>span{font-size:15px!important}
+html.phone .kpi b{font-size:26px!important}
+html.phone input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),html.phone select,html.phone textarea{font-size:17px!important;min-height:50px}
+html.phone .btn{min-height:52px;font-size:17px!important}
+html.phone .btn.small{min-height:44px;font-size:16px!important}
+html.phone .day,html.phone .subtab{min-height:40px;font-size:15px!important;padding:8px 14px!important}
+html.phone .trip b{font-size:17px}
+html.phone .trip small{font-size:14px!important}
+html.phone table{font-size:15px}
+html.phone .fund .l1{font-size:17px!important}
+html.phone .fund .l2{font-size:15px!important;white-space:normal!important}
 
 /* ---- bỏ hẳn chọn màu chuyến ---- */
 #tripColors,#newTripColors,.swatches{display:none!important}
@@ -1418,14 +1459,17 @@ function alignHeaders(){document.querySelectorAll('table:not(.matrix)').forEach(
 document.addEventListener('click',e=>{const f=e.target.closest&&e.target.closest('.fund');if(f&&isPhone())f.classList.toggle('open');});
 const TAB_SHORT={trip:'Chuyến',member:'Người đi',advance:'Đã đóng',expense:'Khoản chi',room:'Phòng',result:'Tổng kết',report:'Báo cáo',group:'Quản trị'};
 const TAB_DEF=[
- ['group','Quản trị','<path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6Z"/><path d="m9 12 2 2 4-4"/>'],
- ['trip','Chuyến đi','<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'],
- ['member','Người đi','<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
- ['advance','Tiền đã đóng','<path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>'],
- ['room','Tiền phòng','<path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M12 4v6M2 18h20"/>'],
- ['expense','Khoản chi','<path d="M4 2v20l3-2 2 2 3-2 3 2 2-2 3 2V2l-3 2-2-2-3 2-3-2-2 2Z"/><path d="M8 8h8M8 12h8M8 16h5"/>'],
- ['result','Tổng kết','<path d="M12 3v18M5 7h14"/><path d="M5 7l-3 8a3 3 0 0 0 6 0Z"/><path d="M19 7l-3 8a3 3 0 0 0 6 0Z"/>'],
- ['report','Báo cáo','<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/>']];
+ /* v22: icon dạng khối đặc kiểu SF Symbols (iOS): person.crop.circle, airplane, person.2, banknote, bed.double, receipt, chart.pie, doc.text */
+ ['group','Quản trị','<path class="sf" fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.3a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8Zm0 13.5a7.8 7.8 0 0 1-6.1-2.94c1-1.86 3.3-2.96 6.1-2.96s5.1 1.1 6.1 2.96A7.8 7.8 0 0 1 12 19.8Z"/>'],
+ ['trip','Chuyến đi','<path class="sf" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5Z"/>'],
+ ['member','Người đi','<path class="sf" d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 2c-2.33 0-7 1.17-7 3.5V18a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1.5C15 14.17 10.33 13 8 13Zm8 0c-.29 0-.62.02-.97.05A4.2 4.2 0 0 1 17 16.5V19h5a1 1 0 0 0 1-1v-1.5c0-2.33-4.67-3.5-7-3.5Z"/>'],
+ ['advance','Tiền đã đóng','<path class="sf" fill-rule="evenodd" d="M3.5 6h17A1.5 1.5 0 0 1 22 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 16.5v-9A1.5 1.5 0 0 1 3.5 6ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM5.5 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm13 4a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/>'],
+ ['room','Tiền phòng','<path class="sf" fill-rule="evenodd" d="M5.5 4h13A1.5 1.5 0 0 1 20 5.5V11H4V5.5A1.5 1.5 0 0 1 5.5 4ZM7 7a1 1 0 0 0-1 1v2h5V8a1 1 0 0 0-1-1H7Zm7 0a1 1 0 0 0-1 1v2h5V8a1 1 0 0 0-1-1h-3ZM3.5 12h17a1.5 1.5 0 0 1 1.5 1.5V17H2v-3.5A1.5 1.5 0 0 1 3.5 12ZM3 18h2.5v1.5a.5.5 0 0 1-.5.5H3.5a.5.5 0 0 1-.5-.5V18Zm15.5 0H21v1.5a.5.5 0 0 1-.5.5H19a.5.5 0 0 1-.5-.5V18Z"/>'],
+ ['expense','Khoản chi','<path class="sf" fill-rule="evenodd" d="M5 2.2 7 3.6 9 2.2l2 1.4 2-1.4 2 1.4 2-1.4 2 1.4v16.8l-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4V2.2ZM8.75 8a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3.5a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3.5a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-3.5Z"/>'],
+ ['result','Tổng kết','<path class="sf" d="M11 4.06A8.5 8.5 0 1 0 19.94 13H11V4.06Z"/><path class="sf" d="M13 2.05A9 9 0 0 1 21.95 11H13V2.05Z"/>'],
+ ['report','Báo cáo','<path class="sf" fill-rule="evenodd" d="M6 2h7.5L20 8.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm7 1.8V8a1 1 0 0 0 1 1h4.2L13 3.8ZM8.75 12h6.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5Zm0 3.5h6.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5Z"/>']];
+/* icon tiêu đề mục dùng chung bộ icon của tab */
+document.querySelectorAll('section.sec[data-tab]').forEach(s=>{const d=TAB_DEF.find(t=>t[0]===s.dataset.tab),i=s.querySelector('.sec-h .ico');if(d&&i)i.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+d[2]+'</svg>';});
 let authReady=!window.supabase,sbSessionRef=null;
 function visibleTabs(){
   if(PV_TOKEN)return ['result','report'];

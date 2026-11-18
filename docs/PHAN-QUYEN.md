@@ -1,66 +1,63 @@
-# Vai trò, quyền, tab và chức năng
+# Vai trò, quyền, tab và chức năng (từ bản v16)
+
+## Ý tưởng
+- **Nhóm** là một cộng đồng người quen (ví dụ: Cào Cào Dưỡng Sinh, Honda Phát Tiến). Chỉ quản trị viên tạo nhóm.
+- Trong nhóm, **người tổ chức** tạo các **chuyến đi**. Mỗi chuyến có một hoặc nhiều **leader** và các **người phụ trách**.
+- Người đi cùng chỉ cần **mã chuyến** (CH-XXXXXXXX) để xem, không cần tài khoản.
 
 ## Vai trò
-| Vai trò | Là ai | Phạm vi |
+| Vai trò | Là ai | Được làm gì |
 |---|---|---|
-| Khách | Chưa đăng nhập | Chỉ thấy tab **Quản trị** (đăng nhập) |
-| Người xem | Vào nhóm bằng mã "Người xem" | Xem Chuyến đi, Tổng kết, Báo cáo của nhóm |
-| Người nhập | Vào nhóm bằng mã "Người nhập" | Xem và nhập/sửa dữ liệu chuyến của nhóm |
-| Chủ nhóm | Người tạo nhóm | Toàn quyền một nhóm |
-| Quản trị viên | Bảng `platform_admins` | Toàn quyền mọi nhóm, tài khoản, hạn mức, nhật ký |
-| Người xem qua link | Có link `?v=...` | Chỉ đọc Tổng kết, Báo cáo của một chuyến, không cần đăng nhập |
+| Quản trị viên | Email trong bảng `admin_emails` hoặc `platform_admins` | Tạo, đổi tên, xoá nhóm; thêm/gỡ người tổ chức; duyệt yêu cầu; bật/tắt mã nhóm; xem mọi chuyến; sao lưu, khôi phục; nhật ký toàn hệ thống |
+| Người tổ chức (theo nhóm) | Quản trị viên thêm bằng email, hoặc duyệt yêu cầu gửi trong ứng dụng | Tạo chuyến trong nhóm. Chỉ thấy chuyến mình tạo hoặc tham gia |
+| Leader (theo chuyến) | Người tạo chuyến, hoặc do leader/quản trị viên thêm bằng email. Nhiều leader ngang quyền | Sửa mọi mục; thêm/gỡ leader và người phụ trách; mã chuyến, link công khai; chốt sổ / mở lại; xoá chuyến vào thùng rác. Không gỡ được leader cuối cùng |
+| Người phụ trách (theo chuyến) | Leader thêm bằng email, tick các mục được nhập (mặc định: Khoản chi) | Thêm, sửa, xoá **mọi** dòng trong các mục được tick (Người đi, Đã đóng, Phòng, Khoản chi); tạo link công khai |
+| Thành viên | Nhập mã chuyến, không cần tài khoản (phiên ẩn danh) | Xem đủ các tab của chuyến đó (chỉ đọc); xem lịch sử (email che bớt); báo sai; đánh dấu đã nộp / đã nhận; xem Phần của tôi |
+| Người xem qua link | Có link `?v=...` | Chỉ Tổng kết và Báo cáo của một chuyến |
+
+Mã nhóm (NH-XXXXXXXX) là tuỳ chọn, mặc định tắt, do quản trị viên bật. Người có mã nhóm xem được mọi chuyến trong nhóm, trừ chuyến leader đã ẩn.
+
+## Mã và link
+- Mã chuyến, mã nhóm và link công khai **hết hạn sau 3 tháng**, không tự đổi. Leader thấy nhắc trước 7 ngày; bấm **Gia hạn 3 tháng** hoặc **Đổi mã mới** (mã cũ mất tác dụng ngay).
+- Leader có thể **tạm khoá** mã. Dữ liệu chuyến được giữ mãi cho tới khi leader xoá.
+- Link `.../?c=CH-XXXXXXXX` mở ứng dụng và tự nhập mã.
+- Nhập sai quá 8 lần trong 10 phút thì bị chặn tạm thời.
+
+## Trang đăng nhập
+- Giới thiệu ứng dụng, ô **Vào chuyến đi** (nhập mã) và mục thu gọn **Tôi là người tổ chức chuyến đi** (Google hoặc mã 6 số qua email).
+- Đã đăng nhập trên máy thì bỏ qua trang này.
 
 ## Tab hiển thị
-| Tab | Khách | Người xem | Người nhập | Chủ nhóm | Quản trị viên |
-|---|---|---|---|---|---|
-| Quản trị | ✔ (đăng nhập) | ✔ | ✔ | ✔ | ✔ |
-| Chuyến đi | | ✔ (xem) | ✔ | ✔ | ✔ |
-| Người đi (thành viên chuyến) | | | ✔ | ✔ | ✔ |
-| Đã đóng | | | ✔ | ✔ | ✔ |
-| Phòng | | | ✔ | ✔ | ✔ |
-| Khoản chi | | | ✔ | ✔ | ✔ |
-| Tổng kết | | ✔ | ✔ | ✔ | ✔ |
-| Báo cáo | | ✔ | ✔ | ✔ | ✔ |
-Nhóm chưa có chuyến nào: chỉ hiện Quản trị và Chuyến đi (để tạo chuyến đầu tiên).
+| Ai | Tab |
+|---|---|
+| Chưa đăng nhập | Trang đăng nhập |
+| Đã đăng nhập, chưa có nhóm | Quản trị (xin quyền tổ chức, nhập mã) |
+| Nhóm chưa có chuyến | Quản trị, Chuyến đi |
+| Còn lại | Đủ 8 tab. Tab nào không có quyền nhập thì hiện nhãn **Chỉ xem**, ẩn nút thêm/sửa/xoá |
 
-## Chức năng
-| Chức năng | Người xem | Người nhập | Chủ nhóm | Quản trị viên |
-|---|---|---|---|---|
-| Đăng nhập, đăng xuất | ✔ | ✔ | ✔ | ✔ |
-| Xem danh sách nhóm của mình, đổi nhóm đang dùng | ✔ | ✔ | ✔ | ✔ |
-| Vào nhóm bằng mã mời | ✔ | ✔ | ✔ | ✔ |
-| Tạo nhóm mới | theo quyền được cấp + hạn mức | theo quyền được cấp + hạn mức | theo quyền được cấp + hạn mức | luôn được, không giới hạn |
-| Rời nhóm | ✔ | ✔ | ✘ (xoá nhóm) | ✔ |
-| Xem Tổng kết, Báo cáo, xuất Excel/PDF | ✔ | ✔ | ✔ | ✔ |
-| Tạo / sửa / xoá chuyến | ✘ | ✔ | ✔ | ✔ |
-| Thành viên chuyến, tiền đã đóng, phòng, khoản chi | ✘ | ✔ | ✔ | ✔ |
-| Tạo / thu hồi link xem công khai | ✘ | ✔ | ✔ | ✔ |
-| Tải bản sao lưu | ✔ | ✔ | ✔ | ✔ |
-| Khôi phục từ file sao lưu | ✘ | ✔ | ✔ | ✔ |
-| Quản lý thành viên nhóm: đổi quyền, xoá, xoá và chặn | ✘ | ✘ | ✔ | ✔ |
-| Xem / đổi mã mời, tạm khoá việc vào bằng mã | ✘ | ✘ | ✔ | ✔ |
-| Danh sách chặn, chặn trước theo email | ✘ | ✘ | ✔ | ✔ |
-| Đổi tên, xoá nhóm | ✘ | ✘ | ✔ | ✔ |
-| Lịch sử (nhật ký) của nhóm | ✘ | ✘ | ✔ | ✔ |
-| Quản trị tổng: mọi nhóm, mọi tài khoản | ✘ | ✘ | ✘ | ✔ |
-| Đặt quyền tạo nhóm và hạn mức từng người, mặc định | ✘ | ✘ | ✘ | ✔ |
-| Cấp / thu quyền quản trị viên | ✘ | ✘ | ✘ | ✔ |
-| Nhật ký toàn hệ thống | ✘ | ✘ | ✘ | ✔ |
-| Mở xem/sửa dữ liệu nhóm không tham gia | ✘ | ✘ | ✘ | ✔ |
+Tab đầu tiên tên là **Của tôi** với người vào bằng mã, **Quản trị** với người đăng nhập.
 
-## Luồng 3 cấp (bản v15)
+## Chức năng theo chuyến (khối "Chuyến này" ở tab Chuyến đi)
+| Nút | Ai thấy |
+|---|---|
+| Phần của tôi, Lịch sử thay đổi, Báo sai | Mọi người |
+| Mã chuyến, Link xem công khai, Leader và phụ trách | Leader, người phụ trách (người phụ trách chỉ xem mã, không đổi được) |
+| Chốt sổ / Mở lại sổ, Thùng rác chuyến | Leader |
 
-Đăng nhập → **Quản trị** (tài khoản, nhóm của tôi, quản trị tổng) → chọn nhóm → tab **Chuyến** → chọn chuyến → 6 tab làm việc (Người đi, Đã đóng, Phòng, Khoản chi, Tổng kết, Báo cáo).
+- **Chốt sổ**: khoá sửa với mọi người cho tới khi leader mở lại. Việc chốt và mở lại được ghi vào lịch sử.
+- **Thùng rác khoản chi**: khoản chi bị xoá được giữ 30 ngày trong chuyến, khôi phục ở cuối tab Khoản chi.
+- **Báo sai**: nút cạnh từng khoản chi. Leader và người phụ trách thấy danh sách, trả lời và đánh dấu đã xử lý; người báo chỉ thấy báo cáo của mình.
+- **Đã nộp / Đã nhận**: ở cột Chốt sổ (Tổng kết) và trong Phần của tôi. Nếu số tiền chốt sổ thay đổi sau khi đánh dấu, dấu cũ hiện màu cam để kiểm tra lại.
+- **Lịch sử**: ghi ai thêm, sửa, xoá khoản chi, tiền phòng, tiền đóng trước, người đi, người phụ trách; tạo, đổi tên, xoá, khôi phục, chốt sổ chuyến. Thành viên thấy email đã che bớt.
 
-- Đầu trang hiện thanh **Nhóm › Chuyến**; bấm tên nhóm để quay về Quản trị. Mở lại sẽ tự vào nhóm và chuyến lần trước.
-- Tab Chuyến có khối **Nhóm** (Quản lý nhóm, Đổi nhóm) và khối **Chuyến này** (Thông tin và lịch sử, Link xem công khai, Thùng rác).
-- Gọi tên: **Thành viên nhóm** = tài khoản đăng nhập có quyền; **Người đi** = danh sách chia tiền của chuyến; **Link xem công khai** = không cần đăng nhập, chỉ đọc.
+## Sửa cùng lúc
+Hai người sửa cùng chuyến: ứng dụng tự gộp theo từng dòng. Chỉ hỏi "Lấy bản của nhóm / Giữ bản của tôi" khi cả hai cùng sửa đúng một dòng.
 
-| Thao tác | Người xem | Người nhập | Chủ nhóm | Quản trị viên |
-|---|---|---|---|---|
-| Tạo, sửa tên, đổi màu chuyến | ✘ | ✔ | ✔ | ✔ |
-| Xoá chuyến (vào Thùng rác 30 ngày) / khôi phục | ✘ | ✔ | ✔ | ✔ |
-| Xoá hẳn khỏi Thùng rác | ✘ | ✘ | ✔ | ✔ |
-| Thông tin và lịch sử chuyến, link xem công khai | ✘ | ✔ | ✔ | ✔ |
+## Máy chủ kiểm tra lại
+Mọi quyền được kiểm tra trên cơ sở dữ liệu (`supabase/007_leader_ma_chuyen.sql`): bảng chỉ truy cập qua các hàm `security definer`, `save_trip` từ chối người không có quyền sửa và chuyến đã chốt. Giao diện chỉ ẩn nút cho dễ dùng.
 
-Cơ sở dữ liệu: `supabase/006_thung_rac_chuyen.sql` (trash_trip, restore_trip, purge_trip, trip_trash, trip_info, trip_audit). "Tạo bởi" của chuyến lấy từ nhật ký; chuyến tạo trước khi có nhật ký hiện "không rõ".
+## Chuyển từ mô hình cũ (v15)
+- Chủ nhóm cũ thành người tổ chức của nhóm và leader của mọi chuyến trong nhóm.
+- Người nhập cũ thành người phụ trách (đủ 4 mục) của mọi chuyến trong nhóm.
+- Người xem cũ: vào bằng mã chuyến.
+- Mã mời nhóm cũ (người nhập / người xem) không còn dùng.

@@ -6,7 +6,7 @@
 ## 1. Dự án "Chia Tiền Nhóm"
 - Ứng dụng PWA một file `index.html` (JS thuần trong một IIFE), chạy trên GitHub Pages: https://dungnt12384-ntd.github.io/chiatien/
 - Backend Supabase (project ref `sqxqltbszsbgdsgbdldo`): RLS, các hàm `security definer`, đăng nhập ẩn danh cho người vào bằng mã chuyến. Migration mới nhất: `supabase/007_leader_ma_chuyen.sql` (đã chạy trên production).
-- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v33). Điều hướng dùng network-first, `cache:'no-cache'`.
+- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v34). Điều hướng dùng network-first, `cache:'no-cache'`.
 - Chủ dự án nói tiếng Việt. Claude làm hết qua dòng lệnh: sửa, kiểm thử, push (`git push origin HEAD:main`), chạy SQL.
 - Mô hình quyền: xem `docs/PHAN-QUYEN.md` (quản trị viên, người tổ chức, leader, người phụ trách, thành viên xem bằng mã `CH-XXXXXXXX`, link công khai `?v=`).
 
@@ -47,6 +47,16 @@ Của tôi cyan `#32ade6` · Chuyến blue `#007aff` · Người đi teal `#30b0
 - **Ô nhập:** nền `--fill`, không viền, bo 12px, cao 44px, chữ 16px; focus có vòng `--brand`.
 - **Chọn ngày, tab con:** viên thuốc nền `--fill`; đang chọn nền `--brand` chữ trắng.
 - **Bảng:** tiêu đề nền thẻ, chữ `--muted` 13px; đường kẻ `--line`; hàng tổng nền `--brand-bg`.
+
+### Lớp nhận diện PetroVietnam / Biendong POC (v23, khối `<style id="brand">` đặt SAU khối `ios`)
+Giữ bố cục iOS, chỉ đổi màu, nền, họa tiết theo logo và backdrop của công ty. KHÔNG gắn logo công ty vào trang (web công khai, việc cá nhân); chỉ dùng màu và họa tiết.
+- Màu: tím than `--pv-navy #2e3a87` (chữ PETROVIETNAM), xanh lá `--pv-green #00a04b` (lá, BIENDONG POC), xanh dương `--pv-blue #0a6ad6`. Chuyển sắc nút/icon `--pv-grad` = xanh lá → xanh → tím than; chữ tiêu đề `--pv-text` = `#1f1d7a` → `#0a6ad6`.
+- Nền: lớp `html::before` cố định, trời sáng trắng → xanh nhạt có 2 vệt sáng chéo; `html::after` là đường lượn SVG xanh lá → tím than ở góc phải dưới (điện thoại mờ hơn). Tối: nền `#070d26` có quầng xanh.
+- Tiêu đề chuyến: dòng nhóm chữ hoa xanh lá nhỏ; tên chuyến chữ HOA Be Vietnam Pro 800, chuyển sắc navy → xanh (giống "NĂNG LƯỢNG QUỐC GIA").
+- Thẻ mục: kính trắng mờ (blur 12px), dải màu thương hiệu 3px ở trên, tiêu đề màu tím than Be Vietnam Pro 800. Icon mục là khối bóng 3D như logo số 6.
+- Nút chính chuyển sắc `--pv-grad`; nút phụ nền nhạt chữ tím than; ngày/tab con đang chọn nền tím than.
+- Màu từng tab (`--k`, trong dải thương hiệu): Của tôi `#2e3a87` · Chuyến `#00a04b` · Người đi `#0b9e8a` · Đã đóng `#1d9bf0` · Phòng `#4f46e5` · Khoản chi `#0a6ad6` · Tổng kết `#3faa2b` · Báo cáo `#6d3fc7`. (Bảng màu iOS ở trên bị lớp này ghi đè.)
+- `theme-color`/manifest: `#eef6fd` (sáng), `#070d26` (tối).
 
 ### Icon (v22, kiểu SF Symbols)
 Khối đặc bo tròn, tô bằng `fill` (không dùng nét): Của tôi = person.crop.circle, Chuyến = airplane, Người đi = person.2, Đã đóng = banknote, Phòng = bed.double, Khoản chi = receipt, Tổng kết = chart.pie, Báo cáo = doc.text. Đường dẫn SVG nằm trong `TAB_DEF` (class `sf`, phần khoét dùng `fill-rule="evenodd"`). Icon tiêu đề mục được gán từ `TAB_DEF` lúc tải trang theo `data-tab`, nên chỉ cần sửa một chỗ. Ở thanh tab icon tô màu `--k`; ở tiêu đề mục icon trắng trên squircle màu `--k`.

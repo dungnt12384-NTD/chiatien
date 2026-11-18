@@ -729,9 +729,50 @@ code.bigcode{font-size:17px;font-weight:800;letter-spacing:1px}
 .paid{font-size:12.5px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:99px;padding:3px 10px;cursor:pointer;white-space:nowrap}
 .paid.on{background:color-mix(in srgb,var(--pos) 15%,var(--surface));color:var(--pos);border-color:transparent}
 .paid-old{color:var(--warn);font-size:12px;margin-right:4px}
-td .paid{margin-top:4px;display:inline-block}
+.name .paid,.name .paid-old{display:block;margin-top:4px;width:max-content;max-width:100%}
 .rpbtn{font-size:12px;color:var(--muted);background:none;border:0;text-decoration:underline;cursor:pointer;padding:2px 4px}
 .privacy h4{margin:12px 0 4px;font-size:15px}.privacy ul{margin:0;padding-left:20px}.privacy li,.privacy p{font-size:14px;line-height:1.5;margin:3px 0}
+
+/* ===== v16.1: tăng tương phản, tách khối rõ ràng ===== */
+:root{--bg:#dfe5ee;--line:#b9c3d3;--surface2:#edf0f6;--shadow:0 1px 3px rgba(20,30,50,.14),0 6px 18px rgba(20,30,50,.10)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#090d13;--line:#41516a;--surface:#1a2332;--surface2:#263246;--shadow:0 1px 3px rgba(0,0,0,.5)}}
+:root[data-theme="dark"]{--bg:#090d13;--line:#41516a;--surface:#1a2332;--surface2:#263246;--shadow:0 1px 3px rgba(0,0,0,.5)}
+.sec{border:1.5px solid var(--line);border-top:5px solid var(--c);box-shadow:var(--shadow)}
+.sec-h{background:color-mix(in srgb,var(--c) 14%,var(--surface))!important;border-bottom:1.5px solid color-mix(in srgb,var(--c) 40%,var(--line))}
+.sec-h h2{color:var(--fg)}
+.sec-h .ico{background:var(--c)!important}.sec-h .ico svg{stroke:#fff!important}
+.sec-b>.sub,.sec-b .sub{color:var(--fg);font-weight:800}
+.tab[aria-selected="true"]{background:var(--c)!important;color:var(--on)!important;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.tab[aria-selected="true"] svg{stroke:var(--on)!important}
+.tab[aria-selected="true"] b{background:rgba(255,255,255,.3)!important;color:var(--on)!important}
+.tabs{border:1.5px solid var(--line)}
+.gcard,.rcard,.kpi,.mypart{border:1.5px solid var(--line)}
+.kpi{background:color-mix(in srgb,var(--c) 9%,var(--surface))}
+input[type=text],input[type=date],input[type=email],select,textarea{border:1.5px solid color-mix(in srgb,var(--fg) 30%,var(--surface))!important;background:var(--surface)!important}
+.btn.ghost{border:1.5px solid color-mix(in srgb,var(--fg) 35%,var(--surface));background:var(--surface)}
+/* ngày: mỗi ngày là một khối, các khoản chi nằm trong khối đó */
+.daytitle.tg{background:color-mix(in srgb,var(--c) 20%,var(--surface))!important;border:1.5px solid color-mix(in srgb,var(--c) 55%,var(--line))!important;border-left:6px solid var(--c)!important;border-radius:10px;padding:9px 12px!important}
+.daytitle.tg h3{color:var(--fg)}
+.items{border:1.5px solid color-mix(in srgb,var(--c) 55%,var(--line));border-left:6px solid var(--c);background:var(--surface)}
+.item{padding:12px 12px}
+.item+.item{border-top:1.5px solid var(--line)}
+.items .item:nth-child(even){background:var(--surface2)}
+.day{border:1.5px solid color-mix(in srgb,var(--fg) 30%,var(--surface));background:var(--surface)}
+.day[aria-selected="true"]{background:var(--c);border-color:var(--c);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+/* phòng */
+.room{border:1.5px solid var(--line);border-left:6px solid var(--c);background:var(--surface);box-shadow:var(--shadow)}
+.room.soloroom{border-left-color:var(--c)}
+.room.warnroom{border-color:var(--warn);border-left:6px solid var(--warn)}
+.room.noprice{border:2px solid #d97706;border-left:6px solid #d97706}
+.room.emptyroom{border:2px solid #dc2626;border-left:6px solid #dc2626}
+.rtoggle{padding:2px 0}
+.chip{border:1.5px solid color-mix(in srgb,var(--fg) 25%,var(--surface))}
+/* bảng tổng kết */
+table{border-collapse:separate;border-spacing:0}
+th{background:color-mix(in srgb,var(--c) 16%,var(--surface2));color:var(--fg)}
+td,th{border-bottom:1.5px solid var(--line)}
+.tablewrap{border:1.5px solid var(--line)}
+.note{border:1.5px solid color-mix(in srgb,var(--c,var(--accent)) 45%,var(--line))}
 </style>
 
 
@@ -1835,8 +1876,8 @@ function renderResult(c){
     const m=g.main,sum=k=>g.members.reduce((t,x)=>t+c.P[x.id][k],0),open=openBal.has(m.id),comps=g.members.slice(1);
     const note=sumMode==='all'?(!isMain(m)?`<span class="gnote">↳ đi kèm ${m.parent?nameNo(m.parent):''}</span>`:''):(comps.length?`<span class="gnote">Gồm đi kèm: ${comps.map(x=>`${nameNo(x.id)} ${signed(c.P[x.id].net)}`).join(', ')}</span>`:'');
     const no=``;
-    return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togBal" data-id="${m.id}"><td class="stt">${memNo(m.id)}</td><td><div class="who">${avatar(m.id)}<span class="name">${esc(m.name)}${no}${g.members.some(x=>x.id===S.holder)?' <small style="color:var(--c-advance)">· thủ quỹ</small>':''}${note}</span></div></td>
-    <td class="num">${fmt(sum('adv'))}</td><td class="num">${fmt(sum('paid'))}</td><td class="num">${fmt(sum('share'))}</td><td>${settlePill(m.id,gnet(g))}${g.members.some(x=>x.id===S.holder)?'':paidUi(m.id,Math.round(gnet(g)))}</td></tr>`+(open?`<tr class="det"><td colspan="6">${personDetail(g,c)}</td></tr>`:'');}).join('')
+    return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togBal" data-id="${m.id}"><td class="stt">${memNo(m.id)}</td><td><div class="who">${avatar(m.id)}<span class="name">${esc(m.name)}${no}${g.members.some(x=>x.id===S.holder)?' <small style="color:var(--c-advance)">· thủ quỹ</small>':''}${note}${g.members.some(x=>x.id===S.holder)?'':paidUi(m.id,Math.round(gnet(g)))}</span></div></td>
+    <td class="num">${fmt(sum('adv'))}</td><td class="num">${fmt(sum('paid'))}</td><td class="num">${fmt(sum('share'))}</td><td>${settlePill(m.id,gnet(g))}</td></tr>`+(open?`<tr class="det"><td colspan="6">${personDetail(g,c)}</td></tr>`:'');}).join('')
     :'<tr><td colspan="6" style="text-align:center;color:var(--muted)">Chưa có thành viên.</td></tr>';
   try{renderMyPart(c);}catch(e){}
 }
@@ -2049,7 +2090,7 @@ function resetExpForm(){amtMode='total';editing=null;expOpen=false;formExcl=new 
   $('#expSubmit').textContent='Thêm khoản chi';$('#expCancel').textContent='Đóng';$('#expErr').hidden=true;}
 $('#expDay').addEventListener('change',()=>{formExcl=new Set();renderSplit();});
 $('#expAmount').addEventListener('input',renderSplit);
-$('#rmDay').addEventListener('change',()=>{const prev=rmPrevDay,nv=$('#rmDay').value;if(prev&&prev!==nv&&day(prev)&&formRooms.length)commitRoomsCore(prev,formRooms,null);loadRoomDay(nv,true);});
+$('#rmDay').addEventListener('change',()=>{const prev=rmPrevDay,nv=$('#rmDay').value,lk=!!document.querySelector('section.sec.lock[data-tab="room"]');if(!lk&&prev&&prev!==nv&&day(prev)&&formRooms.length)commitRoomsCore(prev,formRooms,null);loadRoomDay(nv,!lk);});
 $('#rmPayer').addEventListener('change',()=>{const ex=roomExpOnDay($('#rmDay').value),nv=$('#rmPayer').value;
   if(!ex||ex.payer===nv)return;
   ask(`Đổi người trả tiền phòng ${dayName(ex.dayId)} từ "${nameOf(ex.payer)}" thành "${nameOf(nv)}"? Kết quả sẽ tính lại.`,{ok:'Đổi người trả'},()=>commitRooms(),()=>{$('#rmPayer').value=ex.payer;});});
@@ -2771,7 +2812,7 @@ function lockMsg(){if(isClosed())return 'Chuyến đã chốt sổ, không sửa
   const r=roleOf();return r.role==='helper'?'Bạn chưa được leader cấp quyền nhập ở mục này.':'Bạn chỉ có quyền xem chuyến này. Thấy sai thì bấm "Báo sai".';}
 /* chặn sửa ở tab không có quyền (lớp bảo vệ trên giao diện; máy chủ vẫn kiểm tra lại) */
 const VIEW_ACTS=new Set(['sumMode','repDay','togExp','repItemSort','amtMode','advMode','togSplit','togRoom','togPS','togDay','togBal','togAdv','roomsOpenAll','roomsCloseAll','repTab','repDaysNone','repDaysAll','pickTrip','goTab','expandAdv','expOpenAll','expCloseAll','collapseAdv','pickDay','paidTog']);
-const VIEW_IDS=new Set(['memberSearch','expSearch','rmDay','advSearch']);
+const VIEW_IDS=new Set(['memberSearch','expSearch','rmDay','advSearch','roomSearch','repSearch']);
 function lockedTarget(t){const sec=t&&t.closest&&t.closest('section.sec.lock');if(!sec)return false;
   const b=t.closest('[data-act],button,input,select,textarea,label,[data-grip]');if(!b)return false;
   if(b.matches('[data-act]')&&VIEW_ACTS.has(b.dataset.act))return false;
@@ -2795,7 +2836,8 @@ function guardEdit(t,oldJ,newJ){
   if(ex(o.data,true)!==ex(n.data,true))need.add('room');
   if(ex(o.data,false)!==ex(n.data,false)||ch('trashExp'))need.add('expense');
   if(ch('days')&&!['member','expense','room'].some(k=>canEditTab(k,id)))need.add('days');
-  Object.keys(Object.assign({},o.data,n.data)).forEach(k=>{if(!['members','advances','holder','expenses','trashExp','days'].includes(k)&&ch(k))need.add('other');});
+  Object.keys(Object.assign({},o.data,n.data)).forEach(k=>{if(!['members','advances','holder','expenses','trashExp','days','activeDay'].includes(k)&&ch(k))need.add('other');});
+  if(!need.size){if(!canEditAny(id)||isClosed(id)){lastJson.set(id,newJ);return true;}return false;}   // chỉ đổi ngày đang xem: người chỉ xem vẫn đổi được trên máy mình, không gửi lên
   const ok=[...need].every(k=>k==='lead'?canLead(id)&&!isClosed(id):k==='days'?false:k==='other'?canEditAny(id)&&!isClosed(id):canEditTab(k,id));
   if(ok)return false;
   if(Date.now()-lastUser>2000){lastJson.set(id,newJ);return true;}   // tự chuẩn hoá khi hiển thị, không phải người dùng sửa: không gửi lên

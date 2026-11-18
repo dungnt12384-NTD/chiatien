@@ -2287,7 +2287,7 @@ document.addEventListener('click',ev=>{
     const sibs=isMain(m)?memberGroups().map(g=>g.main):S.members.filter(x=>x.parent===m.parent&&!isMain(x));
     const k=sibs.findIndex(x=>x.id===id),n=k+(act==='mvUp'?-1:1);if(k<0||n<0||n>=sibs.length)return;
     moveMember(id,sibs[n].id,act==='mvUp'?'before':'after');render();return;}
-  if(act==='soloPick'){openRooms.add(id);editRooms.add(id);pickRoom=id;renderRooms();const c=document.querySelector('[data-card="'+id+'"]');if(c)c.scrollIntoView({block:'center',behavior:'smooth'});return;}
+  if(act==='soloPick'){openRooms.add(id);if(document.querySelector('section.sec.lock[data-tab="room"]')){renderRooms();const c0=document.querySelector('[data-card="'+id+'"]');if(c0)c0.scrollIntoView({block:'center',behavior:'smooth'});return;}editRooms.add(id);pickRoom=id;renderRooms();const c=document.querySelector('[data-card="'+id+'"]');if(c)c.scrollIntoView({block:'center',behavior:'smooth'});return;}
   if(act==='roomsOpenAll'){formRooms.forEach(r=>openRooms.add(r.id));renderRooms();return;}
   if(act==='roomsCloseAll'){openRooms.clear();pickRoom=null;renderRooms();return;}
   if(act==='togRoom'){editRooms.delete(id);openRooms.has(id)?openRooms.delete(id):openRooms.add(id);renderRooms();return;}
@@ -2822,7 +2822,7 @@ function lockUi(){
   document.querySelectorAll('section.sec[data-tab]').forEach(sec=>{
     const lk=sec.classList.contains('lock');
     sec.querySelectorAll('button,input,select,textarea').forEach(e=>{
-      const act=e.dataset.act,ok=!lk||(act&&VIEW_ACTS.has(act))||e.hasAttribute('data-rp')||VIEW_IDS.has(e.id)||e.type==='hidden';
+      const act=e.dataset.act,ok=!lk||(act&&VIEW_ACTS.has(act))||e.hasAttribute('data-rp')||VIEW_IDS.has(e.id)||e.classList.contains('sx')||e.type==='hidden';
       if(ok){if(e.classList.contains('lk-hide')||e.classList.contains('lk-inert'))e.classList.remove('lk-hide','lk-inert');if(e.dataset.lkd){e.disabled=false;delete e.dataset.lkd;}return;}
       if(e.tagName==='BUTTON'){if(e.classList.contains('chip')||e.classList.contains('mchip'))e.classList.add('lk-inert');else e.classList.add('lk-hide');}
       else if(!e.disabled){e.disabled=true;e.dataset.lkd='1';}
@@ -2833,12 +2833,12 @@ function lockDayRow(){const r=document.getElementById('dayDateRow'),d=document.g
 let lockRaf=0;
 new MutationObserver(()=>{if(lockRaf)return;lockRaf=requestAnimationFrame(()=>{lockRaf=0;try{lockUi();lockDayRow();}catch(e){}});}).observe(document.querySelector('.wrap'),{childList:true,subtree:true});
 /* chặn sửa ở tab không có quyền (lớp bảo vệ trên giao diện; máy chủ vẫn kiểm tra lại) */
-const VIEW_ACTS=new Set(['sumMode','repDay','togExp','repItemSort','amtMode','advMode','togSplit','togRoom','togPS','togDay','togBal','togAdv','roomsOpenAll','roomsCloseAll','repTab','repDaysNone','repDaysAll','pickTrip','goTab','expandAdv','expOpenAll','expCloseAll','collapseAdv','pickDay','paidTog']);
+const VIEW_ACTS=new Set(['sumMode','repDay','togExp','repItemSort','amtMode','advMode','togSplit','togRoom','togPS','togDay','togBal','togAdv','roomsOpenAll','roomsCloseAll','repTab','repDaysNone','repDaysAll','pickTrip','goTab','expandAdv','expOpenAll','expCloseAll','collapseAdv','pickDay','paidTog','soloPick']);
 const VIEW_IDS=new Set(['memberSearch','expSearch','rmDay','advSearch','roomSearch','repSearch']);
 function lockedTarget(t){const sec=t&&t.closest&&t.closest('section.sec.lock');if(!sec)return false;
   const b=t.closest('[data-act],button,input,select,textarea,label,[data-grip]');if(!b)return false;
   if(b.matches('[data-act]')&&VIEW_ACTS.has(b.dataset.act))return false;
-  if(b.closest('.view,[data-rp]')||VIEW_IDS.has(b.id))return false;
+  if(b.closest('.view,[data-rp]')||VIEW_IDS.has(b.id)||b.classList.contains('sx'))return false;
   if(b.tagName==='LABEL'){const f=b.htmlFor&&document.getElementById(b.htmlFor);if(f&&VIEW_IDS.has(f.id))return false;}
   return true;}
 ['click','pointerdown'].forEach(tp=>document.addEventListener(tp,ev=>{if(!lockedTarget(ev.target))return;ev.preventDefault();ev.stopPropagation();if(tp==='click')toast(lockMsg());},true));

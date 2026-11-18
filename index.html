@@ -3223,7 +3223,7 @@ async function initSync(){
 /* ===== Phân quyền theo chuyến, trang đăng nhập, Quản trị / Của tôi ===== */
 let sbAdmin=false,myReq=null,myCodes=[],codePending=false,gStep='login',gEmail='',gBusy=false,gNote='';
 let dlgKind='',dlgBusy=false,dlgNote='',tInfo=null,tAudit=[],tAuditMore=false,tTrash=[],tPeople=[],codeInfo=null,shareInfo=null,rpRows=[],rpItem=null;
-let admReady=false,admLoaded=false,admTab='groups',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false;
+let admReady=false,admLoaded=false,admTab='groups',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false,admAcc=null,admAccErr='',admAccQ='';
 const paidMap=new Map();let paidFor='',rpCount=new Map(),rpFor='',codeCache=new Map();
 function isAnon(){return !!(sbSession&&sbSession.user&&(sbSession.user.is_anonymous||!sbSession.user.email));}
 const ROLE_NAME={admin:'Quản trị viên',leader:'Leader',helper:'Người phụ trách',viewer:'Thành viên (chỉ xem)'};
@@ -3415,12 +3415,23 @@ async function afterAuth(force){
   if(force||!sbGroup||sbGroup.id!==g.id)connectGroup(g);else{applyRole();}
   if(sbAdmin&&!force)showTab('group',true);else goWork();}
 function onSignedOut(){
-  disconnectGroup();sbAdmin=false;admLoaded=false;myReq=null;myCodes=[];gStep='login';gNote='';gBusy=false;admGroups=[];admReqs=[];admAudit=[];admOpen=null;admDet={};admReady=false;
+  disconnectGroup();sbAdmin=false;admLoaded=false;myReq=null;myCodes=[];gStep='login';gNote='';gBusy=false;admGroups=[];admReqs=[];admAudit=[];admOpen=null;admDet={};admReady=false;admAcc=null;admAccErr='';admAccQ='';
   sbSession=null;sbGroup=null;sbGroups=[];lsDel(LS_GROUP);dropSyncedLocal();closeDlg();applyRole();render();
   setSync('off','Chưa đăng nhập');paintAccount();}
+/* Đăng xuất chắc chắn: trên Safari/Edge iPad thư viện có thể treo (khoá phiên) hoặc lỗi mạng khiến signOut không xong.
+   Thử đăng xuất toàn bộ 4 giây, rồi đăng xuất trên máy 2 giây; nếu vẫn còn phiên thì tự xoá khoá phiên và tải lại trang. */
+const raceT=(p,ms)=>Promise.race([Promise.resolve(p).catch(()=>null),new Promise(r=>setTimeout(()=>r('timeout'),ms))]);
+async function doSignOut(){
+  if(!sb)return;toast(isAnon()?'Đang thoát…':'Đang đăng xuất…');
+  let r=await raceT(sb.auth.signOut(),4000);
+  if(!sbSession)return;
+  if(r==='timeout'||(r&&r.error))r=await raceT(sb.auth.signOut({scope:'local'}),2000);
+  if(!sbSession)return;
+  try{Object.keys(localStorage).filter(k=>/^sb-.*-auth-token/.test(k)).forEach(k=>localStorage.removeItem(k));}catch(e){}
+  onSignedOut();setTimeout(()=>location.reload(),300);}
 function signOutAsk(){
-  if(isAnon())ask('Thoát sẽ xoá các mã đã nhập trên máy này. Muốn xem lại thì nhập mã lần nữa.',{title:'Thoát?',ok:'Thoát',noLabel:'Ở lại',danger:true},()=>{if(sb)sb.auth.signOut();});
-  else ask('Đăng xuất sẽ xoá dữ liệu của nhóm khỏi máy này (dữ liệu vẫn còn trên hệ thống). Chuyến chưa gửi lên vẫn được giữ lại trên máy.',{title:'Đăng xuất?',ok:'Đăng xuất',noLabel:'Ở lại',danger:true},()=>{if(sb)sb.auth.signOut();});}
+  if(isAnon())ask('Thoát sẽ xoá các mã đã nhập trên máy này. Muốn xem lại thì nhập mã lần nữa.',{title:'Thoát?',ok:'Thoát',noLabel:'Ở lại',danger:true},doSignOut);
+  else ask('Đăng xuất sẽ xoá dữ liệu của nhóm khỏi máy này (dữ liệu vẫn còn trên hệ thống). Chuyến chưa gửi lên vẫn được giữ lại trên máy.',{title:'Đăng xuất?',ok:'Đăng xuất',noLabel:'Ở lại',danger:true},doSignOut);}
 
 /* ---------- tab Quản trị / Của tôi ---------- */
 function paintAccount(){
@@ -3462,12 +3473,12 @@ function renderGroupTab(){
   if(!isAnon()&&!sbAdmin&&!sbGroups.some(g=>g.can_create))h+=requestCard();
   if(sbAdmin){h+=adminHtml();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
-  if(keep&&val!=null){const n=document.getElementById(keep);if(n&&(n.tagName==='INPUT'||n.tagName==='TEXTAREA')){n.value=val;n.focus();}}}
+  if(keep&&val!=null){const n=document.getElementById(keep);if(n&&(n.tagName==='INPUT'||n.tagName==='TEXTAREA')){n.value=val;n.focus();try{n.setSelectionRange(val.length,val.length);}catch(e){}}}}
 
 /* ---------- quản trị hệ thống (chỉ quản trị viên) ---------- */
 function adminHtml(){
   const dis=admBusy?' disabled':'';
-  const tabs=[['groups','Nhóm'],['reqs','Yêu cầu'+(admReqs.length?` (${admReqs.length})`:'')],['audit','Nhật ký']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
+  const tabs=[['groups','Nhóm'],['accounts','Tài khoản'],['reqs','Yêu cầu'+(admReqs.length?` (${admReqs.length})`:'')],['audit','Nhật ký']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
   let body='';
   if(admTab==='groups'){
     body=`<div class="rcard"><div class="sub">Tạo nhóm mới</div><div class="row"><div class="field"><input type="text" id="qNewG" maxlength="60" placeholder="Ví dụ: Cào Cào Dưỡng Sinh" aria-label="Tên nhóm mới"></div><button type="button" class="btn" data-q="gcreate"${dis}>Tạo nhóm</button></div></div>`+
@@ -3476,12 +3487,33 @@ function adminHtml(){
           <div class="hint" style="min-height:0">Tạo ${fd(g.created_at)}${g.creator_email?' bởi '+esc(g.creator_email):''} · ${g.trips} chuyến${g.last_activity?' · hoạt động '+fdt(g.last_activity):''}</div></div>
           <button type="button" class="btn ghost small" data-q="gopen" data-id="${esc(g.id)}" aria-expanded="${op}">${op?'Thu gọn':'Quản lý'}</button></div>`+
           (op?groupDetailHtml(g,d,dis):'')+`</div>`;}).join(''):'<div class="hint">Chưa có nhóm nào.</div>');}
+  else if(admTab==='accounts')body=accountsHtml(dis);
   else if(admTab==='reqs'){
     body=admReqs.length?admReqs.map(r=>`<div class="rcard"><div style="overflow-wrap:anywhere"><b>${esc(r.email)}</b></div><div class="hint" style="min-height:0">${fdt(r.at)}${r.note?' · '+esc(r.note):''}</div>
       <div class="row"><div class="field"><select id="qRg-${esc(r.email)}" aria-label="Chọn nhóm">${admGroups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('')}</select></div>
       <button type="button" class="btn small" data-q="rapprove" data-e="${esc(r.email)}"${dis}>Duyệt vào nhóm</button><button type="button" class="btn ghost small" data-q="rreject" data-e="${esc(r.email)}"${dis}>Từ chối</button></div></div>`).join(''):'<div class="hint">Không có yêu cầu nào đang chờ.</div>';}
   else body=`<div class="rcard">${auditHtml(admAudit,true)}${admAuditMore?'<button type="button" class="btn ghost" data-q="amore">Xem thêm</button>':''}</div>`;
   return `<div class="gcard admin-card"><div class="gh"><b>🛡 Quản trị hệ thống</b></div>${msgHtml(admMsg)}<div class="seg">${tabs}</div>${body}</div>`;}
+/* Quản lý tài khoản: danh sách tài khoản email, thêm / gỡ quản trị viên (cần supabase/008_quan_ly_tai_khoan.sql) */
+function accountsHtml(dis){
+  const add=`<div class="rcard"><div class="sub">Thêm quản trị viên</div><div class="hint" style="min-height:0">Người này đăng nhập bằng đúng email là có toàn quyền quản trị (kể cả khi chưa đăng nhập lần nào).</div>
+    <div class="row"><div class="field"><input type="email" id="qAdm" placeholder="email@gmail.com" autocapitalize="off" autocomplete="off" aria-label="Email quản trị viên mới"></div><button type="button" class="btn" data-q="admadd"${dis}>Thêm quản trị</button></div></div>`;
+  if(admAccErr)return add+`<div class="note" role="alert">${esc(admAccErr)}</div>`;
+  if(admAcc===null)return add+'<div class="hint">Đang tải danh sách tài khoản…</div>';
+  const q=admAccQ.trim().toLowerCase(),list=admAcc.filter(a=>!q||a.email.includes(q));
+  return add+`<div class="row"><div class="field"><input type="search" id="qAccQ" value="${esc(admAccQ)}" placeholder="Tìm theo email" autocapitalize="off" autocomplete="off" aria-label="Tìm tài khoản"></div></div>
+    <div class="hint" style="min-height:0">${admAcc.length} tài khoản · ${admAcc.filter(a=>a.is_admin).length} quản trị viên${q?` · đang lọc ${list.length}`:''}</div>`+
+    (list.length?list.map(a=>{const org=a.organizer_of||[];
+      return `<div class="rcard"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(a.email)}</b>${a.is_me?' <small>(bạn)</small>':''}
+        <div class="row" style="gap:6px;margin-top:4px">${a.is_admin?'<span class="badge on">Quản trị viên</span>':''}${org.length?`<span class="badge">Tổ chức: ${esc(org.join(', '))}</span>`:''}${a.trip_roles?`<span class="badge">Vai trò ở ${a.trip_roles} chuyến</span>`:''}${!a.is_admin&&!org.length&&!a.trip_roles?'<span class="badge">Chưa có quyền</span>':''}</div>
+        <div class="hint" style="min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}${a.created_at?' · tạo '+fd(a.created_at):''}</div></div>
+        ${a.is_admin?(a.is_me?'':`<button type="button" class="btn danger-o small" data-q="admrm" data-e="${esc(a.email)}"${dis}>Gỡ quản trị</button>`):`<button type="button" class="btn ghost small" data-q="admset" data-e="${esc(a.email)}"${dis}>Cấp quản trị</button>`}</div></div>`;}).join(''):'<div class="hint">Không có tài khoản nào khớp.</div>');}
+async function admLoadAcc(){
+  const {data,error}=await sb.rpc('admin_accounts');
+  if(error){admAcc=[];admAccErr=/admin_accounts|schema cache|does not exist|not find/i.test(error.message||'')?'Chưa bật chức năng này: cần chạy file supabase/008_quan_ly_tai_khoan.sql trong Supabase (SQL Editor).':'Không tải được danh sách: '+(ERR_VN[error.message]||error.message);}
+  else{admAcc=data||[];admAccErr='';}
+  if(curTab==='group')renderGroupTab();}
+document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qAccQ'){admAccQ=ev.target.value;renderGroupTab();}});
 function groupDetailHtml(g,d,dis){
   const orgs=d.orgs?(d.orgs.length?d.orgs.map(o=>`<div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${esc(o.email)}<div class="hint" style="min-height:0">${o.signed_in?'đã đăng nhập':'chưa đăng nhập lần nào'} · thêm ${fd(o.added_at)}</div></div><button type="button" class="btn ghost small" data-q="orgrm" data-id="${esc(g.id)}" data-e="${esc(o.email)}"${dis}>Gỡ</button></div>`).join(''):'<div class="hint" style="min-height:0">Chưa có người tổ chức.</div>'):'<div class="hint">Đang tải…</div>';
   const c=d.code;
@@ -3506,7 +3538,7 @@ async function admLoadGroup(gid){
 async function rpcDo(name,args,okMsg){admBusy=true;admMsg='';renderGroupTab();
   const {data,error}=await sb.rpc(name,args);admBusy=false;
   admMsg=error?'Chưa làm được: '+(ERR_VN[error.message]||error.message):(okMsg?'OK:'+okMsg:'');return error?null:(data===null?true:data);}
-const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một leader.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.'};
+const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một leader.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.'};
 async function qAct(a,b){
   if(!sb)return;const id=b&&b.dataset.id,e=b&&b.dataset.e;
   if(a==='sync'){if(!dbRef){toast('Chưa kết nối nhóm.');return;}R.trips.forEach(t=>{if(!t.sample&&!t.ph&&canEditAny(t.id))schedulePush(t,0);});if(sbUnsub){const g=sbGroup;connectGroup(g);}toast('Đang đồng bộ lại.');return;}
@@ -3519,7 +3551,13 @@ async function qAct(a,b){
     if(error){toast('Chưa gửi được: '+(ERR_VN[error.message]||error.message));return;}await loadMyReq();renderGroupTab();toast('Đã gửi yêu cầu.');return;}
   if(a==='cp'){copyText(b.dataset.v,b);return;}
   if(!sbAdmin)return;
-  if(a==='atab'){admTab=b.dataset.v;admMsg='';renderGroupTab();await admLoad();return;}
+  if(a==='atab'){admTab=b.dataset.v;admMsg='';renderGroupTab();if(admTab==='accounts')admLoadAcc();await admLoad();return;}
+  if(a==='admadd'||a==='admset'){const v=a==='admadd'?(($('#qAdm')||{}).value||'').trim().toLowerCase():e;
+    if(!okEmail(v)){admMsg='Email chưa đúng.';renderGroupTab();return;}
+    ask(`Cấp quyền quản trị TOÀN HỆ THỐNG cho ${v}? Người này xem, sửa, xoá được mọi nhóm và chuyến.`,{title:'Thêm quản trị viên?',ok:'Cấp quyền'},async()=>{
+      if(await rpcDo('admin_set_admin_email',{p_email:v,on_off:true},'Đã thêm quản trị viên '+v+'.'))await admLoadAcc();else renderGroupTab();});return;}
+  if(a==='admrm'){ask(`Gỡ quyền quản trị của ${e}? Quyền tổ chức nhóm và vai trò trong chuyến (nếu có) vẫn giữ.`,{title:'Gỡ quản trị viên?',ok:'Gỡ quyền',danger:true},async()=>{
+      if(await rpcDo('admin_set_admin_email',{p_email:e,on_off:false},'Đã gỡ quyền quản trị của '+e+'.'))await admLoadAcc();else renderGroupTab();});return;}
   if(a==='amore'){const {data}=await sb.rpc('admin_audit',{p_limit:50,p_before:admAudit.length?admAudit[admAudit.length-1].id:null});admAudit=admAudit.concat(data||[]);admAuditMore=(data||[]).length>=50;renderGroupTab();return;}
   if(a==='gopen'){admOpen=admOpen===id?null:id;admMsg='';renderGroupTab();if(admOpen)await admLoadGroup(id);return;}
   if(a==='gcreate'){const n=($('#qNewG').value||'').trim().replace(/\s+/g,' ');if(!n){admMsg='Nhập tên nhóm.';renderGroupTab();return;}
@@ -3555,6 +3593,7 @@ function fmtAudit(a,showGroup){
     'advance/add':`ghi <b>${n}</b> đóng trước${amt}`,'advance/edit':`sửa tiền đóng trước của <b>${n}</b>${chg}`,'advance/remove':`xoá tiền đóng trước của <b>${n}</b>${amt}`,
     'member/add':`thêm người đi <b>${n}</b>`,'member/remove':`xoá người đi <b>${n}</b>`,'member/rename':`đổi tên người đi <b>${esc(d.from||'')}</b> thành <b>${esc(d.to||'')}</b>`,
     'person/add':`thêm ${d.email?'<b>'+esc(d.email)+'</b>':'một người'} làm ${rl(d.role)}`,'person/edit':`đổi quyền ${d.email?'<b>'+esc(d.email)+'</b>':''} thành ${rl(d.role)}`,'person/remove':`gỡ ${d.email?'<b>'+esc(d.email)+'</b>':'một người'} khỏi chuyến`,
+    'admin/add':`cấp quyền quản trị viên cho <b>${n}</b>`,'admin/remove':`gỡ quyền quản trị viên của <b>${n}</b>`,
     'organizer/add':`cấp quyền tổ chức chuyến cho <b>${n}</b>`,'organizer/remove':`gỡ quyền tổ chức chuyến của <b>${n}</b>`,
     'member/join':`<b>${n}</b> vào nhóm`,'member/kick':`xoá <b>${n}</b> khỏi nhóm`,'member/leave':`<b>${n}</b> rời nhóm`};
   return `<div class="rmrow"><div style="font-size:14px;overflow-wrap:anywhere"><b>${who}</b> ${m[K]||esc(K)}${g}</div><div class="hint" style="min-height:0">${fdt(a.at)}</div></div>`;}

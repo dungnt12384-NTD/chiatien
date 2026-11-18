@@ -14,8 +14,7 @@ html.loading .wrap>*:not(#pvNote){visibility:hidden}
 html.ro .tab[data-go="member"],html.ro .tab[data-go="advance"],html.ro .tab[data-go="room"],html.ro .tab[data-go="expense"]{display:none}
 html.ro .tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
 html.ro.pv .tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
-html.pv .tab[data-go="group"],html.nosb .tab[data-go="group"]{display:none}
-html.nosb:not(.ro) .tabs{grid-template-columns:repeat(7,minmax(0,1fr))}
+html.gate #grpBackup,html.nogroup #grpBackup,html.pv #grpAcct{display:none!important}
 html.ro.pv .tab[data-go="trip"]{display:none}
 html.ro #tripNewBtn,html.ro #tripEditBtn,html.ro #tripEditor,html.ro #tripForm,html.ro #btnSample,html.ro #btnClear,html.ro details.legacy,html.ro #sbBkUp,html.ro #syncNow{display:none!important}
 html.pv .syncpill,html.pv #fundBar,html.pv .foot{display:none!important}
@@ -654,7 +653,7 @@ html.phone .field.sm,html.phone .field{flex:1 1 100%}
 html.phone .tab .tls{font-size:10px;letter-spacing:-.3px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn:not(.ghost):not(.gray):not(.del):not(.danger):not(.success){color:var(--on)}}
 :root[data-theme="dark"] .btn:not(.ghost):not(.gray):not(.del):not(.danger):not(.success){color:var(--on)}
-html.empty #tabs,html.empty #tripBar,html.empty #tripTabs,html.empty #tripEditBtn,html.empty #tripNewCancel,html.empty #fundBar,html.empty .syncpill{display:none!important}
+html.empty #tripBar,html.empty #tripTabs,html.empty #tripEditBtn,html.empty #tripNewCancel,html.empty #fundBar,html.empty .syncpill{display:none!important}
 html.empty .sec{text-align:left}
 html.empty .sec-h .grow,html.empty .sec-h h2,html.empty .sub,html.empty .field label,html.empty .hint,html.empty .note,html.empty .sec-b{text-align:left!important;align-items:stretch}
 html.empty #copyFrom,html.empty label[for="copyFrom"]{display:none}
@@ -677,6 +676,7 @@ html.phone .tab{padding-left:0;padding-right:0}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;background:var(--surface2);padding:5px;border-radius:14px;border:1px solid var(--line)}
 .seg button{height:44px;border:0;border-radius:10px;background:transparent;font-weight:600;font-size:15px;color:var(--muted);cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+html.gate #tripBar,html.nogroup #tripBar,html.gate #syncNow,html.gate #fundBar{display:none!important}
 /* hộp thoại */
 .dlg{border-radius:18px;padding:22px}
 .dlg h3{font-size:18px}.dlg p{font-size:15px}
@@ -724,36 +724,6 @@ td{font-size:15px}
   </section>
 
   <div class="fund" id="fundBar" hidden aria-live="polite"></div>
-
-  <!-- CHUYỂN DỮ LIỆU -->
-  <section class="sec tripsec" data-tab="trip">
-    <div class="sec-h">
-      <div class="ico"><svg viewBox="0 0 24 24"><path d="M7 7h11l-3-3"/><path d="M17 17H6l3 3"/><path d="M18 7v4M6 17v-4"/></svg></div>
-      <div class="grow"><h2>Tài khoản và đồng bộ</h2><p>Đăng nhập để cả nhóm xem và nhập chung dữ liệu trên nhiều thiết bị</p></div>
-    </div>
-    <div class="sec-b">
-      <div class="note info" id="syncStatus" style="--c:var(--c-trip)"></div>
-      <div id="acctBox" class="rb"></div>
-      <div class="row"><button class="btn ghost small" type="button" id="syncNow">Đồng bộ lại ngay</button></div>
-      <div class="hint" style="min-height:0">Chỉ người trong cùng nhóm mới xem được dữ liệu của nhóm. Thay đổi ở máy này tự gửi lên, máy khác nhận trong vài giây. Chưa đăng nhập thì dữ liệu chỉ lưu trên máy này.</div>
-      <div class="hint" id="syncMsg"></div>
-      <div class="sub">Sao lưu</div>
-      <div class="row"><button class="btn ghost" type="button" id="sbBkDown">⬇ Tải bản sao lưu (file)</button><button class="btn ghost" type="button" id="sbBkUp">⬆ Khôi phục từ file</button><input type="file" id="sbBkFile" accept=".json,application/json" hidden></div>
-      <div class="hint" id="sbBkInfo" style="min-height:0"></div>
-      <details class="legacy"><summary>Nhập dữ liệu từ bản cũ (hiếm dùng)</summary>
-      <div class="sub">Hoặc chuyển bằng mã: ở máy có dữ liệu</div>
-      <div class="row">
-        <button class="btn" type="button" id="expAll">Sao chép mã tất cả chuyến</button>
-        <button class="btn ghost" type="button" id="expOne">Chỉ chuyến đang chọn</button>
-      </div>
-      <textarea id="syncOut" class="codebox" rows="4" readonly hidden aria-label="Mã dữ liệu"></textarea>
-      <div class="sub">Ở máy cần nhận dữ liệu</div>
-      <textarea id="syncIn" class="codebox" rows="4" placeholder="Dán mã dữ liệu vào đây (bắt đầu bằng CTN2:)" aria-label="Dán mã dữ liệu"></textarea>
-      <div class="row"><button class="btn" type="button" id="impBtn">Nhập dữ liệu</button></div>
-      <div class="hint" style="min-height:0">Gửi mã qua Zalo, Messenger hoặc email rồi dán ở máy kia. Chuyến trùng sẽ được cập nhật theo mã, chuyến mới được thêm vào, chuyến khác không bị xoá.</div>
-      </details>
-    </div>
-  </section>
 
   <!-- THÀNH VIÊN -->
   <section class="sec member" data-tab="member">
@@ -923,8 +893,34 @@ td{font-size:15px}
 
   <!-- BÁO CÁO -->
   <section class="sec" data-tab="group" hidden>
-    <div class="sec-h"><div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg></div><div class="grow"><h2>Nhóm</h2><p>Quản lý nhóm, thành viên, mã mời và quản trị</p></div></div>
-    <div class="sec-b"><div id="grpMain"></div></div>
+    <div class="sec-h"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></div><div class="grow"><h2>Quản trị</h2><p>Tài khoản, nhóm, thành viên, sao lưu</p></div></div>
+    <div class="sec-b">
+      <div class="gcard" id="grpAcct">
+        <div class="sub">Tài khoản và đồng bộ</div>
+        <div class="note info" id="syncStatus" style="--c:var(--c-trip)"></div>
+        <div id="acctBox" class="rb"></div>
+        <div class="row"><button class="btn ghost small" type="button" id="syncNow">Đồng bộ lại ngay</button></div>
+        <div class="hint" id="syncMsg"></div>
+      </div>
+      <div id="grpMain"></div>
+      <div class="gcard" id="grpBackup">
+        <div class="sub">Sao lưu</div>
+        <div class="row"><button class="btn ghost" type="button" id="sbBkDown">⬇ Tải bản sao lưu (file)</button><button class="btn ghost" type="button" id="sbBkUp">⬆ Khôi phục từ file</button><input type="file" id="sbBkFile" accept=".json,application/json" hidden></div>
+        <div class="hint" id="sbBkInfo" style="min-height:0"></div>
+      <details class="legacy"><summary>Nhập dữ liệu từ bản cũ (hiếm dùng)</summary>
+      <div class="sub">Hoặc chuyển bằng mã: ở máy có dữ liệu</div>
+      <div class="row">
+        <button class="btn" type="button" id="expAll">Sao chép mã tất cả chuyến</button>
+        <button class="btn ghost" type="button" id="expOne">Chỉ chuyến đang chọn</button>
+      </div>
+      <textarea id="syncOut" class="codebox" rows="4" readonly hidden aria-label="Mã dữ liệu"></textarea>
+      <div class="sub">Ở máy cần nhận dữ liệu</div>
+      <textarea id="syncIn" class="codebox" rows="4" placeholder="Dán mã dữ liệu vào đây (bắt đầu bằng CTN2:)" aria-label="Dán mã dữ liệu"></textarea>
+      <div class="row"><button class="btn" type="button" id="impBtn">Nhập dữ liệu</button></div>
+      <div class="hint" style="min-height:0">Gửi mã qua Zalo, Messenger hoặc email rồi dán ở máy kia. Chuyến trùng sẽ được cập nhật theo mã, chuyến mới được thêm vào, chuyến khác không bị xoá.</div>
+      </details>
+      </div>
+    </div>
   </section>
 
   <section class="sec report" data-tab="report">
@@ -1070,16 +1066,28 @@ function alignHeaders(){document.querySelectorAll('table:not(.matrix)').forEach(
     if(th.style.textAlign!==al)th.style.textAlign=al;rows.forEach(r=>{const c=r.children[i];if(c&&c.style.textAlign!==al&&!c.classList.contains('num'))c.style.textAlign=al;});});});}
 {let q=false;new MutationObserver(()=>{if(q)return;q=true;requestAnimationFrame(()=>{q=false;labelTables();alignHeaders();applyFocus();});}).observe(document.documentElement,{childList:true,subtree:true});}
 document.addEventListener('click',e=>{const f=e.target.closest&&e.target.closest('.fund');if(f&&isPhone())f.classList.toggle('open');});
-const TAB_SHORT={trip:'Chuyến',member:'Người đi',advance:'Đã đóng',expense:'Khoản chi',room:'Phòng',result:'Tổng kết',report:'Báo cáo',group:'Nhóm'};
+const TAB_SHORT={trip:'Chuyến',member:'Người đi',advance:'Đã đóng',expense:'Khoản chi',room:'Phòng',result:'Tổng kết',report:'Báo cáo',group:'Quản trị'};
 const TAB_DEF=[
+ ['group','Quản trị','<path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6Z"/><path d="m9 12 2 2 4-4"/>'],
  ['trip','Chuyến đi','<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'],
  ['member','Thành viên','<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
  ['advance','Tiền đã đóng','<path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>'],
  ['room','Tiền phòng','<path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M12 4v6M2 18h20"/>'],
  ['expense','Khoản chi','<path d="M4 2v20l3-2 2 2 3-2 3 2 2-2 3 2V2l-3 2-2-2-3 2-3-2-2 2Z"/><path d="M8 8h8M8 12h8M8 16h5"/>'],
  ['result','Tổng kết','<path d="M12 3v18M5 7h14"/><path d="M5 7l-3 8a3 3 0 0 0 6 0Z"/><path d="M19 7l-3 8a3 3 0 0 0 6 0Z"/>'],
- ['report','Báo cáo','<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/>'],
- ['group','Nhóm','<circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/><path d="M19 6.5a2.5 2.5 0 0 1 0 5" opacity=".5"/>']];
+ ['report','Báo cáo','<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/>']];
+let authReady=!window.supabase,sbSessionRef=null;
+function visibleTabs(){
+  if(PV_TOKEN)return ['result','report'];
+  const data=['trip','member','advance','room','expense','result','report'];
+  if(!window.supabase)return data;                         // không tải được thư viện đồng bộ: chạy tại máy, không có tab Quản trị
+  if(!authReady||!sbSession||!sbGroup)return ['group'];    // chưa đăng nhập / chưa chọn nhóm: chỉ tab Quản trị
+  const empty=R.trips.length===1&&R.trips[0].ph;
+  if(empty)return ['group','trip'];                        // nhóm chưa có chuyến nào: tạo chuyến trước
+  if(sbGroup.role==='viewer')return ['group','trip','result','report'];   // người xem
+  return ['group'].concat(data);                           // chủ nhóm, người nhập, quản trị viên
+}
+function ensureTab(){const v=visibleTabs();if(!v.includes(curTab))showTab(v.includes('trip')&&curTab!=='group'?'trip':v[0],true);else{try{renderTabs();}catch(e){}}}
 let curTab='trip';
 try{const t=localStorage.getItem(KEY+'-tab');if(TAB_DEF.some(x=>x[0]===t))curTab=t;}catch(e){}
 function renderFund(c){
@@ -1099,7 +1107,7 @@ function renderFund(c){
 function renderTabs(c){
   c=c||compute();
   const cnt={trip:R.trips.length,member:S.members.length,advance:new Set(S.advances.map(a=>a.member)).size,expense:S.expenses.length,room:S.expenses.filter(e=>e.rooms&&e.rooms.length).length};
-  $('#tabs').innerHTML=TAB_DEF.map(t=>`<button type="button" class="tab" role="tab" data-go="${t[0]}" data-act="goTab" data-id="${t[0]}" aria-selected="${curTab===t[0]}"><svg viewBox="0 0 24 24" aria-hidden="true">${t[2]}</svg><span class="tl">${t[1]}</span><span class="tls">${TAB_SHORT[t[0]]||t[1]}</span>${t[0]==='advance'&&c.advTotal<c.total?`<b class="num" style="background:var(--neg);color:#fff" title="Quỹ đang âm">!</b>`:(t[0]==='room'&&roomIssues().length?`<b class="num" style="background:var(--neg);color:#fff" title="Có người chưa gán phòng hoặc không còn có mặt">!</b>`:(cnt[t[0]]!==undefined?`<b class="num">${cnt[t[0]]}</b>`:''))}</button>`).join('');
+  const vis=visibleTabs();$('#tabs').style.gridTemplateColumns=`repeat(${vis.length},minmax(0,1fr))`;$('#tabs').innerHTML=TAB_DEF.filter(t=>vis.includes(t[0])).map(t=>`<button type="button" class="tab" role="tab" data-go="${t[0]}" data-act="goTab" data-id="${t[0]}" aria-selected="${curTab===t[0]}"><svg viewBox="0 0 24 24" aria-hidden="true">${t[2]}</svg><span class="tl">${t[1]}</span><span class="tls">${TAB_SHORT[t[0]]||t[1]}</span>${t[0]==='advance'&&c.advTotal<c.total?`<b class="num" style="background:var(--neg);color:#fff" title="Quỹ đang âm">!</b>`:(t[0]==='room'&&roomIssues().length?`<b class="num" style="background:var(--neg);color:#fff" title="Có người chưa gán phòng hoặc không còn có mặt">!</b>`:(cnt[t[0]]!==undefined?`<b class="num">${cnt[t[0]]}</b>`:''))}</button>`).join('');
 }
 function syncTopBars0(){const tb=$('#tripBar');if(tb)tb.hidden=false;}
 function syncTopBars(){
@@ -1122,7 +1130,7 @@ function fillCopyFrom(){const sel=$('#copyFrom');if(!sel)return;const keep=sel.v
   sel.innerHTML='<option value="">Không chép</option>'+R.trips.map(t=>`<option value="${t.id}">${esc(t.name)} (${t.data.members.length} người)</option>`).join('');
   sel.value=(had&&(keep===''||R.trips.some(t=>t.id===keep)))?keep:(trip().data.members.length?R.current:'');sel.dataset.init='1';}
 function syncTripUi(){fillCopyFrom();
-  {const emp=!!(R.trips.length===1&&R.trips[0].ph&&!PV_TOKEN&&dbCanWrite);document.documentElement.classList.toggle('empty',emp);if(emp){tripFormOpen=true;tripEditorOpen=false;if(curTab!=='trip'){setTimeout(()=>showTab('trip',true),0);}}}
+  {const emp=!!(R.trips.length===1&&R.trips[0].ph&&!PV_TOKEN&&dbCanWrite&&(!window.supabase||(sbSession&&sbGroup)));document.documentElement.classList.toggle('empty',emp);if(emp){tripFormOpen=true;tripEditorOpen=false;}}
   const ed=$('#tripEditor'),fm=$('#tripForm'),nb=$('#tripNewBtn');
   if(ed)ed.style.display=(tripEditorOpen&&!tripFormOpen)?'flex':'none';
   if(tripFormOpen){if(!newTripColor)newTripColor=nextColor();const nc=$('#newTripColors');if(nc)nc.innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${newTripColor===c}" aria-label="Chọn màu ${c}" data-act="newColor" data-color="${c}"></button>`).join('');}
@@ -2450,7 +2458,7 @@ $('#expPdf').addEventListener('click',()=>doExport('pdf'));
 /* đồng bộ giữa các thiết bị (lưu trữ chung của trang, mỗi chuyến một tài liệu) */
 function syncLabel(){
   const tm=syncAt?' · '+new Date(syncAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'';
-  return ({off:'Chỉ lưu trên máy này',connecting:'Đang kết nối đồng bộ…',slow:'Chưa kết nối được, đang thử lại',ok:'Đã đồng bộ'+tm,saving:'Đang đồng bộ…',error:'Lỗi đồng bộ',noaccess:'Chưa có quyền đồng bộ'})[syncState]||'';}
+  return ({off:(window.supabase?'Chưa đăng nhập':'Chỉ lưu trên máy này'),connecting:'Đang kết nối đồng bộ…',slow:'Chưa kết nối được, đang thử lại',ok:'Đã đồng bộ'+tm,saving:'Đang đồng bộ…',error:'Lỗi đồng bộ',noaccess:'Chưa có quyền đồng bộ'})[syncState]||'';}
 function paintSync(){
   const p=document.getElementById('syncPill');if(p){p.textContent=syncLabel();p.dataset.s=syncState;}
   const e=document.getElementById('syncStatus');if(e)e.textContent=syncLabel()+(syncNote?'. '+syncNote:'');}
@@ -2588,8 +2596,9 @@ async function loadGroups(){
   return true;}
 function applyRole(){
   const ro=!!(sbSession&&sbGroup&&sbGroup.role==='viewer');
-  document.documentElement.classList.toggle('ro',ro||!!PV_TOKEN);
-  if(ro&&!['trip','result','report'].includes(curTab))showTab('result',false);}
+  const h=document.documentElement.classList;
+  h.toggle('ro',ro||!!PV_TOKEN);h.toggle('gate',!sbSession);h.toggle('nogroup',!sbGroup);
+  ensureTab();}
 function disconnectGroup(){if(sbUnsub){try{sbUnsub();}catch(e){}sbUnsub=null;}dbRef=null;revMap.clear();forceSet.clear();}
 function dropSyncedLocal(){
   R.trips=R.trips.filter(t=>!syncedSet.has(t.id));syncedSet.clear();
@@ -2608,15 +2617,16 @@ function connectGroup(g){
     snap=>{clearTimeout(timer);try{handleSnap(snap);}catch(e){setSync('error','Không đọc được dữ liệu đồng bộ');}},
     e=>{clearTimeout(timer);setSync('error',e&&e.code==='invalid_argument'?'Không có quyền xem dữ liệu của nhóm này':'Không kết nối được kho dữ liệu chung');});
 }
+function goWork(){setTimeout(()=>{if(curTab==='group'&&visibleTabs().includes('trip'))showTab('trip',true);},0);}
 async function afterAuth(){
   closeAuth();setSync('connecting');paintAccount();
   try{const r=await sb.rpc('is_admin');sbAdmin=r.data===true;}catch(e){sbAdmin=false;}await loadCan();paintAccount();
   if(!(await loadGroups()))return;
   if(!sbGroups.length){paintAccount();openAuth('group');return;}
-  const last=lsGet(LS_GROUP);connectGroup(sbGroups.find(g=>g.id===last)||sbGroups[0]);}
+  const last=lsGet(LS_GROUP);connectGroup(sbGroups.find(g=>g.id===last)||sbGroups[0]);goWork();}
 function onSignedOut(){
   disconnectGroup();sbAdmin=false;closeAdmin();sbCan={allowed:true};mg=null;grpFrom='';authStep='login';admGroups=[];admUsers=[];admAudit=[];sbSession=null;sbGroup=null;sbGroups=[];lsDel(LS_GROUP);dropSyncedLocal();applyRole();render();
-  setSync('off','Chưa đăng nhập, dữ liệu chỉ lưu trên máy này');paintAccount();}
+  setSync('off','Chưa đăng nhập');paintAccount();}
 
 /* ---- trang xem công khai (chỉ đọc) ---- */
 async function initPublicView(){
@@ -2646,9 +2656,11 @@ async function initSync(){
   if(PV_TOKEN){initPublicView();return;}
   if(!window.supabase){setSync('off','Không tải được thư viện đồng bộ, đang chạy chỉ trên máy này');paintAccount();return;}
   sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  setTimeout(()=>{if(!authReady){authReady=true;applyRole();paintAccount();}},5000);
   sb.auth.onAuthStateChange((ev,s)=>{
-    if(ev==='SIGNED_OUT'){if(sbSession)onSignedOut();return;}
-    if(!s){if(ev==='INITIAL_SESSION'){setSync('off','Chưa đăng nhập, dữ liệu chỉ lưu trên máy này');paintAccount();}return;}
+    if(ev==='SIGNED_OUT'){authReady=true;if(sbSession)onSignedOut();else{applyRole();paintAccount();}return;}
+    if(!s){if(ev==='INITIAL_SESSION'){authReady=true;setSync('off','Chưa đăng nhập');applyRole();paintAccount();}return;}
+    authReady=true;
     const first=!sbSession||sbSession.user.id!==s.user.id;sbSession=s;
     if(first)setTimeout(afterAuth,0);});
 }
@@ -2670,7 +2682,7 @@ function authHtml(){
     <div class="row"><button type="button" class="btn ghost small" data-au="sendcode"${dis}>Gửi lại mã</button><button type="button" class="btn ghost small" data-au="back">Đổi email</button></div>`;
   if(authStep==='group')return `${msg}
     ${sbGroups.length?sbGroups.map(g=>{const own=g.role==='owner',cur=!!(sbGroup&&sbGroup.id===g.id);
-      return `<div class="gcard${cur?' cur':''}"><div class="gh"><b>${esc(g.name)}</b><span class="badge${own?' on':''}">${own?'Chủ nhóm':(g.role==='viewer'?'Chỉ xem':'Người nhập')}</span>${cur?'<span class="badge on">Đang dùng</span>':''}</div>
+      return `<div class="gcard${cur?' cur':''}"><div class="gh"><b>${esc(g.name)}</b><span class="badge${own?' on':''}">${own?'Chủ nhóm':(g.role==='viewer'?'Người xem':'Người nhập')}</span>${cur?'<span class="badge on">Đang dùng</span>':''}</div>
       <div class="row">${cur?'':`<button type="button" class="btn small" data-au="pick" data-id="${esc(g.id)}">Dùng nhóm này</button>`}${own?`<button type="button" class="btn ghost small" data-au="manage" data-id="${esc(g.id)}">Quản lý nhóm</button>`:`<button type="button" class="btn ghost small" style="color:var(--neg)" data-au="leave" data-id="${esc(g.id)}">Rời nhóm</button>`}</div></div>`;}).join(''):'<div class="gcard"><div class="hint">Bạn chưa thuộc nhóm nào. Tạo nhóm mới hoặc vào nhóm bằng mã mời.</div></div>'}
     <div class="gcard"><div class="sub">Tạo nhóm mới</div>
     ${sbCan.allowed?`<div class="row"><div class="field"><input type="text" id="auGName" maxlength="40" placeholder="Ví dụ: Hội bạn đi Đà Lạt" aria-label="Tên nhóm"></div><button type="button" class="btn" data-au="create"${dis}>Tạo nhóm</button></div>`
@@ -2697,7 +2709,7 @@ function renderAuth(){
   $('#authTitle').textContent={group:'Nhóm',code:'Nhập mã 6 số',members:'Quản lý nhóm',audit:'Lịch sử nhóm',share:'Chia sẻ link xem'}[authStep]||'Đăng nhập';
   $('#authBody').innerHTML=authHtml()+`<div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost small" data-au="close">${authStep==='group'&&!sbGroup?'Để sau':'Đóng'}</button></div>`;
   const f=$(authStep==='login'?'#auEmail':authStep==='code'?'#auCode':authStep==='group'?'#auGName':'#none');if(f&&!/Android|iPhone|iPad/i.test(navigator.userAgent))f.focus();}
-const tabStep=()=>!!sbSession&&['group','members','audit'].includes(authStep)&&!document.documentElement.classList.contains('empty')&&!PV_TOKEN;
+const tabStep=()=>!!window.supabase&&!PV_TOKEN&&(sbSession?['group','members','audit'].includes(authStep):['login','code'].includes(authStep));
 function showAuth(){if(tabStep()){$('#authModal').hidden=true;grpView='mine';if(curTab!=='group')showTab('group',true);}else $('#authModal').hidden=false;renderAuth();}
 function openAuth(step){authStep=step||'login';authNote='';showAuth();}
 function closeAuth(){const m=$('#authModal');if(m)m.hidden=true;authBusy=false;authNote='';authDelMg=false;if(sbSession&&['members','audit','share'].includes(authStep)&&authStep!=='share')authStep='group';if(curTab==='group')renderGroupTab();if(admOpen)admLoad();}
@@ -2707,7 +2719,7 @@ const okEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 let sbCan={allowed:true},mg=null,mgInfo=null,mgBans=[],mgAudit=[],mgAuditMore=false,sbAdmin=false;
 const fdt=v=>{try{return new Date(v).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return v||'';}};
 const fd=v=>{if(!v)return '—';try{return new Date(v).toLocaleDateString('vi-VN');}catch(e){return v||'';}};
-const ROLE_VN={owner:'chủ nhóm',editor:'người nhập',viewer:'chỉ xem'};
+const ROLE_VN={owner:'chủ nhóm',editor:'người nhập',viewer:'người xem'};
 function fmtAudit(a,showGroup){
   const d=a.detail||{},n=esc(a.entity_name||''),g=showGroup&&a.group_name?` <span class="hint" style="min-height:0">· nhóm "${esc(a.group_name)}"</span>`:'';
   const who=a.actor_email?esc(a.actor_email):'Hệ thống';
@@ -2743,17 +2755,17 @@ async function openGroupAudit(g,more){
 let grpView='mine',grpFrom='';
 function membersHtml(msg,dis){
   const g=mg,c=g&&g.codes,inf=mgInfo,me=sbSession&&sbSession.user.id;
-  const rows=roster.length?roster.map(r=>`<div class="rcard"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(r.email||'(không có email)')}</b>${r.user_id===me?' <small>(bạn)</small>':''}<div class="hint" style="min-height:0">vào nhóm ${fd(r.joined_at)}</div></div>${r.role==='owner'?'<span class="hint" style="min-height:0;white-space:nowrap">chủ nhóm</span>':`<select data-rrole data-id="${esc(r.user_id)}" aria-label="Quyền" style="width:auto;flex:none"><option value="editor"${r.role==='editor'?' selected':''}>Người nhập</option><option value="viewer"${r.role==='viewer'?' selected':''}>Chỉ xem</option></select>`}</div>
+  const rows=roster.length?roster.map(r=>`<div class="rcard"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(r.email||'(không có email)')}</b>${r.user_id===me?' <small>(bạn)</small>':''}<div class="hint" style="min-height:0">vào nhóm ${fd(r.joined_at)}</div></div>${r.role==='owner'?'<span class="hint" style="min-height:0;white-space:nowrap">chủ nhóm</span>':`<select data-rrole data-id="${esc(r.user_id)}" aria-label="Quyền" style="width:auto;flex:none"><option value="editor"${r.role==='editor'?' selected':''}>Người nhập</option><option value="viewer"${r.role==='viewer'?' selected':''}>Người xem</option></select>`}</div>
       ${r.role==='owner'?'':`<div class="row"><button type="button" class="btn ghost small" data-au="rmember" data-id="${esc(r.user_id)}">Xoá khỏi nhóm</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-au="rban" data-id="${esc(r.user_id)}">Xoá và chặn</button></div>`}</div>`).join(''):'<div class="hint">Đang tải…</div>';
   const bans=mgBans.length?mgBans.map(b=>`<div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(b.email)}</b><div class="hint" style="min-height:0">${fd(b.banned_at)}${b.reason?' · '+esc(b.reason):''}</div></div><button type="button" class="btn ghost small" data-au="unban" data-v="${esc(b.email)}">Bỏ chặn</button></div>`).join(''):'<div class="hint" style="min-height:0">Chưa chặn ai.</div>';
   const jOn=!inf||inf.join_enabled;
   return `${msg}<div class="gcard"><div class="gh"><b>${esc(g.name)}</b></div><div class="hint" style="min-height:0">${inf?`Tạo bởi <b>${esc(inf.creator_email||'?')}</b> · ${fd(inf.created_at)}`:'Đang tải…'}</div>
     </div><div class="gcard"><div class="sub">Thành viên (${roster.length})</div>${rows}
-    <div class="hint" style="min-height:0"><b>Chủ nhóm</b>: toàn quyền, quản lý thành viên, mã, link. <b>Người nhập</b>: thêm/sửa khoản chi và chuyến. <b>Chỉ xem</b>: xem báo cáo, tổng kết.</div>
+    <div class="hint" style="min-height:0"><b>Chủ nhóm</b>: toàn quyền, quản lý thành viên, mã, link. <b>Người nhập</b>: thêm/sửa khoản chi và chuyến. <b>Người xem</b>: xem báo cáo, tổng kết.</div>
     </div><div class="gcard"><div class="sub">Vào nhóm bằng mã</div>
     <div class="row" style="align-items:center"><span style="flex:1 1 auto">${jOn?'Đang <b>cho phép</b> người mới vào bằng mã.':'Đang <b>tạm khoá</b>: không ai vào mới được bằng mã.'}</span><button type="button" class="btn ghost small" data-au="joinset" data-v="${jOn?'0':'1'}"${dis}>${jOn?'Tạm khoá':'Mở lại'}</button></div>
     ${c?`<div class="row" style="align-items:center"><span style="min-width:96px">Người nhập</span><b class="num" style="letter-spacing:.05em">${esc(c.edit)}</b>${cpBtn(c.edit)}</div>
-    <div class="row" style="align-items:center"><span style="min-width:96px">Chỉ xem</span><b class="num" style="letter-spacing:.05em">${esc(c.view)}</b>${cpBtn(c.view)}</div>
+    <div class="row" style="align-items:center"><span style="min-width:96px">Người xem</span><b class="num" style="letter-spacing:.05em">${esc(c.view)}</b>${cpBtn(c.view)}</div>
     <div class="hint" style="min-height:0"><b>Đổi mã không ảnh hưởng người đã vào nhóm</b>: họ vẫn ở lại và dùng bình thường. Chỉ những ai chưa vào mà đang giữ mã cũ sẽ không vào được nữa.</div>
     <button type="button" class="btn ghost small" data-au="resetcodes"${dis}>Đổi mã mời (vô hiệu mã cũ)</button>`:'<div class="hint">Đang tải…</div>'}
     </div><div class="gcard"><div class="sub">Danh sách chặn (${mgBans.length})</div>${bans}
@@ -2774,7 +2786,9 @@ async function admLoad(){
 function renderGroupTab(){
   const el=document.getElementById('grpMain');if(!el)return;
   if(!window.supabase){el.innerHTML='<div class="note info">Không tải được thư viện đồng bộ nên chưa dùng được nhóm.</div>';return;}
-  if(!sbSession){el.innerHTML='<div class="gcard"><div class="hint" style="min-height:0">Đăng nhập để dùng chung dữ liệu với nhóm trên nhiều thiết bị.</div><button type="button" class="btn" data-acct="login">Đăng nhập</button></div>';return;}
+  if(!authReady){el.innerHTML='<div class="hint">Đang kiểm tra đăng nhập…</div>';return;}
+  if(!sbSession){if(!['login','code'].includes(authStep))authStep='login';el.innerHTML=`<div class="gcard"><div class="gh"><b>Đăng nhập</b></div>${authHtml()}</div>`;
+    const f=document.getElementById(authStep==='code'?'auCode':'auEmail');return;}
   const dis=authBusy?' disabled':'';
   let head='';
   if(sbAdmin)head=`<div class="seg"><button type="button" data-g="mine" aria-pressed="${grpView==='mine'}">Nhóm của tôi</button><button type="button" data-g="admin" aria-pressed="${grpView==='admin'}">Quản trị tổng</button></div>`;
@@ -2879,7 +2893,7 @@ async function authAction(act,btn){
     if(error){authBusy=false;authStep='code';authFail(/expired|invalid/i.test(error.message)?'Mã sai hoặc đã hết hạn. Bấm "Gửi lại mã" để lấy mã mới.':'Chưa xác nhận được: '+error.message);}
     return;}
   if(act==='manage'){const g=sbGroups.find(x=>x.id===btn.dataset.id);if(g){grpFrom='';openMembers(g);}return;}
-  if(act==='pick'){const g=sbGroups.find(x=>x.id===btn.dataset.id);if(g){closeAuth();connectGroup(g);}return;}
+  if(act==='pick'){const g=sbGroups.find(x=>x.id===btn.dataset.id);if(g){closeAuth();connectGroup(g);goWork();}return;}
   if(act==='rename'||act==='delgrp'){grpEdit={id:btn.dataset.id,mode:act==='rename'?'rename':'delete'};authNote='';renderAuth();const f=$(act==='rename'?'#auRen':'#auDel');if(f)f.focus();return;}
   if(act==='grpcancel'){grpEdit=null;authNote='';renderAuth();return;}
   if(act==='renameok'){const n=($('#auRen').value||'').trim().replace(/\s+/g,' ');
@@ -2905,13 +2919,13 @@ async function authAction(act,btn){
     authBusy=true;renderAuth();
     const {data,error}=await sb.rpc('create_group',{gname:n});
     if(error){authFail(/create forbidden/i.test(error.message)?'Tài khoản của bạn chưa được cấp quyền tạo nhóm. Hãy nhờ quản trị viên.':/group limit/i.test(error.message)?'Mỗi người chỉ tạo được tối đa 3 nhóm. Hãy xoá nhóm không dùng nữa rồi tạo lại.':'Chưa tạo được nhóm: '+error.message);return;}
-    await loadGroups();await loadCan();const g=sbGroups.find(x=>x.id===data.id)||sbGroups[0];closeAuth();if(g)connectGroup(g);return;}
+    await loadGroups();await loadCan();const g=sbGroups.find(x=>x.id===data.id)||sbGroups[0];closeAuth();if(g){connectGroup(g);goWork();}return;}
   if(act==='join'){const c=($('#auGCode').value||'').trim();
     if(!c){authFail('Nhập mã mời.');return;}
     authBusy=true;renderAuth();
     const {data,error}=await sb.rpc('join_group',{code:c});
     if(error){authFail(/invalid code/i.test(error.message)?'Mã mời không đúng.':/banned/i.test(error.message)?'Bạn đã bị chủ nhóm chặn, không vào được nhóm này.':/join disabled/i.test(error.message)?'Nhóm đang tạm khoá việc vào bằng mã. Hãy liên hệ chủ nhóm.':'Chưa vào được nhóm: '+error.message);return;}
-    await loadGroups();const g=sbGroups.find(x=>x.id===data.id)||sbGroups[0];closeAuth();if(g)connectGroup(g);return;}
+    await loadGroups();const g=sbGroups.find(x=>x.id===data.id)||sbGroups[0];closeAuth();if(g){connectGroup(g);goWork();}return;}
   if(act==='rmember'){const r=roster.find(x=>x.user_id===btn.dataset.id);if(!r)return;
     ask(`Xoá ${r.email||'người này'} khỏi nhóm? Họ sẽ không còn xem được dữ liệu của nhóm.`,{title:'Xoá khỏi nhóm?',ok:'Xoá khỏi nhóm',noLabel:'Giữ lại',danger:true},async()=>{
       const {error}=await sb.rpc('remove_member',{gid:mg.id,uid:r.user_id});
@@ -2968,19 +2982,19 @@ function signOutAsk(){ask('Đăng xuất sẽ xoá dữ liệu của nhóm khỏ
 /* ---- khung tài khoản trong tab Chuyến đi ---- */
 function paintAccount(){
   try{paintBackupInfo();}catch(e){}
-  try{if(curTab==='group'&&!(authStep==='group'&&document.activeElement&&/^au/.test(document.activeElement.id||'')))renderGroupTab();}catch(e){}
+  try{if(curTab==='group'&&!(document.activeElement&&/^(au|mg|adm)/.test(document.activeElement.id||'')))renderGroupTab();}catch(e){}
   const el=document.getElementById('acctBox');if(!el)return;
   if(PV_TOKEN||!window.supabase){el.innerHTML='';return;}
-  if(!sbSession){el.innerHTML=`<div class="row"><button type="button" class="btn" data-acct="login">Đăng nhập</button></div>`;return;}
-  const u=sbSession.user,g=sbGroup,role={owner:'chủ nhóm',editor:'người nhập',viewer:'chỉ xem'}[g&&g.role]||'';
-  el.innerHTML=`<div class="s" style="font-size:14px">Tài khoản: <b>${esc(u.email||'')}</b></div>`+
-    (g?`<div class="s" style="font-size:14px">Nhóm: <b>${esc(g.name)}</b> · ${role}</div>`+
-       (g.role==='viewer'?'<div class="hint" style="min-height:0">Bạn có quyền xem. Chỉ chủ nhóm hoặc người nhập mới sửa được.</div>':''):`<div class="hint" style="min-height:0">Chưa chọn nhóm.</div>`)+
+  if(!sbSession){el.innerHTML='<div class="hint" style="min-height:0">Đăng nhập để dùng chung dữ liệu với nhóm trên nhiều thiết bị.</div>';return;}
+  const u=sbSession.user,g=sbGroup;
+  const roles=[];if(sbAdmin)roles.push('Quản trị viên');if(g)roles.push({owner:'Chủ nhóm',editor:'Người nhập',viewer:'Người xem'}[g.role]);
+  const desc=g?({owner:'Toàn quyền với nhóm: chuyến, thành viên, mã mời, chia sẻ, xoá nhóm.',editor:'Xem và nhập/sửa dữ liệu chuyến. Không quản lý thành viên.',viewer:'Chỉ xem Chuyến, Tổng kết, Báo cáo. Không sửa được.'}[g.role]):'Chưa chọn nhóm: hãy chọn, tạo hoặc vào một nhóm bên dưới.';
+  el.innerHTML=`<div style="font-size:15px">Tài khoản: <b>${esc(u.email||'')}</b></div>`+
+    `<div class="row" style="gap:8px;align-items:center">${roles.map(r=>`<span class="badge on">${r}</span>`).join('')}${g?`<span class="hint" style="min-height:0">nhóm <b>${esc(g.name)}</b></span>`:''}</div>`+
+    `<div class="hint" style="min-height:0">${desc}${sbAdmin?' Quản trị viên còn quản lý mọi nhóm và tài khoản (mục Quản trị tổng).':''}</div>`+
     `<div class="row">`+
-      (isOwner()?`<button type="button" class="btn ghost small" data-acct="members">Quản lý nhóm</button>`:'')+
-      (canWriteRole()?`<button type="button" class="btn ghost small" data-acct="share">Chia sẻ link xem chuyến này</button>`:'')+
-      (sbAdmin?`<button type="button" class="btn small" data-acct="admin">Quản trị tổng</button>`:'')+
-      `<button type="button" class="btn ghost small" data-acct="group">Đổi / tạo / vào nhóm</button><button type="button" class="btn ghost small" data-acct="logout">Đăng xuất</button></div>`;}
+      (canWriteRole()&&g?`<button type="button" class="btn ghost small" data-acct="share">Chia sẻ link xem chuyến này</button>`:'')+
+      `<button type="button" class="btn ghost small" data-acct="logout">Đăng xuất</button></div>`;}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-acct]');if(!b)return;
   const a=b.dataset.acct;
   if(a==='login')openAuth('login');
@@ -3107,6 +3121,7 @@ $('#btnSample').addEventListener('click',()=>{const t=mkTrip('Đà Lạt 2 ngày
 render();showTab(curTab,false);
 R.trips.forEach(t=>{if(sampleIds.has(t.id)){t.sample=true;lastJson.set(t.id,snapJson(t));}});
 initSync();
+try{applyRole();}catch(e){}
 })();
 </script>
 

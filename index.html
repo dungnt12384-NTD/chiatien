@@ -2800,7 +2800,7 @@ async function initSync(){
 /* ===== Phân quyền theo chuyến, trang đăng nhập, Quản trị / Của tôi ===== */
 let sbAdmin=false,myReq=null,myCodes=[],codePending=false,gStep='login',gEmail='',gBusy=false,gNote='';
 let dlgKind='',dlgBusy=false,dlgNote='',tInfo=null,tAudit=[],tAuditMore=false,tTrash=[],tPeople=[],codeInfo=null,shareInfo=null,rpRows=[],rpItem=null;
-let admTab='groups',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false;
+let admReady=false,admLoaded=false,admTab='groups',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false;
 const paidMap=new Map();let paidFor='',rpCount=new Map(),rpFor='',codeCache=new Map();
 function isAnon(){return !!(sbSession&&sbSession.user&&(sbSession.user.is_anonymous||!sbSession.user.email));}
 const ROLE_NAME={admin:'Quản trị viên',leader:'Leader',helper:'Người phụ trách',viewer:'Thành viên (chỉ xem)'};
@@ -2992,7 +2992,7 @@ async function afterAuth(force){
   if(force||!sbGroup||sbGroup.id!==g.id)connectGroup(g);else{applyRole();}
   if(sbAdmin&&!force)showTab('group',true);else goWork();}
 function onSignedOut(){
-  disconnectGroup();sbAdmin=false;myReq=null;myCodes=[];gStep='login';gNote='';gBusy=false;admGroups=[];admReqs=[];admAudit=[];admOpen=null;admDet={};
+  disconnectGroup();sbAdmin=false;admLoaded=false;myReq=null;myCodes=[];gStep='login';gNote='';gBusy=false;admGroups=[];admReqs=[];admAudit=[];admOpen=null;admDet={};admReady=false;
   sbSession=null;sbGroup=null;sbGroups=[];lsDel(LS_GROUP);dropSyncedLocal();closeDlg();applyRole();render();
   setSync('off','Chưa đăng nhập');paintAccount();}
 function signOutAsk(){
@@ -3037,7 +3037,7 @@ function renderGroupTab(){
   const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
   let h=groupsCard()+(sbAdmin?'':codeCard());
   if(!isAnon()&&!sbAdmin&&!sbGroups.some(g=>g.can_create))h+=requestCard();
-  if(sbAdmin)h+=adminHtml();
+  if(sbAdmin){h+=adminHtml();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
   if(keep&&val!=null){const n=document.getElementById(keep);if(n&&(n.tagName==='INPUT'||n.tagName==='TEXTAREA')){n.value=val;n.focus();}}}
 
@@ -3048,7 +3048,7 @@ function adminHtml(){
   let body='';
   if(admTab==='groups'){
     body=`<div class="rcard"><div class="sub">Tạo nhóm mới</div><div class="row"><div class="field"><input type="text" id="qNewG" maxlength="60" placeholder="Ví dụ: Cào Cào Dưỡng Sinh" aria-label="Tên nhóm mới"></div><button type="button" class="btn" data-q="gcreate"${dis}>Tạo nhóm</button></div></div>`+
-      (admGroups.length?admGroups.map(g=>{const op=admOpen===g.id,d=admDet[g.id]||{};
+      (!admReady?'<div class="hint">Đang tải danh sách nhóm…</div>':admGroups.length?admGroups.map(g=>{const op=admOpen===g.id,d=admDet[g.id]||{};
         return `<div class="rcard"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(g.name)}</b>
           <div class="hint" style="min-height:0">Tạo ${fd(g.created_at)}${g.creator_email?' bởi '+esc(g.creator_email):''} · ${g.trips} chuyến${g.last_activity?' · hoạt động '+fdt(g.last_activity):''}</div></div>
           <button type="button" class="btn ghost small" data-q="gopen" data-id="${esc(g.id)}" aria-expanded="${op}">${op?'Thu gọn':'Quản lý'}</button></div>`+
@@ -3075,7 +3075,7 @@ function groupDetailHtml(g,d,dis){
 async function admLoad(){
   if(!sbAdmin)return;
   const [a,b,c]=await Promise.all([sb.rpc('admin_groups'),sb.rpc('organizer_requests_list'),admTab==='audit'?sb.rpc('admin_audit',{p_limit:50}):Promise.resolve({data:admAudit})]);
-  admGroups=a.data||[];admReqs=b.data||[];if(admTab==='audit'){admAudit=c.data||[];admAuditMore=(c.data||[]).length>=50;}
+  admGroups=a.data||[];admReqs=b.data||[];admReady=true;if(admOpen===null&&admGroups.length===1){admOpen=admGroups[0].id;admLoadGroup(admOpen);}if(admTab==='audit'){admAudit=c.data||[];admAuditMore=(c.data||[]).length>=50;}
   if(curTab==='group')renderGroupTab();}
 async function admLoadGroup(gid){
   const [o,c]=await Promise.all([sb.rpc('group_organizers_list',{gid}),sb.rpc('group_code_get',{gid})]);

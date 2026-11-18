@@ -2615,7 +2615,7 @@ async function afterAuth(){
   if(!sbGroups.length){paintAccount();openAuth('group');return;}
   const last=lsGet(LS_GROUP);connectGroup(sbGroups.find(g=>g.id===last)||sbGroups[0]);}
 function onSignedOut(){
-  disconnectGroup();sbAdmin=false;closeAdmin();sbSession=null;sbGroup=null;sbGroups=[];lsDel(LS_GROUP);dropSyncedLocal();applyRole();render();
+  disconnectGroup();sbAdmin=false;closeAdmin();sbCan={allowed:true};mg=null;grpFrom='';authStep='login';admGroups=[];admUsers=[];admAudit=[];sbSession=null;sbGroup=null;sbGroups=[];lsDel(LS_GROUP);dropSyncedLocal();applyRole();render();
   setSync('off','Chưa đăng nhập, dữ liệu chỉ lưu trên máy này');paintAccount();}
 
 /* ---- trang xem công khai (chỉ đọc) ---- */
@@ -2698,7 +2698,7 @@ function renderAuth(){
   $('#authBody').innerHTML=authHtml()+`<div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost small" data-au="close">${authStep==='group'&&!sbGroup?'Để sau':'Đóng'}</button></div>`;
   const f=$(authStep==='login'?'#auEmail':authStep==='code'?'#auCode':authStep==='group'?'#auGName':'#none');if(f&&!/Android|iPhone|iPad/i.test(navigator.userAgent))f.focus();}
 const tabStep=()=>!!sbSession&&['group','members','audit'].includes(authStep)&&!document.documentElement.classList.contains('empty')&&!PV_TOKEN;
-function showAuth(){if(tabStep()){$('#authModal').hidden=true;grpView='mine';if(curTab!=='group')showTab('group',true);}else showAuth();}
+function showAuth(){if(tabStep()){$('#authModal').hidden=true;grpView='mine';if(curTab!=='group')showTab('group',true);}else $('#authModal').hidden=false;renderAuth();}
 function openAuth(step){authStep=step||'login';authNote='';showAuth();}
 function closeAuth(){const m=$('#authModal');if(m)m.hidden=true;authBusy=false;authNote='';authDelMg=false;if(sbSession&&['members','audit','share'].includes(authStep)&&authStep!=='share')authStep='group';if(curTab==='group')renderGroupTab();if(admOpen)admLoad();}
 const authFail=t=>{authBusy=false;authNote=t;renderAuth();};
@@ -2968,6 +2968,7 @@ function signOutAsk(){ask('Đăng xuất sẽ xoá dữ liệu của nhóm khỏ
 /* ---- khung tài khoản trong tab Chuyến đi ---- */
 function paintAccount(){
   try{paintBackupInfo();}catch(e){}
+  try{if(curTab==='group'&&!(authStep==='group'&&document.activeElement&&/^au/.test(document.activeElement.id||'')))renderGroupTab();}catch(e){}
   const el=document.getElementById('acctBox');if(!el)return;
   if(PV_TOKEN||!window.supabase){el.innerHTML='';return;}
   if(!sbSession){el.innerHTML=`<div class="row"><button type="button" class="btn" data-acct="login">Đăng nhập</button></div>`;return;}

@@ -1014,6 +1014,15 @@ html .pill,html .badge{background:var(--surface2)!important;color:var(--muted)!i
 html .badge.on{background:var(--brand)!important;color:#fff!important}
 html .ggroup,html .grow.on,html .gi.on,html [class*="gitem"].on{background:var(--brand-bg)!important;border-left-color:var(--brand)!important}
 
+/* ---- tab máy tính: icon trên, nhãn ngắn dưới (8 tab không bị cắt chữ) ---- */
+html:not(.phone) .tab{flex-direction:column!important;justify-content:center;gap:5px!important;height:72px!important;padding:6px 2px!important;font-size:12.5px!important;line-height:1.15;position:relative}
+html:not(.phone) .tab .tl{display:none!important}
+html:not(.phone) .tab .tls{display:block!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html:not(.phone) .tab b{position:absolute!important;top:4px!important;right:calc(50% - 30px)!important;font-size:10px!important;padding:0 6px!important;min-width:17px;line-height:17px!important;text-align:center;border-radius:99px}
+
+/* ---- tiêu đề phụ trong mục: chữ thường, không gào ---- */
+html .sec .sub{text-transform:none!important;letter-spacing:0!important;font-size:14px!important;font-weight:700!important}
+
 /* ---- bỏ hẳn chọn màu chuyến ---- */
 #tripColors,#newTripColors,.swatches{display:none!important}
 </style>

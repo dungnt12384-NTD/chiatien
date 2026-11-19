@@ -2928,7 +2928,7 @@ $('#tripName').addEventListener('keydown',e=>{if(!editingTrip)return;
 $('#holder').addEventListener('change',e=>{const nv=e.target.value;if(nv===S.holder)return;
   ask(`Đổi người giữ quỹ từ "${S.holder?nameOf(S.holder):'chưa có'}" thành "${nameOf(nv)}"? Kết quả và thanh toán sẽ tính lại.`,{ok:'Đổi người giữ quỹ'},()=>{S.holder=nv;render();},()=>render());});
 
-function resetExpForm(){amtMode='total';editing=null;expOpen=false;formExcl=new Set();$('#expDesc').value='';$('#expAmount').value='';
+function resetExpForm(){window.CLAIM_PENDING=null;amtMode='total';editing=null;expOpen=false;formExcl=new Set();$('#expDesc').value='';$('#expAmount').value='';
   $('#expSubmit').textContent='Thêm khoản chi';$('#expCancel').textContent='Đóng';$('#expErr').hidden=true;}
 $('#expDay').addEventListener('change',()=>{formExcl=new Set();renderSplit();});
 $('#expAmount').addEventListener('input',renderSplit);
@@ -2990,7 +2990,11 @@ $('#expForm').addEventListener('submit',ev=>{ev.preventDefault();
     rooms:room?formRooms.map((r,k)=>({id:r.id,name:r.name.trim()||('Phòng '+(k+1)),price:r.price,people:[...r.people]})):null,
     selfRoom:room?[...formSelf]:[]};
   const finish=()=>{
+    const clId=editing?null:window.CLAIM_PENDING;   /* v90: khoản này được tạo từ đề nghị "Tôi đã trả" */
     if(editing){Object.assign(S.expenses.find(e=>e.id===editing),rec);}else S.expenses.push({id:uid(),...rec,...(myMail()?{by:myMail()}:{})});
+    if(clId&&sb){sb.rpc('decide_claim',{p_id:clId,p_ok:true,p_reply:null}).then(({error})=>{
+      if(error)toast('Đã lưu khoản chi nhưng chưa đánh dấu duyệt được đề nghị: '+(ERR_VN[error.message]||error.message));
+      else{toast('Đã lưu khoản chi và duyệt đề nghị.');clCount.set(R.current,Math.max(0,(clCount.get(R.current)||1)-1));renderTripExtra();}});}
     S.activeDay=rec.dayId;
     const dsel=rec.dayId;openDays.add(rec.dayId);resetExpForm();render();$('#expDay').value=dsel;renderSplit();$('#expDesc').focus();};
   const proceed=()=>{
@@ -3636,6 +3640,7 @@ let dlgKind='',dlgBusy=false,dlgNote='',tInfo=null,tAudit=[],tAuditMore=false,tT
 let admReady=false,admLoaded=false,admTab='perm',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false,admAcc=null,admAccErr='',admAccQ='',admAccTrips={},admOv={},myAccess={},myGrpExp={},admExp={},admDraft={},admCodes={},admTCodes={},admGQ='',admNewG=false,admLogOpen=false;
 const ADM_ENT=['admin','group','organizer','quota'];   /* nhật ký quản trị: chỉ thao tác trong tab quản trị */
 const paidMap=new Map();let paidFor='',rpCount=new Map(),rpFor='',codeCache=new Map();
+let clRows=null,clCount=new Map(),clFor='',clDraft={};window.CLAIM_PENDING=null;   /* v90: "Tôi đã trả" */
 function isAnon(){return !!(sbSession&&sbSession.user&&(sbSession.user.is_anonymous||!sbSession.user.email));}
 const ROLE_NAME={admin:'Quản trị viên',leader:'Thủ quỹ',helper:'Người hỗ trợ',viewer:'Thành viên (chỉ xem)'};
 const TAB_NAME={member:'Người đi',advance:'Đã đóng',room:'Phòng',expense:'Khoản chi'};
@@ -3790,6 +3795,12 @@ async function loadPaid(tid){if(!sb||!sbGroup||!tid||!syncedSet.has(tid))return;
   if(R.current===tid){try{renderResult(compute());}catch(e){}}}
 async function loadRpCount(tid){if(!sb||!sbGroup||!tid||!syncedSet.has(tid))return;rpFor=tid;
   try{const {data}=await sb.rpc('trip_reports_list',{tid});rpCount.set(tid,(data||[]).filter(r=>!r.resolved_at).length);}catch(e){}
+  if(R.current===tid)renderTripExtra();}
+/* v90: đề nghị "Tôi đã trả" – chỉ thủ quỹ cần đếm số chờ duyệt */
+async function loadClaims(tid){const {data,error}=await sb.rpc('trip_claims_list',{tid});clRows=error?[]:(data||[]);if(error)dlgNote=ERR_VN[error.message]||error.message;
+  clCount.set(tid,(clRows||[]).filter(c=>c.status==='pending').length);renderTripExtra();}
+async function loadClCount(tid){if(!sb||!sbGroup||!tid||!syncedSet.has(tid))return;clFor=tid;
+  try{const {data}=await sb.rpc('trip_claims_list',{tid});clCount.set(tid,(data||[]).filter(c=>c.status==='pending').length);}catch(e){}
   if(R.current===tid)renderTripExtra();}
 async function loadCodeInfo(tid){if(!sb||!tid||!syncedSet.has(tid))return;codeCache.set(tid,{loading:true});
   try{const {data}=await sb.rpc('trip_code_get',{tid});codeCache.set(tid,data||{});}catch(e){codeCache.set(tid,{});}
@@ -4259,7 +4270,7 @@ async function admLoadGroup(gid){
 async function rpcDo(name,args,okMsg){admBusy=true;admMsg='';renderGroupTab();
   const {data,error}=await sb.rpc(name,args);admBusy=false;
   admMsg=error?'Chưa làm được: '+(ERR_VN[error.message]||error.message):(okMsg?'OK:'+okMsg:'');return error?null:(data===null?true:data);}
-const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.'};
+const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.'};
 async function qAct(a,b){
   if(!sb)return;const id=b&&b.dataset.id,e=b&&b.dataset.e;
   if(a==='sync'){if(!dbRef){toast('Chưa kết nối nhóm.');return;}R.trips.forEach(t=>{if(!t.sample&&!t.ph&&canEditAny(t.id))schedulePush(t,0);});if(sbUnsub){const g=sbGroup;connectGroup(g);}toast('Đang đồng bộ lại.');return;}
@@ -4397,6 +4408,7 @@ function renderTripExtra(){
   if(paidFor!==t.id)loadPaid(t.id);
   const hr=canHandleRp();if(hr&&rpFor!==t.id)loadRpCount(t.id);
   if(ld&&!codeCache.has(t.id))loadCodeInfo(t.id);
+  if(ld&&clFor!==t.id)loadClCount(t.id);
   const ci=codeCache.get(t.id)||{},dl=ci.expires_at?daysLeft(ci.expires_at):99;
   const warn=ld&&ci.code&&ci.enabled&&dl<=7?`<div class="note" role="alert">${dl<=0?'Mã chuyến đã hết hạn, thành viên không vào xem được nữa.':'Mã chuyến còn '+dl+' ngày là hết hạn.'} <button type="button" class="btn ghost small" data-tx="code">Gia hạn</button></div>`:'';
   const rc=rpCount.get(t.id)||0;
@@ -4408,6 +4420,7 @@ function renderTripExtra(){
     ${cl?'<div class="hint" style="min-height:0">Sổ đã chốt: không ai sửa được cho tới khi thủ quỹ mở lại.</div>':''}${warn}
     <div class="row tx-row">
       <button type="button" class="btn ghost small" data-tx="reports">${hr?'Báo sai'+(rc?` <span class="cnt">${rc}</span>`:''):'Báo sai'}</button>
+      ${ld||!cl?`<button type="button" class="btn ghost small" data-tx="claims">${ld?'Đã trả hộ'+(clCount.get(t.id)?` <span class="cnt">${clCount.get(t.id)}</span>`:''):'Tôi đã trả'}</button>`:''}
       ${ed?`<button type="button" class="btn ghost small${cWarn?' code-warn':''}" data-tx="code"${cWarn?` title="Mã chuyến đang ${cTxt}: người có mã không vào xem được"`:''}>${cWarn?'⚠️ ':''}Mã chuyến${cWarn?' ('+cTxt+')':''}</button><button type="button" class="btn ghost small" data-tx="share">Link công khai</button>`:''}
       ${ld?`<button type="button" class="btn ghost small" data-tx="${cl?'reopen':'close'}">${cl?'Mở lại sổ':'Chốt sổ'}</button>`:''}
     </div></div>`;}
@@ -4445,7 +4458,7 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
   openDlg(a);});
 
 /* ---------- hộp thoại ---------- */
-const DLG_TITLE={viewers:'Thông tin hiện tại: ai đang xem chuyến',hist:'Lịch sử thay đổi',reports:'Báo sai',report:'Báo sai',code:'Mã chuyến',share:'Link xem công khai',people:'Thủ quỹ và người hỗ trợ',trash:'Thùng rác chuyến',tall:'🗑 Thùng rác',privacy:'Quyền riêng tư'};
+const DLG_TITLE={viewers:'Thông tin hiện tại: ai đang xem chuyến',hist:'Lịch sử thay đổi',reports:'Báo sai',report:'Báo sai',claims:'Khoản đã trả hộ',code:'Mã chuyến',share:'Link xem công khai',people:'Thủ quỹ và người hỗ trợ',trash:'Thùng rác chuyến',tall:'🗑 Thùng rác',privacy:'Quyền riêng tư'};
 function closeDlg(){const m=$('#authModal');if(m)m.hidden=true;dlgKind='';dlgNote='';dlgBusy=false;}
 /* hộp thoại của chuyến (Lịch sử, Báo sai, Mã chuyến…): bấm ra vùng xám bên ngoài = đóng; đang gõ dở thì hỏi trước */
 document.addEventListener('click',ev=>{if(!ev.target||ev.target.id!=='authModal'||!dlgKind)return;
@@ -4461,6 +4474,7 @@ async function openDlg(k,opt){dlgKind=k;dlgNote='';dlgBusy=false;$('#authModal')
     if(a.error||b.error)dlgNote='Chưa tải được: '+((a.error||b.error).message);else{tInfo=a.data||{};tAudit=b.data||[];tAuditMore=tAudit.length>=50;}}
   else if(k==='report'){rpItem=opt||null;}
   else if(k==='reports'){rpRows=null;renderDlg();const {data,error}=await sb.rpc('trip_reports_list',{tid:t.id});rpRows=error?[]:(data||[]);if(error)dlgNote=error.message;rpCount.set(t.id,(rpRows||[]).filter(r=>!r.resolved_at).length);renderTripExtra();}
+  else if(k==='claims'){clRows=null;renderDlg();await loadClaims(t.id);}
   else if(k==='code'){codeInfo=null;renderDlg();const {data,error}=await sb.rpc('trip_code_get',{tid:t.id});codeInfo=data||null;if(error)dlgNote=error.message;else codeCache.set(t.id,data);}
   else if(k==='share'){shareInfo=null;renderDlg();const {data}=await sb.rpc('share_info',{p_trip:t.id});shareInfo=data||{};}
   else if(k==='viewers'){tViewers=null;renderDlg();const {data,error}=await sb.rpc('trip_viewers',{tid:t.id});tViewers=data||[];if(error)dlgNote=ERR_VN[error.message]||error.message;}
@@ -4486,6 +4500,23 @@ function dlgBody(){
       <div class="hint" style="min-height:0">${r.reporter?esc(r.reporter)+' · ':''}${fdt(r.at)}${r.mine?' · bạn gửi':''}</div>
       ${r.resolved_at?`<div class="note info" style="--c:var(--pos)">Đã xử lý ${fdt(r.resolved_at)}${r.reply?': '+esc(r.reply):''}</div>`:(ed?`<div class="row"><div class="field"><input type="text" id="dlgRp-${r.id}" maxlength="500" placeholder="Trả lời (không bắt buộc)" aria-label="Trả lời"></div><button type="button" class="btn small" data-dl="rpdone" data-id="${r.id}"${dis}>Đã xử lý</button></div>`:'<div class="hint" style="min-height:0;color:var(--warn)">Chưa xử lý</div>')}</div>`).join(''):'<div class="hint">Chưa có báo sai nào.</div>';
     return `${ed?'':'<div class="row"><button type="button" class="btn" data-dl="rpnew">+ Báo sai mới</button></div><div class="sub">Báo sai bạn đã gửi</div>'}${rows}${ed?'<div class="row"><button type="button" class="btn ghost small" data-dl="rpnew">+ Ghi một báo sai</button></div>':''}`;}
+  if(dlgKind==='claims'){if(clRows===null)return wait;
+    const stB=c=>c.status==='approved'?'<span class="badge on">Đã duyệt</span>':c.status==='rejected'?'<span class="badge warn">Từ chối</span>':'<span class="badge">Chờ duyệt</span>';
+    const top=c=>`<div class="row" style="gap:8px;align-items:center;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-size:14.5px;font-weight:600">${esc(c.descr)} · ${fmt(c.amount)}</div>${stB(c)}</div>
+      <div class="hint" style="min-height:0">${esc(c.member_name||nameOf(c.member_id))} đã trả${c.day_id&&day(c.day_id)?' · '+esc(dayName(c.day_id)):''} · ${fdt(c.at)}</div>${c.note?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Ghi chú: ${esc(c.note)}</div>`:''}${c.status!=='pending'&&c.reply?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Thủ quỹ trả lời: ${esc(c.reply)}</div>`:''}`;
+    if(ld){
+      const rows=clRows.length?clRows.map(c=>`<div class="rcard">${top(c)}${c.status==='pending'?`<div class="row"><div class="field"><input type="text" id="dlgCl-${c.id}" maxlength="500" placeholder="Trả lời (không bắt buộc)" aria-label="Trả lời"></div><button type="button" class="btn small" data-dl="clok" data-id="${c.id}"${dis}>Duyệt</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-dl="clno" data-id="${c.id}"${dis}>Từ chối</button></div>`:''}</div>`).join(''):'<div class="hint">Chưa có đề nghị nào.</div>';
+      return `<p style="color:var(--muted);font-size:14px;margin:0">Người đi báo đã trả hộ. <b>Duyệt</b> sẽ mở sẵn form khoản chi (đã điền), bạn chọn người chia rồi lưu. Chưa lưu thì đề nghị vẫn chờ.</p>${rows}`;}
+    const dr=clDraft||{},me=dr.mem||lsGet('chiatien-me-'+R.current)||'',dsel=dr.day||S.activeDay||'';
+    const form=isClosed()?'<div class="hint">Sổ đã chốt, không gửi thêm được.</div>'
+      :`<div class="gcard"><div class="sub">Gửi đề nghị</div><p style="color:var(--muted);font-size:12px;margin:0">Bạn đã trả giúp một khoản? Gửi ở đây, thủ quỹ kiểm tra rồi mới ghi vào chuyến.</p>
+        <div class="field"><label for="clMem">Người đã trả</label><select id="clMem"><option value="">— chọn —</option>${S.members.map(m=>`<option value="${esc(m.id)}"${m.id===me?' selected':''}>${esc(m.name)}</option>`).join('')}</select></div>
+        <div class="field"><label for="clDay">Ngày</label><select id="clDay"><option value="">(không rõ)</option>${S.days.map(d=>`<option value="${esc(d.id)}"${d.id===dsel?' selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
+        <div class="field"><label for="clDesc">Nội dung</label><input type="text" id="clDesc" maxlength="80" placeholder="Ví dụ: cà phê sáng, tiền phà" value="${esc(dr.desc||'')}"></div>
+        <div class="field"><label for="clAmt">Số tiền</label><input type="text" id="clAmt" inputmode="decimal" placeholder="Ví dụ: 150.000 hoặc 150k" value="${esc(dr.amt||'')}"></div>
+        <div class="field"><label for="clNote">Ghi chú (không bắt buộc)</label><input type="text" id="clNote" maxlength="200" value="${esc(dr.note||'')}"></div>
+        <div class="row"><button type="button" class="btn" data-dl="clsend"${dis}>Gửi đề nghị</button></div></div>`;
+    return form+(clRows.length?`<div class="sub">Đề nghị bạn đã gửi</div>`+clRows.map(c=>`<div class="rcard">${top(c)}</div>`).join(''):'');}
   if(dlgKind==='code'){if(!codeInfo)return wait;const c=codeInfo,dl=daysLeft(c.expires_at),url=codeUrl(c.code);
     return `<p style="color:var(--muted);font-size:14px;margin:0">Gửi mã hoặc link này cho người đi cùng. Họ <b>chỉ xem</b> được chuyến này, không cần tài khoản.</p>
       <div class="codebig"><code>${esc(c.code)}</code></div>
@@ -4540,6 +4571,28 @@ async function dlgAct(a,b){
   if(a==='cp'){copyText(b.dataset.v,b);return;}
   if(a==='hlog'){tLogOpen=!tLogOpen;renderDlg();return;}
   if(a==='hmore'){const {data}=await sb.rpc('trip_audit',{gid,tid:t.id,p_limit:50,p_before:tAudit.length?tAudit[tAudit.length-1].id:null});tAudit=tAudit.concat(data||[]);tAuditMore=(data||[]).length>=50;renderDlg();return;}
+  if(a==='clsend'){const v=id=>(($('#'+id)||{}).value||'').trim();
+    clDraft={mem:v('clMem'),day:v('clDay'),desc:v('clDesc'),amt:v('clAmt'),note:v('clNote')};
+    const am=parseMoney(clDraft.amt),m=clDraft.mem?mem(clDraft.mem):null;
+    if(!m){dlgNote='Chọn người đã trả.';renderDlg();return;}
+    if(!clDraft.desc){dlgNote='Nhập nội dung khoản đã trả.';renderDlg();return;}
+    if(!(am>0)){dlgNote='Nhập số tiền hợp lệ, ví dụ 150.000 hoặc 150k.';renderDlg();return;}
+    if(await dlgRpc('submit_claim',{tid:t.id,p_day:clDraft.day||null,p_member:clDraft.mem,p_name:m.name,p_desc:clDraft.desc,p_amount:Math.round(am),p_note:clDraft.note||null},'Đã gửi. Thủ quỹ sẽ xem và duyệt.')){
+      lsSet('chiatien-me-'+R.current,clDraft.mem);clDraft={};await loadClaims(t.id);}
+    renderDlg();return;}
+  if(a==='clno'){const id=+b.dataset.id,rep=($('#dlgCl-'+id)||{}).value||'';
+    if(await dlgRpc('decide_claim',{p_id:id,p_ok:false,p_reply:rep},'Đã từ chối.'))await loadClaims(t.id);renderDlg();return;}
+  if(a==='clok'){const id=+b.dataset.id,c=(clRows||[]).find(x=>x.id===id);if(!c||c.status!=='pending')return;
+    if(isClosed()){dlgNote='Sổ đã chốt, hãy mở lại sổ trước khi duyệt.';renderDlg();return;}
+    closeDlg();showTab('expense',true);resetExpForm();
+    expOpen=true;render();
+    if(c.day_id&&day(c.day_id))$('#expDay').value=c.day_id;
+    $('#expPayer').value=mem(c.member_id)?c.member_id:defaultPayer();
+    $('#expDesc').value=c.descr;$('#expAmount').value=Number(c.amount).toLocaleString('vi-VN');
+    $('#expSubmit').textContent='Lưu và duyệt đề nghị';$('#expCancel').textContent='Huỷ duyệt';
+    window.CLAIM_PENDING=c.id;syncExpForm();renderSplit();
+    toast('Đã điền sẵn. Chọn người chia rồi bấm "Lưu và duyệt đề nghị".');
+    $('#expDesc').scrollIntoView({block:'center',behavior:'smooth'});return;}
   if(a==='rpnew'){openDlg('report');return;}
   if(a==='rpsend'){const m=($('#rpMsg').value||'').trim(),n=($('#dlgName').value||'').trim();if(!m){dlgNote='Viết vài chữ về chỗ sai.';renderDlg();return;}
     const it=rpItem;if(await dlgRpc('report_issue',{tid:t.id,p_item:it?it.id:null,p_label:it?it.label:null,p_msg:m,p_name:n},'Đã gửi. Thủ quỹ sẽ xem và sửa nếu đúng.')){rpItem=null;rpFor='';renderTripExtra();setTimeout(()=>{if(dlgKind==='report')openDlg('reports');},900);}renderDlg();return;}

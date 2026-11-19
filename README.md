@@ -1,5 +1,6 @@
 # Chia Tiền Nhóm (PWA)
-n© 2026 Copyright by **DUNGSINE** – tác giả gốc. Xem [LICENSE](LICENSE).
+
+© 2026 Copyright by **DUNGSINE** – tác giả gốc. Xem [LICENSE](LICENSE).
 
 Ứng dụng chia tiền chuyến đi theo nhóm. Một trang tĩnh (không cần máy chủ), dữ liệu và đăng nhập qua Supabase.
 

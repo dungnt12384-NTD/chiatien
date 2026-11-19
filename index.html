@@ -1199,6 +1199,10 @@ html:not(.phone) .tab[aria-selected="true"],html:not(.phone) .tab[aria-selected=
 html:not(.phone) .tab[aria-selected="true"]::after{content:"";position:absolute;left:10%;right:10%;bottom:-1px;height:3px;background:var(--k)}
 html:not(.phone) .tab svg{width:28px!important;height:28px!important}
 html:not(.phone) .tab .tls{font-size:13px!important}
+/* quản lý tài khoản: danh sách chuyến của từng tài khoản */
+.acc-trips{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.acc-trip{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
+.acc-trip:last-child{border-bottom:0}
 /* trang vào (gate) ở máy tính/iPad: rộng hết cột, phóng to cho cân với giao diện sau khi vào */
 html:not(.phone) #gate{width:100%!important;max-width:560px!important;align-self:center;padding-top:28px!important}
 @media (min-width:720px){html:not(.phone) #gate{zoom:1.2}}
@@ -3223,7 +3227,7 @@ async function initSync(){
 /* ===== Phân quyền theo chuyến, trang đăng nhập, Quản trị / Của tôi ===== */
 let sbAdmin=false,myReq=null,myCodes=[],codePending=false,gStep='login',gEmail='',gBusy=false,gNote='';
 let dlgKind='',dlgBusy=false,dlgNote='',tInfo=null,tAudit=[],tAuditMore=false,tTrash=[],tPeople=[],codeInfo=null,shareInfo=null,rpRows=[],rpItem=null;
-let admReady=false,admLoaded=false,admTab='groups',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false,admAcc=null,admAccErr='',admAccQ='';
+let admReady=false,admLoaded=false,admTab='groups',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false,admAcc=null,admAccErr='',admAccQ='',admAccTrips={};
 const paidMap=new Map();let paidFor='',rpCount=new Map(),rpFor='',codeCache=new Map();
 function isAnon(){return !!(sbSession&&sbSession.user&&(sbSession.user.is_anonymous||!sbSession.user.email));}
 const ROLE_NAME={admin:'Quản trị viên',leader:'Leader',helper:'Người phụ trách',viewer:'Thành viên (chỉ xem)'};
@@ -3500,16 +3504,22 @@ function accountsHtml(dis){
     <div class="row"><div class="field"><input type="email" id="qAdm" placeholder="email@gmail.com" autocapitalize="off" autocomplete="off" aria-label="Email quản trị viên mới"></div><button type="button" class="btn" data-q="admadd"${dis}>Thêm quản trị</button></div></div>`;
   if(admAccErr)return add+`<div class="note" role="alert">${esc(admAccErr)}</div>`;
   if(admAcc===null)return add+'<div class="hint">Đang tải danh sách tài khoản…</div>';
-  const q=admAccQ.trim().toLowerCase(),list=admAcc.filter(a=>!q||a.email.includes(q));
-  return add+`<div class="row"><div class="field"><input type="search" id="qAccQ" value="${esc(admAccQ)}" placeholder="Tìm theo email" autocapitalize="off" autocomplete="off" aria-label="Tìm tài khoản"></div></div>
+  const q=admAccQ.trim().toLowerCase(),tr=e=>admAccTrips[e]||[];
+  const list=admAcc.filter(a=>!q||a.email.includes(q)||tr(a.email).some(t=>(t.trip_name+' '+(t.group_name||'')).toLowerCase().includes(q))||(a.organizer_of||[]).some(g=>g.toLowerCase().includes(q)));
+  const tripsHtml=e=>{const rows=tr(e);if(!rows.length)return '';
+    return `<div class="acc-trips"><div class="sub">Quyền theo chuyến (${rows.length})</div>`+rows.map(t=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(t.trip_name)}</b>${t.group_name?` <small>· ${esc(t.group_name)}</small>`:''}${t.deleted?' <small style="color:var(--neg)">· trong thùng rác</small>':t.closed?' <small>· đã chốt sổ</small>':''}
+      ${t.role==='helper'?`<div class="hint" style="min-height:0">Nhập liệu: ${(t.tabs||[]).map(k=>TAB_NAME[k]||k).join(', ')||'—'}</div>`:''}</div>
+      <span class="badge${t.role==='leader'?' on':''}">${t.role==='leader'?'Leader':'Người phụ trách'}</span></div>`).join('')+`</div>`;};
+  return add+`<div class="row"><div class="field"><input type="search" id="qAccQ" value="${esc(admAccQ)}" placeholder="Tìm theo email, tên chuyến, tên nhóm" autocapitalize="off" autocomplete="off" aria-label="Tìm tài khoản"></div></div>
     <div class="hint" style="min-height:0">${admAcc.length} tài khoản · ${admAcc.filter(a=>a.is_admin).length} quản trị viên${q?` · đang lọc ${list.length}`:''}</div>`+
     (list.length?list.map(a=>{const org=a.organizer_of||[];
       return `<div class="rcard"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(a.email)}</b>${a.is_me?' <small>(bạn)</small>':''}
-        <div class="row" style="gap:6px;margin-top:4px">${a.is_admin?'<span class="badge on">Quản trị viên</span>':''}${org.length?`<span class="badge">Tổ chức: ${esc(org.join(', '))}</span>`:''}${a.trip_roles?`<span class="badge">Vai trò ở ${a.trip_roles} chuyến</span>`:''}${!a.is_admin&&!org.length&&!a.trip_roles?'<span class="badge">Chưa có quyền</span>':''}</div>
+        <div class="row" style="gap:6px;margin-top:4px">${a.is_admin?'<span class="badge on">Quản trị viên</span>':''}${org.length?`<span class="badge">Tổ chức: ${esc(org.join(', '))}</span>`:''}${!a.is_admin&&!org.length&&!a.trip_roles?'<span class="badge">Chưa có quyền</span>':''}</div>
         <div class="hint" style="min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}${a.created_at?' · tạo '+fd(a.created_at):''}</div></div>
-        ${a.is_admin?(a.is_me?'':`<button type="button" class="btn danger-o small" data-q="admrm" data-e="${esc(a.email)}"${dis}>Gỡ quản trị</button>`):`<button type="button" class="btn ghost small" data-q="admset" data-e="${esc(a.email)}"${dis}>Cấp quản trị</button>`}</div></div>`;}).join(''):'<div class="hint">Không có tài khoản nào khớp.</div>');}
+        ${a.is_admin?(a.is_me?'':`<button type="button" class="btn danger-o small" data-q="admrm" data-e="${esc(a.email)}"${dis}>Gỡ quản trị</button>`):`<button type="button" class="btn ghost small" data-q="admset" data-e="${esc(a.email)}"${dis}>Cấp quản trị</button>`}</div>${tripsHtml(a.email)}</div>`;}).join(''):'<div class="hint">Không có tài khoản nào khớp.</div>');}
 async function admLoadAcc(){
-  const {data,error}=await sb.rpc('admin_accounts');
+  const [{data,error},rt]=await Promise.all([sb.rpc('admin_accounts'),sb.rpc('admin_account_trips')]);
+  admAccTrips={};(rt&&rt.data||[]).forEach(t=>{(admAccTrips[t.email]=admAccTrips[t.email]||[]).push(t);});
   if(error){admAcc=[];admAccErr=/admin_accounts|schema cache|does not exist|not find/i.test(error.message||'')?'Chưa bật chức năng này: cần chạy file supabase/008_quan_ly_tai_khoan.sql trong Supabase (SQL Editor).':'Không tải được danh sách: '+(ERR_VN[error.message]||error.message);}
   else{admAcc=data||[];admAccErr='';}
   if(curTab==='group')renderGroupTab();}

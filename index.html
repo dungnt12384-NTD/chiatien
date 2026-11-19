@@ -1386,6 +1386,9 @@ html.phone .undo-fab button{padding:0 10px}
 @keyframes udDot{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.ud-hl,.ud-dot{animation:none}}
 @media print{.ud-bar{display:none!important}}
+/* v87: cảnh báo tài khoản nhận tiền vừa đổi; khoản chi của người khác (Người hỗ trợ chỉ xem) */
+.bank-warn{margin:4px 0;padding:7px 10px;border-radius:10px;background:var(--neg-bg,#fdecec);color:var(--neg,#c62828);border:1.5px solid currentColor;font-size:12.5px;font-weight:600;line-height:1.4}
+.exp-lock{flex:0 0 auto;font-size:11px;color:var(--muted);white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
 /* v80: Tra cứu quyền cân cỡ chữ theo các mục khác (tiêu đề mục 14px, tên 14.5px, chữ phụ 12px, nhãn 11px) */
 html body .admin-card .perm-sec>.sub{font-size:14px!important;font-weight:700!important;margin:0}
 html body .admin-card .perm-det .sub{font-size:12.5px!important;font-weight:700!important;color:var(--muted)!important;margin:8px 0 0}
@@ -1559,7 +1562,8 @@ html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;bo
       </div>
       <details class="bank-box" id="bankBox">
         <summary>🏦 Tài khoản nhận tiền của thủ quỹ <small id="bankSum"></small></summary>
-        <div class="hint" style="min-height:0">Điền để tab Tổng kết có mã QR chuyển khoản ghi sẵn số tiền từng người phải nộp.</div>
+        <div class="hint" style="min-height:0">Điền để tab Tổng kết có mã QR chuyển khoản ghi sẵn số tiền từng người phải nộp. Chỉ Thủ quỹ đổi được; mỗi lần đổi đều ghi người đổi, giờ đổi và cảnh báo cho cả nhóm 48 giờ.</div>
+        <div id="bankMeta"></div>
         <div class="row">
           <div class="field"><label for="bankBin">Ngân hàng</label><select id="bankBin"></select></div>
           <div class="field"><label for="bankAcc">Số tài khoản</label><input type="text" id="bankAcc" inputmode="numeric" autocomplete="off" maxlength="19"></div>
@@ -1687,6 +1691,7 @@ html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;bo
       <div class="grow"><h2>Tổng kết</h2><p>Tổng chi phí và chốt sổ từng người với thủ quỹ</p></div>
     </div>
     <div class="sec-b">
+      <div id="bankWarnRes"></div>
       <div id="myPart"></div>
       <div class="kpis" id="kpis"></div>
       <div id="warns"></div>
@@ -2623,8 +2628,8 @@ function renderList(c){
       return `<div class="item" data-eid="${e.id}"><button type="button" class="grip" data-grip="${e.id}" aria-label="Kéo để đổi thứ tự, hoặc dùng phím mũi tên lên xuống">${GRIP}</button>${avatar(e.payer)}<div class="mid"><div class="t">${esc(e.desc)}</div>
       ${e.rooms&&e.rooms.length?`<div class="s">${nameNo(e.payer)} chi · ${e.rooms.length} phòng, tổng tiền phòng ${fmt(e.amount)}</div><div class="rlines">${roomLinesHtml(e)}</div>`:`<div class="s">${nameNo(e.payer)} chi · ${splitText(e)}${e.excluded.length?` · bỏ ${e.excluded.map(i=>nameNo(i)).join(', ')}`:''}</div>`}</div>
       <div class="amt num" style="color:var(--c-expense)">${fmt(e.amount)}</div>
-      <button class="btn ghost small" data-act="editExp" data-id="${e.id}" type="button">Sửa</button>
-      <button class="xbtn" data-act="delExp" data-id="${e.id}" aria-label="Xoá khoản chi">${X}</button>${window.supabase&&sbGroup&&!PV_TOKEN?`<button type="button" class="rpbtn" data-rp="${e.id}">Báo sai</button>`:''}</div>`;}).join('')+'</div>'}</div>`;
+      ${expMine(e)?`<button class="btn ghost small" data-act="editExp" data-id="${e.id}" type="button">Sửa</button>
+      <button class="xbtn" data-act="delExp" data-id="${e.id}" aria-label="Xoá khoản chi">${X}</button>`:`<span class="exp-lock" title="Khoản do ${esc(e.by||'người khác')} nhập. Chỉ người nhập hoặc Thủ quỹ sửa / xoá được.">🔒 ${esc(e.by?e.by.split('@')[0]:'người khác')}</span>`}${window.supabase&&sbGroup&&!PV_TOKEN?`<button type="button" class="rpbtn" data-rp="${e.id}">Báo sai</button>`:''}</div>`;}).join('')+'</div>'}</div>`;
   }).join('');
 }
 function balPill(b){
@@ -2985,7 +2990,7 @@ $('#expForm').addEventListener('submit',ev=>{ev.preventDefault();
     rooms:room?formRooms.map((r,k)=>({id:r.id,name:r.name.trim()||('Phòng '+(k+1)),price:r.price,people:[...r.people]})):null,
     selfRoom:room?[...formSelf]:[]};
   const finish=()=>{
-    if(editing){Object.assign(S.expenses.find(e=>e.id===editing),rec);}else S.expenses.push({id:uid(),...rec});
+    if(editing){Object.assign(S.expenses.find(e=>e.id===editing),rec);}else S.expenses.push({id:uid(),...rec,...(myMail()?{by:myMail()}:{})});
     S.activeDay=rec.dayId;
     const dsel=rec.dayId;openDays.add(rec.dayId);resetExpForm();render();$('#expDay').value=dsel;renderSplit();$('#expDesc').focus();};
   const proceed=()=>{
@@ -3167,6 +3172,7 @@ document.addEventListener('click',ev=>{
   else if(act==='togBal'){openBal.has(id)?openBal.delete(id):openBal.add(id);render();}
   else if(act==='expandAdv'){S.members.forEach(m=>openAdv.add(m.id));render();}
   else if(act==='collapseAdv'){openAdv.clear();render();}
+  else if((act==='delExp'||act==='editExp')&&!expMine(S.expenses.find(x=>x.id===id))){toast(DENY_MSG.exp_other);return;}
   else if(act==='delExp'){const e=S.expenses.find(x=>x.id===id);if(!e)return;
     ask(`Xoá khoản chi "${e.desc}" (${fmt(e.amount)})? Khoản chi được giữ trong Thùng rác, khôi phục được.`,{ok:'Xoá khoản chi',danger:true},()=>{trashExpense(e);S.expenses=S.expenses.filter(x=>x.id!==id);if(editing===id)resetExpForm();render();});}
   else if(act==='editExp'){startEdit(id);}
@@ -3427,6 +3433,11 @@ async function doPush(id){
   }catch(e){
     q.busy=false;
     if(e&&e.code==='conflict'){handleConflict(id,e);return;}
+    if(e&&e.code==='denied'){t.unsynced=false;   /* v87: máy chủ từ chối phần không có quyền -> quay về bản trên máy chủ */
+      try{if(e.rev!=null)setRev(id,e.rev);}catch(x){}
+      if(validTrip(e.remote)){t.data=JSON.parse(JSON.stringify(e.remote.data));t.name=e.remote.name;normTrip(t);lastJson.set(id,snapJson(t));baseMap.set(id,JSON.parse(JSON.stringify(t.data)));if(id===R.current)S=t.data;}
+      toast((DENY_MSG[e.reason]||'Bạn không có quyền sửa phần này.')+' Đã trả lại số liệu trên máy chủ.');
+      saveLocal();render();setSync('ok');return;}
     if(e&&(e.code==='closed'||e.code==='deleted')){t.unsynced=false;
       if(e.code==='closed'){const r=tripRoles.get(id);if(r&&!r.closed_at)r.closed_at=new Date().toISOString();if(validTrip(e.remote)){t.data=JSON.parse(JSON.stringify(e.remote.data));t.name=e.remote.name;normTrip(t);lastJson.set(id,snapJson(t));baseMap.set(id,JSON.parse(JSON.stringify(t.data)));if(id===R.current)S=t.data;}
         toast('Chuyến "'+t.name+'" đã chốt sổ, phần vừa sửa không được lưu.');}
@@ -3520,6 +3531,7 @@ function makeAdapter(gid){
         if(data&&data.conflict){const e=new Error('conflict');e.code='conflict';e.remote=data;throw e;}
         if(data&&data.closed){const e=new Error('closed');e.code='closed';e.remote=data.data;throw e;}
         if(data&&data.deleted){const e=new Error('deleted');e.code='deleted';throw e;}
+        if(data&&data.denied){const e=new Error('denied');e.code='denied';e.reason=data.denied;e.remote=data.data;e.rev=data.rev;throw e;}
         setRev(id,data.rev);forceSet.delete(id);
         if(isNew&&!tripRoles.has(id)){tripRoles.set(id,{role:'leader',tabs:['member','advance','room','expense'],closed_at:null});}},
       delete:async()=>{const {error}=await sb.rpc('trash_trip',{gid:gid,tid:id});if(error)throw sbErr(error);revMap.delete(id);}};},
@@ -3641,6 +3653,13 @@ function roleOf(id){id=id||R.current;const r=tripRoles.get(id);if(r)return {role
 function isClosed(id){const r=tripRoles.get(id||R.current);return !!(r&&r.closed_at);}
 function canEditAny(id){if(!window.supabase)return true;if(PV_TOKEN||!sbSession||!sbGroup)return false;return roleOf(id).role!=='viewer';}
 function canLead(id){if(!window.supabase)return true;if(PV_TOKEN||!sbSession||!sbGroup)return false;const r=roleOf(id).role;return r==='leader'||r==='admin';}
+/* v87: máy chủ (supabase/022) kiểm từng phần khi lưu; đây là chữ báo khi bị từ chối và các kiểm tra tương ứng trên giao diện */
+const DENY_MSG={bank:'Chỉ Thủ quỹ được đổi tài khoản nhận tiền.',member:'Bạn không được giao sửa Người đi.',advance:'Bạn không được giao sửa Tiền đã đóng.',
+  expense:'Bạn không được giao nhập khoản chi.',exp_other:'Bạn chỉ sửa / xoá được khoản chi do chính mình tạo.'};
+function expMine(e){if(!e||(e.rooms&&e.rooms.length))return true;if(!window.supabase||!sbGroup||PV_TOKEN)return true;
+  let id=null;try{id=R.current;}catch(x){}if(canLead(id)||!canEditAny(id))return true;   /* người chỉ xem: để lớp khoá chung ẩn nút như cũ */
+  const me=myMail();return !!me&&e.by===me;}
+function bankCanEdit(){if(!window.supabase||!sbGroup)return true;let id=null;try{id=R.current;}catch(x){}return canLead(id);}
 function canEditTab(tab,id){if(!window.supabase)return true;if(!canEditAny(id)||isClosed(id))return false;const r=roleOf(id);return r.role!=='helper'||r.tabs.includes(tab);}
 const LOCK_TABS=['member','advance','room','expense'];
 function applyLocks(){
@@ -4580,10 +4599,18 @@ function vietQr(b,amount,msg){
   return p+crc16(p);}
 function qrSvg(text){if(typeof qrcode!=='function')return '<div class="hint">Chưa tải được bộ tạo mã QR.</div>';const q=qrcode(0,'M');q.addData(text);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true});}
 function qrMsg(id){const m=mem(id);return noAccent((m?m.name:'')+' '+((trip()||{}).name||'')).slice(0,25).trim();}
+/* v87: ai đặt tài khoản nhận, lúc nào (máy chủ ghi data.bankBy / bankAt); vừa đổi trong 48 giờ thì cảnh báo đỏ */
+function bankRecent(){const at=S.bankAt?new Date(S.bankAt):null;return !!(S.bank&&at&&!isNaN(at)&&Date.now()-at<48*3600e3);}
+function bankMetaHtml(){if(!S.bank)return '';const at=S.bankAt?new Date(S.bankAt):null,ok=at&&!isNaN(at);
+  const who=S.bankBy?`do <b>${esc(S.bankBy)}</b> đặt`:'chưa rõ ai đặt (đặt trước bản v87)',when=ok?` lúc ${fdt(at)}`:'';
+  return bankRecent()?`<div class="bank-warn">⚠ Tài khoản nhận tiền vừa được đổi${when}, ${who}. Nếu thấy lạ, hỏi lại Thủ quỹ trước khi chuyển.</div>`
+    :`<div class="hint" style="min-height:0">Tài khoản nhận ${who}${when}.</div>`;}
+function paintBankWarn(){const el=document.getElementById('bankWarnRes');if(!el)return;el.innerHTML=bankOk()&&bankRecent()?bankMetaHtml():'';}
 function qrCard(id,amount){const b=S.bank,msg=qrMsg(id);
   return `<div class="qr-card"><div class="qr-img" aria-label="Mã QR chuyển ${fmt(amount)}">${qrSvg(vietQr(b,amount,msg))}</div>
     <div class="qr-info"><div class="hint" style="min-height:0">Mở app ngân hàng, quét mã là có sẵn số tiền và nội dung.</div><b class="num" style="color:var(--neg)">${fmt(amount)}</b>
-    <div>${esc(bankName(b.bin))} · <b>${esc(b.acc)}</b></div>${b.name?`<div>${esc(b.name)}</div>`:''}<div class="hint" style="min-height:0">Nội dung: ${esc(msg)}</div></div></div>`;}
+    <div>${esc(bankName(b.bin))} · <b>${esc(b.acc)}</b></div>${b.name?`<div>${esc(b.name)}</div>`:''}<div class="hint" style="min-height:0">Nội dung: ${esc(msg)}</div>
+    ${bankMetaHtml()}<div class="hint" style="min-height:0">Trước khi bấm chuyển, kiểm tra tên người nhận trong app ngân hàng${b.name?` phải là <b>${esc(b.name)}</b>`:' đúng là Thủ quỹ'}.</div></div></div>`;}
 const QR_ICO='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm1-9h2v2H6V6Zm10 0h2v2h-2V6ZM6 16h2v2H6v-2Zm7-3h2v2h-2v-2Zm4 0h4v2h-2v2h-2v-4Zm-4 4h2v4h-2v-4Zm4 2h2v2h-2v-2Zm2-2h2v2h-2v-2Z"/></svg>';
 function qrBtn(id,n){return n<0&&bankOk()?`<button type="button" class="qr-btn" data-qr="${esc(id)}" data-n="${-n}" title="Mã QR chuyển khoản ${fmt(-n)}" aria-label="Mở mã QR chuyển khoản ${fmt(-n)}">${QR_ICO}<span>Quét QR</span></button>`:'';}
 function showQr(id,amount){const m=mem(id);$('#qrTitle').textContent='QR nộp tiền: '+(m?m.name:'');$('#qrBody').innerHTML=qrCard(id,amount);$('#qrModal').hidden=false;$('#qrClose').focus();}
@@ -4595,10 +4622,14 @@ function paintBank(){const sel=$('#bankBin');if(!sel||!BANKS)return;const b=S.ba
   if(!sel.options.length)sel.innerHTML='<option value="">Chọn ngân hàng…</option>'+BANKS.map(x=>`<option value="${x[0]}">${esc(x[1])}</option>`).join('');
   const act=document.activeElement;
   if(act!==sel)sel.value=b.bin||'';if(act!==$('#bankAcc'))$('#bankAcc').value=b.acc||'';if(act!==$('#bankName'))$('#bankName').value=b.name||'';
-  $('#bankSum').textContent=bankOk()?'· '+bankName(b.bin)+' '+b.acc:'· chưa có';}
+  $('#bankSum').textContent=bankOk()?'· '+bankName(b.bin)+' '+b.acc:'· chưa có';
+  const can=bankCanEdit();['bankBin','bankAcc','bankName'].forEach(k=>{const e=$('#'+k);if(!e)return;if(!can){e.disabled=true;e.dataset.bk='1';}else if(e.dataset.bk){e.disabled=false;delete e.dataset.bk;}});
+  const m=$('#bankMeta');if(m)m.innerHTML=bankMetaHtml()+(can?'':'<div class="hint" style="min-height:0">🔒 Chỉ Thủ quỹ đổi được tài khoản nhận tiền.</div>');
+  try{paintBankWarn();}catch(e){}}
 ['bankBin','bankAcc','bankName'].forEach(k=>$('#'+k).addEventListener('change',()=>{
+  if(!bankCanEdit()){toast(DENY_MSG.bank);paintBank();return;}
   const bin=$('#bankBin').value,acc=($('#bankAcc').value||'').replace(/\s+/g,''),name=noAccent($('#bankName').value);
-  if(!bin&&!acc&&!name)delete S.bank;else S.bank={bin,acc,name};
+  if(!bin&&!acc&&!name){delete S.bank;delete S.bankBy;delete S.bankAt;}else{S.bank={bin,acc,name};S.bankBy=myMail()||'';S.bankAt=new Date().toISOString();}
   if(acc&&!/^[0-9A-Za-z]{4,19}$/.test(acc))toast('Số tài khoản chỉ gồm chữ số (4–19 ký tự).');
   render();}));
 try{paintBank();}catch(e){}

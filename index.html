@@ -1396,7 +1396,8 @@ html body .org-mail{font-size:14px!important}
       <div class="row"><button class="btn" type="button" id="tripNewBtn">+ Tạo chuyến mới</button><button class="btn ghost" type="button" id="tripEditBtn" aria-expanded="false"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M15.6 3.6a2.2 2.2 0 0 1 3.1 0l1.7 1.7a2.2 2.2 0 0 1 0 3.1L9.2 19.6 4 21a.8.8 0 0 1-1-1l1.4-5.2L15.6 3.6Z"/></svg> Sửa chuyến</button></div>
       <form class="row" id="tripForm" autocomplete="off" style="display:none">
         <div class="field" style="flex-basis:260px"><label for="newTripName">Tạo chuyến mới</label><input type="text" id="newTripName" placeholder="Ví dụ: Đà Lạt 20/12" maxlength="50"></div>
-        <div class="field" style="flex-basis:260px"><label for="copyFrom">Chép thành viên từ chuyến</label><select id="copyFrom"></select></div>
+        <div class="field" style="flex-basis:260px"><label for="copyFrom">Chép từ chuyến</label><select id="copyFrom"></select></div>
+        <div class="field" style="flex-basis:220px" id="copyModeF"><label for="copyMode">Chép những gì</label><select id="copyMode"><option value="members">Chỉ người đi</option><option value="full">Nhân bản toàn bộ (người đi, ngày, phòng, khoản chi, tiền đã đóng)</option></select></div>
         <div class="row" hidden style="align-items:center;flex-basis:100%"><span class="sub">Màu của chuyến mới</span><div class="swatches" id="newTripColors" role="group" aria-label="Màu của chuyến mới"></div></div>
         <button class="btn" type="submit">Tạo chuyến</button>
         <button class="btn ghost" type="button" id="tripNewCancel">Huỷ</button>
@@ -1826,8 +1827,31 @@ function copyMembersInto(target,srcData){const map={},byName=new Map(target.memb
   (srcData.members||[]).forEach(m=>{if(m.parent&&map[m.parent]&&addedIds.includes(map[m.id])&&map[m.id]!==map[m.parent]){const t=target.members.find(x=>x.id===map[m.id]);if(t)t.parent=map[m.parent];}});
   return {map,added:addedIds.length,addedIds};}
 function fillCopyFrom(){const sel=$('#copyFrom');if(!sel)return;const keep=sel.value,had=sel.dataset.init==='1';
-  sel.innerHTML='<option value="">Không chép</option>'+R.trips.map(t=>`<option value="${t.id}">${esc(t.name)} (${t.data.members.length} người)</option>`).join('');
-  sel.value=(had&&(keep===''||R.trips.some(t=>t.id===keep)))?keep:(trip().data.members.length?R.current:'');sel.dataset.init='1';}
+  const ext=window.COPY_EXT;let many=false;try{many=!!(sbSession&&!PV_TOKEN&&sbGroups.length>1);}catch(e){}
+  sel.innerHTML='<option value="">Không chép</option>'+R.trips.filter(t=>!t.ph).map(t=>`<option value="${t.id}">${esc(t.name)} (${t.data.members.length} người)</option>`).join('')+
+    (ext?`<option value="ext">${esc(ext.label)}</option>`:'')+(many?'<option value="pick">↪ Chuyến của nhóm khác…</option>':'');
+  sel.value=(had&&(keep===''||(keep==='ext'&&ext)||R.trips.some(t=>t.id===keep)))?keep:(ext?'ext':(trip().data.members.length?R.current:''));sel.dataset.init='1';
+  const mf=$('#copyModeF');if(mf)mf.hidden=!sel.value;}
+/* v72: chọn chuyến của nhóm khác làm nguồn để nhân bản */
+async function loadTripsOf(gid){const {data,error}=await sb.from('trips').select('id,data').eq('group_id',gid).eq('deleted',false);
+  if(error)throw error;return (data||[]).filter(r=>r.data&&r.data.data&&Array.isArray(r.data.data.members)).map(r=>({id:r.id,name:r.data.name||'(chưa đặt tên)',color:r.data.color,data:r.data.data}));}
+function pickExtTrip(){const sel=$('#copyFrom'),back=()=>{sel.value=window.COPY_EXT?'ext':'';fillCopyFrom();};
+  const gs=sbGroups.filter(g=>!sbGroup||g.id!==sbGroup.id);if(!gs.length){back();return;}
+  ask('Chọn nhóm có chuyến muốn nhân bản.',{title:'Chép từ nhóm nào?',noLabel:'Huỷ',choices:gs.map(g=>({label:g.name,fn:async()=>{
+    let L;try{L=await loadTripsOf(g.id);}catch(e){toast('Chưa tải được chuyến của nhóm này.');back();return;}
+    if(!L.length){toast('Nhóm “'+g.name+'” chưa có chuyến nào bạn xem được.');back();return;}
+    ask('Chọn chuyến để nhân bản.',{title:'Chuyến của nhóm “'+g.name+'”',noLabel:'Huỷ',choices:L.map(t=>({label:`${t.name} · ${t.data.members.length} người`,fn:()=>{
+      window.COPY_EXT={label:`${t.name} · nhóm ${g.name} (${t.data.members.length} người)`,name:t.name,color:t.color,data:t.data};sel.dataset.init='';fillCopyFrom();sel.value='ext';$('#copyModeF').hidden=false;}}))},null,back);}}))},null,back);}
+function cloneFull(src){const d=JSON.parse(JSON.stringify(src));delete d.trashExp;return d;}
+function cloneMembers(src){const d=blank();if(src&&src.members&&src.members.length){const r=copyMembersInto(d,src);d.days[0].present=d.members.map(m=>m.id);d.holder=src.holder?r.map[src.holder]||null:null;}return d;}
+/* v72: sao chép chuyến đang mở sang nhóm khác (hoặc chính nhóm này) */
+async function copyTripTo(g,src,full){
+  const data=full?cloneFull(src.data):cloneMembers(src.data),name=(src.name||'Chuyến')+' (bản sao)';
+  if(sbGroup&&g.id===sbGroup.id){R.trips=R.trips.filter(t=>!t.ph);const nt=mkTrip(name,data);R.trips.push(nt);tripFormOpen=false;tripEditorOpen=false;useTrip(nt.id);showTab('trip',true);toast('Đã tạo “'+name+'” trong nhóm này.');return;}
+  const id=uid(),{error}=await sb.rpc('save_trip',{p_id:id,p_group:g.id,p_data:{name,color:src.color||TRIP_COLORS[0],updatedAt:Date.now(),data},p_base:0,p_force:false});
+  if(error){toast('Chưa sao chép được: '+(ERR_VN[error.message]||error.message));return;}
+  ask(`Đã tạo “${name}” trong nhóm “${g.name}”. Bạn là leader của chuyến mới. Mở nhóm đó để xem?`,{title:'Đã sao chép',ok:'Mở nhóm đó',noLabel:'Ở lại'},()=>{
+    try{localStorage.setItem('chiatien-lt-'+g.id,id);}catch(e){}connectGroup(g);showTab('trip',true);});}
 function syncTripUi(){fillCopyFrom();
   {const emp=!!(R.trips.length===1&&R.trips[0].ph&&!PV_TOKEN&&dbCanWrite&&(!window.supabase||(sbSession&&sbGroup)));const was=document.documentElement.classList.contains('empty');document.documentElement.classList.toggle('empty',emp);if(emp){tripFormOpen=true;tripEditorOpen=false;}
     else if(was){tripFormOpen=false;tripEditorOpen=false;}}   /* hết trạng thái "nhóm trống" (vd đổi nhóm, chuyến vừa tải xong) -> đóng khung Tạo chuyến đã tự mở, không để kẹt chế độ tập trung */
@@ -3692,6 +3716,7 @@ function tripMngCard(){
     <button type="button" class="btn ghost small" data-tx="hist">Lịch sử thay đổi</button>
     ${ed?'<button type="button" class="btn ghost small" data-tx="people">Leader và phụ trách</button>':''}
     ${ld?'<button type="button" class="btn ghost small" data-tx="trash">Thùng rác chuyến</button>':''}
+    ${sbGroups.some(g=>g.can_create)?'<button type="button" class="btn ghost small" data-tx="copyto">Sao chép chuyến</button>':''}
   </div></div>`;}
 function renderGroupTab(){
   const el=document.getElementById('grpMain');if(!el)return;
@@ -4016,6 +4041,12 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
     ask(sbGroups.length>1?'Chọn nhóm để xem các chuyến của nhóm đó.':'Bạn mới có 1 nhóm. Có mã chuyến của nhóm khác thì nhập ở ô bên dưới danh sách chuyến.',{title:'Chọn nhóm',noLabel:'Huỷ',
       choices:sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,ac=myAccess[g.id],n=ac?(ac.trips||[]).length:g.trips;
         return {label:(cur?'✓ ':'')+g.name+(n!=null?' · '+n+' chuyến':''),fn:()=>{if(!cur){connectGroup(g);toast('Đang mở nhóm “'+g.name+'”…');}showTab('trip',true);}};})});return;}
+  if(a==='copyto'){const L=sbGroups.filter(g=>g.can_create);if(!L.length||!t||t.ph)return;const src={name:t.name,color:t.color,data:JSON.parse(JSON.stringify(t.data))};
+    ask(`Sao chép chuyến “${src.name}” sang nhóm nào? Bạn sẽ là leader của chuyến mới.`,{title:'Sao chép chuyến',noLabel:'Huỷ',
+      choices:L.map(g=>({label:g.name+(sbGroup&&g.id===sbGroup.id?' (nhóm này)':''),fn:()=>{
+        setTimeout(()=>ask('Chép những gì sang chuyến mới?',{title:'Sao chép sang “'+g.name+'”',noLabel:'Huỷ',choices:[
+          {label:'Nhân bản toàn bộ (người đi, ngày, phòng, khoản chi, tiền đã đóng)',fn:()=>copyTripTo(g,src,true)},
+          {label:'Chỉ người đi',fn:()=>copyTripTo(g,src,false)}]}),0);}}))});return;}
   if(a==='pickmng'){const L=R.trips.filter(x=>!x.ph);if(!L.length)return;   /* chọn chuyến ngay tại thẻ Quản lý chuyến */
     ask(L.length>1?'Chọn chuyến để quản lý.':'Nhóm này mới có 1 chuyến.',{title:'Chọn chuyến',noLabel:'Huỷ',
       choices:L.map(x=>{const cur=x.id===R.current;return {label:(cur?'✓ ':'')+x.name,fn:()=>{if(!cur){tripFormOpen=false;tripEditorOpen=false;useTrip(x.id);}renderGroupTab();}};})});return;}
@@ -4323,11 +4354,10 @@ $('#bkAdd').addEventListener('click',()=>{const info=bulkInfo(),unit=advMode==='
 $('#tripForm').addEventListener('submit',ev=>{ev.preventDefault();
   R.trips=R.trips.filter(t=>!t.ph);
   const name=$('#newTripName').value.trim()||('Chuyến đi '+(R.trips.length+1));
-  const data=blank();
-  const srcT=R.trips.find(t=>t.id===$('#copyFrom').value);
-  if(srcT&&srcT.data.members.length){const r=copyMembersInto(data,srcT.data);
-    data.days[0].present=data.members.map(m=>m.id);data.holder=srcT.data.holder?r.map[srcT.data.holder]||null:null;
-  }
+  const cv=$('#copyFrom').value,full=$('#copyMode').value==='full';
+  const srcData=cv==='ext'&&window.COPY_EXT?window.COPY_EXT.data:((R.trips.find(t=>t.id===cv)||{}).data||null);
+  const data=srcData&&full?cloneFull(srcData):cloneMembers(srcData);
+  window.COPY_EXT=null;$('#copyMode').value='members';
   const t=mkTrip(name,data);if(newTripColor)t.color=newTripColor;newTripColor='';R.trips.push(t);$('#newTripName').value='';tripFormOpen=false;tripEditorOpen=false;useTrip(t.id);});
 $('#memberCopy').addEventListener('click',()=>{const others=R.trips.filter(t=>t.id!==R.current&&t.data.members.length);
   if(!others.length){say('#memberMsg','Chưa có chuyến nào khác có thành viên để chép.');return;}
@@ -4339,6 +4369,7 @@ $('#memberCopy').addEventListener('click',()=>{const others=R.trips.filter(t=>t.
       if(!S.holder&&S.members[0])S.holder=S.members[0].id;
       render();say('#memberMsg',`Đã chép ${r.added} thành viên từ "${t.name}". Người mới chưa được tính vào các khoản chi cũ.`);}}))},null,null);});
 $('#tripEditBtn').addEventListener('click',()=>{if(tripEditorOpen&&!tripFormOpen){tripExit();return;}tripEditorOpen=true;tripFormOpen=false;syncTripUi();});
+$('#copyFrom').addEventListener('change',e=>{if(e.target.value==='pick'){pickExtTrip();return;}$('#copyModeF').hidden=!e.target.value;});
 $('#tripNewBtn').addEventListener('click',()=>{tripFormOpen=true;tripEditorOpen=false;newTripColor='';{const cf=$('#copyFrom');if(cf)delete cf.dataset.init;}syncTripUi();$('#newTripName').focus();});
 $('#tripNewCancel').addEventListener('click',()=>{tripFormOpen=false;syncTripUi();});
 /* tab Chuyến: đang mở "Sửa chuyến" hoặc "Tạo chuyến mới" = chế độ tập trung: phần khác xám + không bấm được;

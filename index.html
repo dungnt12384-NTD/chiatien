@@ -1739,7 +1739,8 @@ function fillCopyFrom(){const sel=$('#copyFrom');if(!sel)return;const keep=sel.v
   sel.innerHTML='<option value="">Không chép</option>'+R.trips.map(t=>`<option value="${t.id}">${esc(t.name)} (${t.data.members.length} người)</option>`).join('');
   sel.value=(had&&(keep===''||R.trips.some(t=>t.id===keep)))?keep:(trip().data.members.length?R.current:'');sel.dataset.init='1';}
 function syncTripUi(){fillCopyFrom();
-  {const emp=!!(R.trips.length===1&&R.trips[0].ph&&!PV_TOKEN&&dbCanWrite&&(!window.supabase||(sbSession&&sbGroup)));document.documentElement.classList.toggle('empty',emp);if(emp){tripFormOpen=true;tripEditorOpen=false;}}
+  {const emp=!!(R.trips.length===1&&R.trips[0].ph&&!PV_TOKEN&&dbCanWrite&&(!window.supabase||(sbSession&&sbGroup)));const was=document.documentElement.classList.contains('empty');document.documentElement.classList.toggle('empty',emp);if(emp){tripFormOpen=true;tripEditorOpen=false;}
+    else if(was){tripFormOpen=false;tripEditorOpen=false;}}   /* hết trạng thái "nhóm trống" (vd đổi nhóm, chuyến vừa tải xong) -> đóng khung Tạo chuyến đã tự mở, không để kẹt chế độ tập trung */
   const ed=$('#tripEditor'),fm=$('#tripForm'),nb=$('#tripNewBtn');
   if(ed)ed.style.display=(tripEditorOpen&&!tripFormOpen)?'flex':'none';
   if(tripFormOpen){if(!newTripColor)newTripColor=nextColor();const nc=$('#newTripColors');if(nc)nc.innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${newTripColor===c}" aria-label="Chọn màu ${c}" data-act="newColor" data-color="${c}"></button>`).join('');}
@@ -3855,6 +3856,7 @@ function renderTripExtra(){
   const gn=document.getElementById('tripGrpName');if(gn)gn.textContent=!PV_TOKEN&&sbSession&&sbGroup?sbGroup.name+' ▾':'';
   if(PV_TOKEN||!window.supabase||!sbSession||!sbGroup){el.innerHTML='';return;}
   const t=trip(),r=roleOf(),cl=isClosed(),ed=canEditAny(),ld=canLead(),synced=syncedSet.has(t.id)&&!t.ph;
+  if(t.ph&&(syncState==='connecting'||syncState==='slow')){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">⏳ Đang tải các chuyến của nhóm “${esc(sbGroup.name)}”…${syncState==='slow'?' Mạng đang chậm, chờ thêm chút.':''}</div></div>`;return;}
   if(t.ph){el.innerHTML=sbGroup.can_create?'':`<div class="gcard"><div class="hint" style="min-height:0">Nhóm này chưa có chuyến nào bạn xem được.</div></div>`;return;}
   if(!synced){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">Chuyến này đang được gửi lên nhóm…</div></div>`;return;}
   if(paidFor!==t.id)loadPaid(t.id);

@@ -1388,6 +1388,12 @@ html.phone .undo-fab button{padding:0 10px}
 @media print{.ud-bar{display:none!important}}
 /* v87: cảnh báo tài khoản nhận tiền vừa đổi; khoản chi của người khác (Người hỗ trợ chỉ xem) */
 .bank-warn{margin:4px 0;padding:7px 10px;border-radius:10px;background:var(--neg-bg,#fdecec);color:var(--neg,#c62828);border:1.5px solid currentColor;font-size:12.5px;font-weight:600;line-height:1.4}
+/* v105: chuyến đã chốt sổ nhìn là biết ngay: nhãn đỏ 🔒 + viền gạch đứt + nền hơi đỏ */
+html .closed-tag{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:800;line-height:1.3;padding:2px 8px;border-radius:99px;background:color-mix(in srgb,var(--neg,#c62828) 14%,var(--surface,#fff));color:var(--neg,#c62828);border:1.5px solid var(--neg,#c62828);white-space:nowrap;vertical-align:middle}
+html .trip.is-closed{border-style:dashed;border-color:var(--neg,#c62828);background:color-mix(in srgb,var(--neg,#c62828) 8%,var(--surface,#fff))}
+html .trip.is-closed[aria-selected="true"]{border-style:solid;color:var(--fg)}
+html .trip.is-closed small{color:var(--neg,#c62828);font-weight:700}
+html .acc-trip.is-closed{border-left:4px solid var(--neg,#c62828);background:color-mix(in srgb,var(--neg,#c62828) 7%,transparent)}
 .exp-lock{flex:0 0 auto;font-size:11px;color:var(--muted);white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
 /* v80: Tra cứu quyền cân cỡ chữ theo các mục khác (tiêu đề mục 14px, tên 14.5px, chữ phụ 12px, nhãn 11px) */
 html body .admin-card .perm-sec>.sub{font-size:14px!important;font-weight:700!important;margin:0}
@@ -2075,11 +2081,11 @@ function renderTripCode(){const box=document.getElementById('tripCodeBox');if(!b
   const show=!PV_TOKEN&&!!window.supabase&&!!sb&&!sbAdmin;box.hidden=!show;if(!show||box.firstChild)return;
   box.innerHTML=`<div class="trip-code"><div class="row" style="align-items:flex-end;gap:8px"><div class="field" style="flex:1 1 200px"><label for="qCodeT">Có mã chuyến? Nhập để thêm chuyến</label><input type="text" id="qCodeT" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="CH-XXXXXXXX"></div><button type="button" class="btn" data-q="codeT">Thêm chuyến</button></div><div id="qCodeMsgT"></div></div>`;}
 function renderTrips(){syncTripUi();try{renderTripExtra();}catch(e){}try{renderTripCode();}catch(e){}
-  $('#tripTabs').innerHTML=R.trips.map(t=>`<button type="button" class="trip" role="tab" aria-selected="${t.id===R.current}" data-act="pickTrip" data-id="${t.id}"><b>${esc(t.name)}</b><small class="num">${t.data.members.length} người · ${fmt(tripTotal(t))}</small></button>`).join('');
+  $('#tripTabs').innerHTML=R.trips.map(t=>{const cl=isClosed(t.id);return `<button type="button" class="trip${cl?' is-closed':''}" role="tab" aria-selected="${t.id===R.current}" data-act="pickTrip" data-id="${t.id}"${cl?' title="Đã chốt sổ"':''}><b>${cl?'🔒 ':''}${esc(t.name)}</b><small class="num">${cl?'ĐÃ CHỐT SỔ · ':''}${t.data.members.length} người · ${fmt(tripTotal(t))}</small></button>`;}).join('');
   const tn=$('#tripName');if(!editingTrip)tn.value=trip().name;
   const cur=trip();document.documentElement.style.removeProperty('--tc');
   $('#tripColors').innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${cur.color===c}" aria-label="Chọn màu ${c}" data-act="pickColor" data-color="${c}"></button>`).join('');
-  $('#tripBar').innerHTML=`${sbSession&&sbGroup?`<button type="button" class="crumb" data-tx="pickgrp" title="Bấm để chọn nhóm">${esc(sbGroup.name)} ▾</button><span>›</span>`:'<span>Đang xem chuyến</span>'}<b>${esc(cur.name)}</b><span class="num">${cur.data.members.length} người · ${cur.data.days.length} ngày · ${fmt(tripTotal(cur))}</span>`;
+  $('#tripBar').innerHTML=`${sbSession&&sbGroup?`<button type="button" class="crumb" data-tx="pickgrp" title="Bấm để chọn nhóm">${esc(sbGroup.name)} ▾</button><span>›</span>`:'<span>Đang xem chuyến</span>'}<b>${esc(cur.name)}</b>${isClosed(cur.id)?' <span class="closed-tag" title="Sổ đã chốt: không sửa được, mã QR chuyển khoản đã hiện ở Tổng kết">🔒 ĐÃ CHỐT SỔ</span>':''}<span class="num">${cur.data.members.length} người · ${cur.data.days.length} ngày · ${fmt(tripTotal(cur))}</span>`;
 }
 
 let swapSnap=null, swapMode=false, swapSel=null, newTripColor='', tripEditorOpen=false, tripFormOpen=false, nrDraft=null, priceWarn=null, editRooms=new Set(), editing=null, formExcl=new Set(), formKind='normal', formRooms=[], formSelf=new Set(), pickRoom=null, roomAskSkip=new Set(), roomAskForce=false;

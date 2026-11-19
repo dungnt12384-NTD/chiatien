@@ -1213,6 +1213,7 @@ html:not(.phone) .tab .tls{font-size:13px!important}
 button.acc-open{width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;color:inherit;font:inherit;cursor:pointer;padding:9px 4px}
 button.acc-open:hover{background:var(--fill)}
 button.acc-open.on{background:color-mix(in srgb,var(--brand) 10%,transparent)}
+.acc-row{padding:9px 4px}.acc-row.on{background:color-mix(in srgb,var(--brand) 10%,transparent)}.acc-row>.btn{flex:0 0 auto}
 /* chức năng không có quyền: xám đi, không bấm được (thay vì sáng như thường) */
 html .lk-off,html .lk-off:hover{opacity:.38!important;filter:grayscale(1)!important;cursor:not-allowed!important;box-shadow:none!important;transform:none!important}
 html .sec.lock input:disabled,html .sec.lock select:disabled,html .sec.lock textarea:disabled{opacity:.5!important;filter:grayscale(1);cursor:not-allowed!important;background:repeating-linear-gradient(135deg,var(--fill) 0 6px,transparent 6px 12px)!important}
@@ -3529,8 +3530,8 @@ function groupsCard(){
       <small class="hint" style="display:block;min-height:0">${a?trips.length:g.trips} chuyến bạn xem được · ${ex?'bấm để thu gọn':'bấm để xem chuyến'}</small></span></button>
       <button type="button" class="btn small${cur?' is-open':''}" data-q="${cur?'gowork':'pick'}" data-id="${esc(g.id)}">${cur?'Đang mở':'Mở nhóm'}</button></div>`+
       (a&&ex?`<div class="lv2"><div class="acc-src">${accessSrc(a)}</div>`+(trips.length?`<div class="acc-trips">`+trips.map(t=>{const on=cur&&R.current===t.id;
-        return `<button type="button" class="acc-trip acc-open${on?' on':''}" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}"><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;text-align:left"><b>${esc(t.name)}</b>${t.closed?' <small>· đã chốt sổ</small>':''}
-          <small class="hint" style="display:block;min-height:0">${VIA_NAME[t.via]||''}</small></span><span class="badge${t.role==='viewer'?'':' on'}">${TRIP_ROLE[t.role]||t.role}</span></button>`;}).join('')+`</div>`:
+        return `<div class="acc-trip acc-row${on?' on':''}"><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;text-align:left"><b>${esc(t.name)}</b>${t.closed?' <small>· đã chốt sổ</small>':''}
+          <small class="hint" style="display:block;min-height:0">${TRIP_ROLE[t.role]||t.role}${VIA_NAME[t.via]?' · '+VIA_NAME[t.via]:''}</small></span><button type="button" class="btn small${on?' is-open':''}" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}" title="Mở chuyến này ở tab Chuyến">${on?'Đang mở':'Mở'}</button></div>`;}).join('')+`</div>`:
         `<div class="hint" style="min-height:0">${a.is_organizer?'Chưa có chuyến nào bạn có vai trò. Bạn tạo chuyến mới ở tab Chuyến.':'Chưa có chuyến nào.'}</div>`)+`</div>`:'')+`</div>`;}).join('')+`</div>`;}
 const TRIP_ROLE={leader:'Leader',helper:'Người phụ trách',admin:'Quản trị',viewer:'Chỉ xem'};
 const VIA_NAME={role:'Được gán vai trò trong chuyến',admin:'Quyền quản trị viên',organizer:'Thuộc BTC nhóm: chỉ xem',trip_code:'Nhờ mã chuyến đã nhập',group_code:'Nhờ mã nhóm đã nhập'};

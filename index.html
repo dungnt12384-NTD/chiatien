@@ -1325,6 +1325,8 @@ html.phone .tab{height:58px!important}
 html.phone .tab svg{width:23px!important;height:23px!important}
 html.phone .tab .tls{font-size:10.5px!important}
 html.phone .sync-head{font-size:11px!important;max-width:55%}
+.mng-pick{border:1px solid var(--line,#d6dbe3);background:transparent;border-radius:10px;padding:6px 10px;font:inherit;color:inherit;cursor:pointer;text-align:left;overflow-wrap:anywhere;width:100%}
+.mng-pick span{color:var(--accent,#2563eb);font-weight:600}
 </style>
 
 
@@ -3641,7 +3643,7 @@ function requestCard(){
 function tripMngCard(){
   if(PV_TOKEN||!sbGroup)return '';const t=trip();if(!t||t.ph||!syncedSet.has(t.id))return '';
   const ed=canEditAny(),ld=canLead(),org=sbAdmin||(myAccess[sbGroup.id]&&myAccess[sbGroup.id].is_organizer);
-  return `<div class="gcard"><div class="gh"><b style="overflow-wrap:anywhere">🧰 Quản lý chuyến: ${esc(t.name)}</b></div><div class="row tx-row">
+  return `<div class="gcard"><div class="gh"><button type="button" class="mng-pick" data-tx="pickmng" title="Bấm để chọn chuyến khác"><b>🧰 Quản lý chuyến:</b> <span>${esc(t.name)} ▾</span></button></div><div class="row tx-row">
     ${org?'<button type="button" class="btn ghost small" data-tx="viewers">Thông tin hiện tại</button>':''}
     <button type="button" class="btn ghost small" data-tx="hist">Lịch sử thay đổi</button>
     ${ed?'<button type="button" class="btn ghost small" data-tx="people">Leader và phụ trách</button>':''}
@@ -3685,13 +3687,13 @@ function adminHtml(){
         const tDef=!!window.CODE_SET.trip.default_enabled,tOn=(all||[]).filter(t=>{const x=admTCodes[t.id];return x&&(tDef?!x.active:x.active);}).length;
         return `<div class="rcard grp-row${op?' cur':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap">
           <button type="button" class="lv-tog" data-q="agx" data-id="${esc(g.id)}" aria-expanded="${ex}"><span class="chev">▸</span><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${mk(g.name)}</b>
-          <small class="hint" style="display:block;min-height:0">${g.trips} chuyến${ol?' · '+ol.length+' người trong BTC':''}${op?' · đang quản lý':''}</small>${codeBadge(gc)}${tOn?` <span class="badge gc-on">${tDef?`⚠️ ${tOn} chuyến đang tắt / hết hạn mã chuyến`:`🔑 ${tOn} chuyến đang bật mã chuyến`}</span>`:''}</span></button>
+          <small class="hint" style="display:block;min-height:0">${g.trips} chuyến${ol?' · '+ol.length+' người trong BTC':''}${op?' · đang quản lý':''}</small>${codeBadge(gc)}${tOn?` <span class="badge gc-on">${tDef?`⚠️ ${tOn} mã chuyến tắt`:`🔑 ${tOn} mã chuyến bật`}</span>`:''}</span></button>
           <button type="button" class="btn small${op?' is-open':''}" data-q="gopen" data-id="${esc(g.id)}" aria-expanded="${op}">${op?'Đóng quản lý':'Quản lý'}</button></div>`+
           (op?`<div class="lv2 mng-panel"><div class="hint" style="min-height:0">Tạo ${fd(g.created_at)}${g.creator_email?' bởi '+esc(g.creator_email):''}${g.last_activity?' · sửa gần nhất '+fdt(g.last_activity):''}</div>`+groupDetailHtml(g,d,dis)+`</div>`:'')+
           (ex?`<div class="lv2">`:'')+
           (ex&&tl?`<div class="acc-trips">${tq?`<div class="sub">Chuyến khớp (${tl.length}/${all.length})</div>`:''}`+(tl.length?tl.map(t=>{const tc=admTCodes[t.id];return `<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${mk(t.name)}</b>${t.closed?' <small>· đã chốt sổ</small>':''}${t.hidden?' <small>· ẩn với mã nhóm</small>':''}
             <div class="hint" style="min-height:0">Leader: ${t.leaders&&t.leaders.length?t.leaders.map(esc).join(', '):'chưa có'}${t.helpers?` · ${t.helpers} người phụ trách`:''}</div>
-            ${tc&&tc.active?`<span class="badge ${codeWarn('trip',true)?'gc-on':'gc-off'}">🔑 Mã chuyến đang bật · ${tc.viewers} người xem bằng mã · hết hạn ${fd(tc.expires_at)}</span>`:`<span class="badge ${tc&&codeWarn('trip',false)?'gc-on':'gc-off'}">${tc?(codeWarn('trip',false)?'⚠️ ':'')+'Mã chuyến '+(tc.enabled?'đã hết hạn':'đang tắt'):'Chưa có mã chuyến'}</span>`}</div><button type="button" class="btn small" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}" title="Mở chuyến này ở tab Chuyến">Mở</button></div>`;}).join(''):'<div class="hint" style="min-height:0">Chưa có chuyến nào.</div>')+`</div>`:'')+
+            ${tc&&tc.active?`<span class="badge ${codeWarn('trip',true)?'gc-on':'gc-off'}">🔑 Mã chuyến đang bật · ${tc.viewers} người xem bằng mã · hết hạn ${fd(tc.expires_at)}</span>`:`<span class="badge ${tc&&codeWarn('trip',false)?'gc-on':'gc-off'}">${tc?(codeWarn('trip',false)?'⚠️ ':'')+'Mã '+(tc.enabled?'hết hạn':'tắt'):'Chưa có mã'}</span>`}</div><button type="button" class="btn small" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}" title="Mở chuyến này ở tab Chuyến">Mở</button></div>`;}).join(''):'<div class="hint" style="min-height:0">Chưa có chuyến nào.</div>')+`</div>`:'')+
           (ex&&ol&&!op?`<div class="acc-trips"><div class="sub">Ban tổ chức – BTC (${ol.length})</div>`+(ol.length?ol.map(o=>orgRowHtml(o,'')).join(''):'<div class="hint" style="min-height:0">Chưa có ai trong BTC. Bấm Quản lý để thêm.</div>')+`</div>`:'')+
           (ex?`</div>`:'')+`</div>`;}).join(''):`<div class="hint">${q?'Không có nhóm hoặc chuyến nào khớp.':'Chưa có nhóm nào.'}</div>`);}
   else if(admTab==='accounts')body=accountsHtml(dis);
@@ -3952,6 +3954,9 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
     ask(sbGroups.length>1?'Chọn nhóm để xem các chuyến của nhóm đó.':'Bạn mới có 1 nhóm. Có mã chuyến của nhóm khác thì nhập ở ô bên dưới danh sách chuyến.',{title:'Chọn nhóm',noLabel:'Huỷ',
       choices:sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,ac=myAccess[g.id],n=ac?(ac.trips||[]).length:g.trips;
         return {label:(cur?'✓ ':'')+g.name+(n!=null?' · '+n+' chuyến':''),fn:()=>{if(!cur){connectGroup(g);toast('Đang mở nhóm “'+g.name+'”…');}showTab('trip',true);}};})});return;}
+  if(a==='pickmng'){const L=R.trips.filter(x=>!x.ph);if(!L.length)return;   /* chọn chuyến ngay tại thẻ Quản lý chuyến */
+    ask(L.length>1?'Chọn chuyến để quản lý.':'Nhóm này mới có 1 chuyến.',{title:'Chọn chuyến',noLabel:'Huỷ',
+      choices:L.map(x=>{const cur=x.id===R.current;return {label:(cur?'✓ ':'')+x.name,fn:()=>{if(!cur){tripFormOpen=false;tripEditorOpen=false;useTrip(x.id);}renderGroupTab();}};})});return;}
   if(a==='me'){showTab('result',true);setTimeout(()=>{const m=$('#myPart');if(m)m.scrollIntoView({behavior:'smooth',block:'start'});},50);return;}
   if(a==='close'||a==='reopen'){const cl=a==='close';
     ask(cl?`Chốt sổ chuyến "${t.name}"? Sau khi chốt, không ai sửa được nữa cho tới khi leader mở lại. Mọi người vẫn xem được.`:`Mở lại sổ chuyến "${t.name}" để sửa tiếp? Việc mở lại được ghi vào lịch sử để mọi người thấy.`,

@@ -1,0 +1,2 @@
+-- 033: submit_claim / resend_claim nhận p_reporter (tên người gửi, tách khỏi "người đã trả"); my_sent_reports + resend_report (người gửi xem lại và báo lại báo sai đã xử lý).
+-- Đã áp dụng trực tiếp (apply_migration 033), đã chạy thử và hoàn tác. Quay lại: drop my_sent_reports(integer), resend_report(bigint,text,text); tạo lại submit_claim / resend_claim bản 025 / 031 (không p_reporter).

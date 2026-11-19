@@ -1230,6 +1230,9 @@ html .gcard .gsub.lv3{background:color-mix(in srgb,var(--h) 7%,var(--surface))!i
 .sec.mng-focus .gcard:not(.admin-card),.sec.mng-focus .admin-card>.gh,.sec.mng-focus .admin-card>.seg,.sec.mng-focus .admin-card .adm-tools,.sec.mng-focus .admin-card .rcard.grp-row:not(.cur){opacity:.35;filter:grayscale(1);transition:opacity .15s,filter .15s}
 /* vô hiệu luôn phần xung quanh: chỉ thao tác được trong khung quản lý; bấm ra ngoài = thoát quản lý */
 .sec.mng-focus .gcard:not(.admin-card),.sec.mng-focus .admin-card>.gh,.sec.mng-focus .admin-card>.seg,.sec.mng-focus .admin-card .adm-tools,.sec.mng-focus .admin-card .rcard.grp-row:not(.cur){pointer-events:none;user-select:none}
+/* tab Chuyến: đang Sửa chuyến / Tạo chuyến mới -> xám + khoá phần không liên quan; bấm vào đó = thoát */
+html.trip-focus #tripBar,html.trip-focus #tabs,html.trip-focus .tripsec .sec-h,html.trip-focus #tripTabs,html.trip-focus #tripCodeBox,html.trip-focus #tripExtra,html.trip-focus #tripNewBtn,html.trip-focus.tf-new #tripEditBtn{opacity:.35;filter:grayscale(1);pointer-events:none;user-select:none;transition:opacity .15s,filter .15s}
+html.trip-focus #tripEditor,html.trip-focus #tripForm{position:relative;z-index:1}
 /* khung nhóm: viền bao quanh như thẻ chuyến ở tab Chuyến, không đổ bóng, không viền trái dày */
 html #grpMain .gcard .rcard{box-shadow:none!important;border:1.5px solid var(--line)!important;border-radius:18px!important}
 html #grpMain .gcard .rcard.cur{border-color:var(--brand,var(--accent))!important;background:var(--brand-bg,color-mix(in srgb,var(--accent) 10%,var(--surface)))!important}
@@ -1716,7 +1719,7 @@ function syncTopBars0(){const tb=$('#tripBar');if(tb)tb.hidden=false;}
 function syncTopBars(){
   const tb=$('#tripBar');if(tb)tb.hidden=false;
   try{renderFund(compute());}catch(e){}}
-function showTab(k,jump){const prevTab=curTab;curTab=k;if(k==='group'&&typeof renderGroupTab==='function'){try{renderGroupTab();}catch(e){}}
+function showTab(k,jump){const prevTab=curTab;curTab=k;try{document.documentElement.classList.toggle('trip-focus',!!tripFocusBox());}catch(e){}if(k==='group'&&typeof renderGroupTab==='function'){try{renderGroupTab();}catch(e){}}
   if(k==='trip'&&prevTab!=='trip'){tripEditorOpen=false;tripFormOpen=false;try{if(typeof syncTripUi==='function')syncTripUi();}catch(e){}}
   try{localStorage.setItem(KEY+'-tab',k);}catch(e){}
   document.querySelectorAll('[data-tab]').forEach(el=>{el.hidden=el.dataset.tab!==k;});
@@ -1739,6 +1742,7 @@ function syncTripUi(){fillCopyFrom();
   if(tripFormOpen){if(!newTripColor)newTripColor=nextColor();const nc=$('#newTripColors');if(nc)nc.innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${newTripColor===c}" aria-label="Chọn màu ${c}" data-act="newColor" data-color="${c}"></button>`).join('');}
   if(fm)fm.style.display=tripFormOpen?'flex':'none';
   if(nb)nb.style.display=tripFormOpen?'none':'';
+  document.documentElement.classList.toggle('trip-focus',!!tripFocusBox());document.documentElement.classList.toggle('tf-new',!!tripFormOpen);
   const eb=$('#tripEditBtn');if(eb){eb.style.display=tripFormOpen?'none':'';const o=tripEditorOpen&&!tripFormOpen;eb.innerHTML=o?'<svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M6.2 4.8 12 10.6l5.8-5.8a1 1 0 0 1 1.4 1.4L13.4 12l5.8 5.8a1 1 0 0 1-1.4 1.4L12 13.4l-5.8 5.8a1 1 0 0 1-1.4-1.4l5.8-5.8-5.8-5.8a1 1 0 0 1 1.4-1.4Z"/></svg> Đóng sửa chuyến':'<svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M15.6 3.6a2.2 2.2 0 0 1 3.1 0l1.7 1.7a2.2 2.2 0 0 1 0 3.1L9.2 19.6 4 21a.8.8 0 0 1-1-1l1.4-5.2L15.6 3.6Z"/></svg> Sửa chuyến';eb.setAttribute('aria-expanded',o);eb.classList.toggle('success',o);eb.classList.toggle('ghost',!o);}}
 /* tab Chuyến: ô nhập mã chuyến để thêm chuyến (vẽ 1 lần để không mất chữ đang gõ) */
 function renderTripCode(){const box=document.getElementById('tripCodeBox');if(!box)return;
@@ -4118,9 +4122,31 @@ $('#memberCopy').addEventListener('click',()=>{const others=R.trips.filter(t=>t.
       S.expenses.forEach(e=>{if(!(e.rooms&&e.rooms.length)){r.addedIds.forEach(id=>{if(!e.excluded.includes(id))e.excluded.push(id);});}});
       if(!S.holder&&S.members[0])S.holder=S.members[0].id;
       render();say('#memberMsg',`Đã chép ${r.added} thành viên từ "${t.name}". Người mới chưa được tính vào các khoản chi cũ.`);}}))},null,null);});
-$('#tripEditBtn').addEventListener('click',()=>{tripEditorOpen=!tripEditorOpen;tripFormOpen=false;syncTripUi();});
+$('#tripEditBtn').addEventListener('click',()=>{if(tripEditorOpen&&!tripFormOpen){tripExit();return;}tripEditorOpen=true;tripFormOpen=false;syncTripUi();});
 $('#tripNewBtn').addEventListener('click',()=>{tripFormOpen=true;tripEditorOpen=false;newTripColor='';{const cf=$('#copyFrom');if(cf)delete cf.dataset.init;}syncTripUi();$('#newTripName').focus();});
 $('#tripNewCancel').addEventListener('click',()=>{tripFormOpen=false;syncTripUi();});
+/* tab Chuyến: đang mở "Sửa chuyến" hoặc "Tạo chuyến mới" = chế độ tập trung: phần khác xám + không bấm được;
+   bấm ra ngoài khung = thoát (hỏi lưu nếu đang sửa dở); cú bấm đó không làm gì khác */
+function tripFocusBox(){if(curTab!=='trip'||document.documentElement.classList.contains('empty'))return null;
+  if(tripFormOpen)return $('#tripForm');if(tripEditorOpen)return $('#tripEditor');return null;}
+function tripCloseAll(){if(editingTrip)setTripEdit(false);tripEditorOpen=false;tripFormOpen=false;syncTripUi();}
+function tripExit(){
+  if(tripFormOpen){const n=$('#newTripName').value.trim();
+    if(!n){tripCloseAll();return;}
+    ask(`Đang tạo chuyến mới “${n}” nhưng chưa bấm "Tạo chuyến". Tạo chuyến trước khi thoát?`,
+      {title:'Lưu thay đổi?',ok:'Tạo chuyến',alt:{label:'Không lưu',fn:()=>{$('#newTripName').value='';tripCloseAll();}},noLabel:'Quay lại'},
+      ()=>{const f=$('#tripForm');if(f.requestSubmit)f.requestSubmit();else f.dispatchEvent(new Event('submit',{cancelable:true}));},()=>{$('#newTripName').focus();});return;}
+  const t=trip(),v=$('#tripName').value.trim().replace(/\s+/g,' ');
+  if(!editingTrip||!v||v===t.name){tripCloseAll();return;}
+  ask(`Tên chuyến đang sửa từ “${t.name}” thành “${v}” nhưng chưa lưu. Lưu tên mới trước khi thoát?`,
+    {title:'Lưu thay đổi?',ok:'Lưu tên',alt:{label:'Không lưu',fn:tripCloseAll},noLabel:'Quay lại'},
+    ()=>{t.name=v;tripCloseAll();render();},()=>{$('#tripName').focus();});}
+document.addEventListener('click',ev=>{const box=tripFocusBox();if(!box||!box.offsetParent)return;
+  const t=ev.target;if(!t||!t.closest)return;
+  if(box.contains(t)||(tripEditorOpen&&t.closest('#tripEditBtn'))||t.closest('#modal')||t.closest('#authModal')||t.closest('.toast'))return;
+  ev.preventDefault();ev.stopPropagation();tripExit();},true);
+document.addEventListener('focusin',ev=>{const box=tripFocusBox();if(!box||!box.offsetParent)return;const t=ev.target;
+  if(t&&!box.contains(t)&&!(tripEditorOpen&&t.closest&&t.closest('#tripEditBtn'))&&!t.closest('#modal')&&!t.closest('#authModal')){const f=box.querySelector('input:not([readonly]),button,select');if(f)f.focus();}});
 $('#tripDup').addEventListener('click',()=>{const t=trip();
   ask(`Nhân bản chuyến "${t.name}"? Chuyến mới có đủ thành viên, ngày, khoản chi, tiền phòng và tiền đã đóng trước giống chuyến này, rồi bạn sửa riêng, chuyến gốc không bị ảnh hưởng.`,{ok:'Nhân bản',title:'Nhân bản chuyến đi?',success:true},()=>{
     const data=JSON.parse(JSON.stringify(t.data)),nt=mkTrip(t.name+' (bản sao)',data);nt.color=nextColor();R.trips.push(nt);tripFormOpen=false;tripEditorOpen=true;useTrip(nt.id);});});

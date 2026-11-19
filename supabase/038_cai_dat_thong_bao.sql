@@ -1,0 +1,4 @@
+-- 038: cài đặt email thông báo do quản trị viên chỉnh trong app (tab Quản trị > Thông báo): bảng notify_settings (bật/tắt, loại: report/claim/close/open/bank, người nhận thêm, SMTP host/port/user/tên hiển thị).
+--   Mật khẩu gửi thư lưu mã hoá trong Supabase Vault (admin_notify_set_password); chỉ Edge Function notify-item (service_role) đọc được (notify_smtp_password). Thêm loại "đổi tài khoản nhận tiền" (trigger trg_notify_trip_bank, cột trips.bank_notified).
+--   Edge Function notify-item đã đọc cài đặt từ bảng; vẫn dùng secret GMAIL_USER / GMAIL_APP_PASSWORD làm dự phòng nếu chưa nhập trong app.
+-- Quay lại: drop trigger trg_notify_trip_bank on public.trips; drop function notify_trip_bank(), admin_notify_get(), admin_notify_set(...), admin_notify_set_password(text), admin_notify_clear_password(), notify_smtp_password(); drop table notify_settings.

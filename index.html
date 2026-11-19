@@ -4094,7 +4094,7 @@ function adminLogCard(){const rows=admAudit.filter(x=>ADM_ENT.includes(x.entity)
 function adminHtml(){
   const dis=admBusy?' disabled':'';
   if(admTab==='reqs'||admTab==='audit')admTab='groups';
-  const tabs=[['perm','🔎 Tra cứu quyền'],['groups','Nhóm'],['accounts','Tài khoản'],['codes','Cài đặt']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
+  const tabs=[['perm','🔎 Tra cứu quyền'],['groups','Nhóm'],['accounts','Tài khoản'],['notify','🔔 Thông báo'],['codes','Cài đặt']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
   let body='';
   if(admTab==='groups'){
     const q=fzW(admGQ).join(' '),hit=s=>!!q&&fz(s,q),mk=s=>fzMark(s,q);
@@ -4119,6 +4119,7 @@ function adminHtml(){
           (ex?`</div>`:'')+`</div>`;}).join(''):`<div class="hint">${q?'Không có nhóm hoặc chuyến nào khớp.':'Chưa có nhóm nào.'}</div>`)+gtrashHtml(dis);}
   else if(admTab==='perm')body=permHtml();
   else if(admTab==='accounts')body=accountsHtml(dis);
+  else if(admTab==='notify')body=notifyHtml(dis);
   else if(admTab==='codes')body=codeSetHtml(dis);
   return `<div class="gcard admin-card"><div class="gh"><b>🛡 Quản trị hệ thống</b></div>${msgHtml(admMsg)}<div class="seg">${tabs}</div>${body}</div>`;}
 /* cài đặt mặc định của mã (cần supabase/016): bật/tắt khi tạo + số ngày hạn. Cảnh báo chỉ khi mã KHÁC mặc định
@@ -4158,6 +4159,32 @@ function prefHtml(dis){const P=window.APP_PREFS||{},D=window.PREF_DRAFT||{},td0=
         <button type="button" class="btn" data-q="prefsave" data-k="undo_max"${dis}>Lưu</button></div>
       <div class="hint" style="min-height:0">Hiện tại: <b>${um0} bước</b>. Nút ↶ Hoàn tác / ↷ Làm lại hiện ở góc dưới bên phải khi có bước để quay lại (phím tắt Ctrl+Z / Ctrl+Y). Các bước được nhớ trên máy đang dùng, mất khi tải lại trang.</div></div>`;}
 /* tab Quản trị > Cài đặt mã */
+/* v104: cài đặt email thông báo (bật/tắt, loại thông báo, người nhận, tài khoản gửi); cần supabase/038 */
+window.NT=null;window.NT_DRAFT={};
+async function admLoadNotify(){const {data,error}=await sb.rpc('admin_notify_get');window.NT=error?{err:ERR_VN[error.message]||error.message}:(data||{});window.NT_DRAFT={};renderGroupTab();}
+function notifyHtml(dis){const N=window.NT;if(!N)return '<div class="hint">Đang tải…</div>';if(N.err)return `<div class="note" role="alert">${esc(N.err)}</div>`;
+  const D=window.NT_DRAFT||{},v=(k,def)=>D[k]!=null?D[k]:def,ty=N.types||{};
+  const ck=(k,def,label)=>`<label class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><input type="checkbox" data-nt="${k}"${v(k,def)?' checked':''}${dis}><span>${label}</span></label>`;
+  const tx=(k,def,label,extra)=>`<div class="field" style="flex:1 1 180px"><label for="qNt-${k}">${label}</label><input type="${k==='pw'?'password':'text'}" id="qNt-${k}" data-nt="${k}" value="${esc(String(v(k,def)))}" autocomplete="off" autocapitalize="off" ${extra||''}></div>`;
+  return `<div class="rcard"><div class="sub">🔔 Email thông báo</div>
+    ${ck('en',!!N.enabled,'<b>Bật gửi email thông báo</b>')}
+    <div class="hint" style="min-height:0">${N.enabled?'Đang bật.':'Đang tắt: không gửi thư nào.'}${N.updated_by?` Sửa gần nhất ${fdt(N.updated_at)} bởi ${esc(N.updated_by)}.`:''}</div></div>
+    <div class="rcard"><div class="sub">Loại thông báo</div>
+      ${ck('t_report',ty.report!==false,'Báo sai mới')}${ck('t_claim',ty.claim!==false,'Đề nghị “Tôi đã trả” mới (kể cả gửi lại)')}${ck('t_close',ty.close!==false,'Chốt sổ')}${ck('t_open',ty.open!==false,'Mở lại sổ')}${ck('t_bank',ty.bank!==false,'Đổi tài khoản nhận tiền (chỉ ghi 4 số cuối)')}</div>
+    <div class="rcard"><div class="sub">Người nhận</div>
+      ${ck('to_leaders',N.to_leaders!==false,'Các Thủ quỹ của chuyến đó')}${ck('to_admins',N.to_admins!==false,'Quản trị viên')}
+      <div class="field"><label for="qNt-extra">Email nhận thêm (mỗi dòng một email, nhận mọi thông báo của mọi chuyến)</label><textarea id="qNt-extra" data-nt="extra" rows="3" autocapitalize="off" placeholder="ketoan@congty.vn">${esc(String(v('extra',(N.extra_emails||[]).join('\n'))))}</textarea></div></div>
+    <div class="rcard"><div class="sub">Tài khoản gửi thư</div>
+      <div class="hint" style="min-height:0">Dùng tài khoản email bất kỳ có SMTP. Gmail: máy chủ <code>smtp.gmail.com</code>, cổng 465, mật khẩu là <b>mật khẩu ứng dụng</b> (bật xác minh 2 bước rồi tạo). Mật khẩu được mã hoá trong Supabase, app không bao giờ hiện lại.</div>
+      <div class="row">${tx('host',N.smtp_host||'smtp.gmail.com','Máy chủ SMTP')}${tx('port',N.smtp_port||465,'Cổng (465 hoặc 587)','inputmode="numeric"')}</div>
+      <div class="row">${tx('user',N.smtp_user||'','Email gửi','inputmode="email"')}${tx('from',N.from_name||'Chia tiền','Tên người gửi hiển thị')}</div>
+      <div class="row">${tx('pw','','Mật khẩu ứng dụng'+(N.has_password?' (đã lưu, để trống nếu không đổi)':' (chưa có)'),'placeholder="'+(N.has_password?'••••••••••••••••':'16 ký tự')+'"')}</div>
+      <div class="row"><button type="button" class="btn" data-q="ntsave"${dis}>Lưu cài đặt</button>${N.has_password?`<button type="button" class="btn ghost small" data-q="ntclear"${dis}>Xoá mật khẩu đã lưu</button>`:''}</div></div>
+    <div class="rcard"><div class="sub">Gửi thư thử</div>
+      <div class="row">${tx('test',myMail(),'Gửi thử tới email','inputmode="email"')}<button type="button" class="btn ghost" data-q="nttest"${dis}>Gửi thử</button></div>
+      <div class="hint" style="min-height:0">Lưu cài đặt trước khi gửi thử. Thư thử dùng tài khoản gửi ở trên, kể cả khi đang tắt thông báo.</div></div>`;}
+document.addEventListener('input',ev=>{const t=ev.target;if(!t||!t.dataset||t.dataset.nt==null)return;window.NT_DRAFT=window.NT_DRAFT||{};window.NT_DRAFT[t.dataset.nt]=t.type==='checkbox'?t.checked:t.value;});
+document.addEventListener('change',ev=>{const t=ev.target;if(!t||!t.dataset||t.dataset.nt==null||t.type!=='checkbox')return;window.NT_DRAFT=window.NT_DRAFT||{};window.NT_DRAFT[t.dataset.nt]=t.checked;});
 function codeSetHtml(dis){const D=window.CS_DRAFT||{};
   const one=(k,title,use)=>{const s=window.CODE_SET[k]||{},d=D[k]||{},en=d.en!=null?d.en:!!s.default_enabled,days=d.days!=null?d.days:(s.days||90);
     return `<div class="rcard cs-card"><div class="sub">${title}</div><div class="hint" style="min-height:0">${use}</div>
@@ -4371,7 +4398,7 @@ async function admLoadGroup(gid){
 async function rpcDo(name,args,okMsg){admBusy=true;admMsg='';renderGroupTab();
   const {data,error}=await sb.rpc(name,args);admBusy=false;
   admMsg=error?'Chưa làm được: '+(ERR_VN[error.message]||error.message):(okMsg?'OK:'+okMsg:'');return error?null:(data===null?true:data);}
-const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.',claim_not_rejected:'Chỉ đề nghị bị từ chối mới gửi lại được.',duplicate:'Đề nghị này bạn đã gửi rồi và đang chờ duyệt, không cần gửi lại.',report_not_done:'Báo sai này chưa được xử lý nên chưa báo lại được.',not_found:'Không tìm thấy.',system_group:'Thư mục "Chưa xếp nhóm" là của hệ thống, không xoá được.',is_admin:'Đây là quản trị viên: gỡ quyền quản trị trước rồi mới xoá tài khoản.'};
+const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.',claim_not_rejected:'Chỉ đề nghị bị từ chối mới gửi lại được.',bad_host:'Máy chủ SMTP chưa đúng.',bad_port:'Cổng phải là 465 hoặc 587.',bad_password:'Mật khẩu chưa hợp lệ.',duplicate:'Đề nghị này bạn đã gửi rồi và đang chờ duyệt, không cần gửi lại.',report_not_done:'Báo sai này chưa được xử lý nên chưa báo lại được.',not_found:'Không tìm thấy.',system_group:'Thư mục "Chưa xếp nhóm" là của hệ thống, không xoá được.',is_admin:'Đây là quản trị viên: gỡ quyền quản trị trước rồi mới xoá tài khoản.'};
 async function qAct(a,b){
   if(!sb)return;const id=b&&b.dataset.id,e=b&&b.dataset.e;
   if(a==='sync'){if(!dbRef){toast('Chưa kết nối nhóm.');return;}R.trips.forEach(t=>{if(!t.sample&&!t.ph&&canEditAny(t.id))schedulePush(t,0);});if(sbUnsub){const g=sbGroup;connectGroup(g);}toast('Đang đồng bộ lại.');return;}
@@ -4388,6 +4415,25 @@ async function qAct(a,b){
       else{window.APP_PREFS=Object.assign({},P,{[k]:n});window.PREF_DRAFT={};admMsg='OK:Đã lưu.';try{paintUndo();}catch(e){}}renderGroupTab();};
     if(k==='trash_days'&&n>0&&(old===0||n<old))ask(`Đổi thành tự xoá hẳn sau ${n} ngày? Chuyến nào đã nằm trong thùng rác lâu hơn ${n} ngày sẽ bị xoá hẳn (không khôi phục được) ở lần mở thùng rác tiếp theo.`,{title:'Rút ngắn thời gian giữ?',ok:'Lưu',danger:true},run);
     else run();return;}
+  if(a==='ntsave'){const D=window.NT_DRAFT||{},N=window.NT||{},ty=N.types||{},g=(k,def)=>D[k]!=null?D[k]:def;
+    const extra=String(g('extra',(N.extra_emails||[]).join('\n'))).split(/[\s,;]+/).map(s=>s.trim().toLowerCase()).filter(Boolean);
+    const bad=extra.find(x=>!okEmail(x));if(bad){admMsg='Email chưa đúng: '+bad;renderGroupTab();return;}
+    const port=parseInt(g('port',N.smtp_port||465),10);if(![465,587].includes(port)){admMsg='Cổng phải là 465 hoặc 587.';renderGroupTab();return;}
+    const user=String(g('user',N.smtp_user||'')).trim();if(user&&!okEmail(user)){admMsg='Email gửi chưa đúng.';renderGroupTab();return;}
+    const pw=String(D.pw||'');
+    const r=await rpcDo('admin_notify_set',{p_enabled:!!g('en',!!N.enabled),p_types:{report:!!g('t_report',ty.report!==false),claim:!!g('t_claim',ty.claim!==false),close:!!g('t_close',ty.close!==false),open:!!g('t_open',ty.open!==false),bank:!!g('t_bank',ty.bank!==false)},
+      p_to_leaders:!!g('to_leaders',N.to_leaders!==false),p_to_admins:!!g('to_admins',N.to_admins!==false),p_extra:extra,p_host:String(g('host',N.smtp_host||'smtp.gmail.com')).trim(),p_port:port,p_user:user,p_from:String(g('from',N.from_name||'Chia tiền')).trim()},'Đã lưu cài đặt thông báo.');
+    if(r===null||r===false){renderGroupTab();return;}
+    if(pw){const r2=await rpcDo('admin_notify_set_password',{p:pw},'Đã lưu cài đặt và mật khẩu gửi thư.');if(r2===null||r2===false){renderGroupTab();return;}}
+    await admLoadNotify();return;}
+  if(a==='ntclear'){ask('Xoá mật khẩu gửi thư đã lưu? Sẽ không gửi được email cho tới khi nhập lại.',{title:'Xoá mật khẩu?',ok:'Xoá',danger:true},async()=>{if(await rpcDo('admin_notify_clear_password',{},'Đã xoá mật khẩu.'))await admLoadNotify();else renderGroupTab();});return;}
+  if(a==='nttest'){const to=String((window.NT_DRAFT||{}).test||myMail()).trim();if(!okEmail(to)){admMsg='Email nhận thử chưa đúng.';renderGroupTab();return;}
+    admBusy=true;admMsg='';renderGroupTab();let res=null,err=null;
+    try{const r=await sb.functions.invoke('notify-item',{body:{kind:'test',to}});res=r.data;err=r.error;}catch(e){err=e;}
+    admBusy=false;
+    const WHY={chua_cau_hinh_mail:'Chưa có email gửi và mật khẩu. Nhập rồi bấm Lưu cài đặt trước.',email_nhan_sai:'Email nhận thử chưa đúng.',forbidden:'Chỉ quản trị viên gửi thử được.'};
+    admMsg=res&&res.ok?'OK:Đã gửi thư thử tới '+to+'. Kiểm tra hộp thư (cả thư rác).':'Chưa gửi được: '+(res?(WHY[res.reason]||('Lỗi gửi thư'+(res.detail?': '+res.detail:''))):(err&&err.message||'không gọi được hàm gửi thư'));
+    renderGroupTab();return;}
   if(a==='csave'){const k=b.dataset.k,s=window.CODE_SET[k]||{},en=($('#qCsEn-'+k)||{}).value==='1',dv=(($('#qCsDays-'+k)||{}).value||'').trim(),days=+dv;
     if(!/^\d+$/.test(dv)||days<1||days>3650){admMsg='Hạn dùng phải là số ngày từ 1 đến 3650.';renderGroupTab();return;}
     if(en===!!s.default_enabled&&days===+s.days){admMsg='Chưa có gì thay đổi.';renderGroupTab();return;}
@@ -4435,7 +4481,7 @@ async function qAct(a,b){
     if(error){toast('Chưa gửi được: '+(ERR_VN[error.message]||error.message));return;}await loadMyReq();renderGroupTab();toast('Đã gửi yêu cầu.');return;}
   if(a==='cp'){copyText(b.dataset.v,b);return;}
   if(!sbAdmin)return;
-  if(a==='atab'){admTab=b.dataset.v;admMsg='';renderGroupTab();if(admTab==='accounts')admLoadAcc();if(admTab==='perm')admLoadPerm();await admLoad();return;}
+  if(a==='atab'){admTab=b.dataset.v;admMsg='';renderGroupTab();if(admTab==='accounts')admLoadAcc();if(admTab==='perm')admLoadPerm();if(admTab==='notify')admLoadNotify();await admLoad();return;}
   if(a==='padd2'){const em=(b.dataset.e||(($('#qPAddE')||{}).value||'')).trim().toLowerCase(),tid=b.dataset.t||(($('#qPAddT')||{}).value||''),role=(($('#qPAddR')||{}).value)||'leader';
     const tabs=role==='helper'?[...document.querySelectorAll('#qPAddTabs input:checked')].map(x=>x.value):[];
     if(!okEmail(em)){admMsg='Email chưa đúng.';renderGroupTab();return;}if(!tid){admMsg='Chọn chuyến trước.';renderGroupTab();return;}

@@ -2021,7 +2021,7 @@ function syncTopBars0(){const tb=$('#tripBar');if(tb)tb.hidden=false;}
 function syncTopBars(){
   const tb=$('#tripBar');if(tb)tb.hidden=false;
   try{renderFund(compute());}catch(e){}}
-function showTab(k,jump){const prevTab=curTab;curTab=k;try{document.documentElement.classList.toggle('trip-focus',!!tripFocusBox());fxApply();}catch(e){}if(k==='group'&&typeof renderGroupTab==='function'){try{renderGroupTab();}catch(e){}}
+function showTab(k,jump){const prevTab=curTab;curTab=k;try{document.documentElement.classList.toggle('trip-focus',!!tripFocusBox());fxApply();}catch(e){}if(k==='group'&&typeof renderGroupTab==='function'){try{renderGroupTab();}catch(e){}try{if(typeof sb!=='undefined'&&sb&&sbSession&&!isAnon())loadMyTrips();}catch(e){}}
   if(k==='trip'&&prevTab!=='trip'){tripEditorOpen=false;tripFormOpen=false;try{if(typeof syncTripUi==='function')syncTripUi();}catch(e){}}
   try{localStorage.setItem(KEY+'-tab',k);}catch(e){}
   document.querySelectorAll('[data-tab]').forEach(el=>{el.hidden=el.dataset.tab!==k;});
@@ -3788,6 +3788,20 @@ async function loadGroups(){
   sbGroups=(data||[]).map(g=>({id:g.id,name:g.name,can_create:!!g.can_create,trips:+g.trips||0}));
   if(sbGroup){const g=sbGroups.find(x=>x.id===sbGroup.id);if(g)sbGroup=g;}
   return true;}
+/* v92: CHUYẾN là chính, nhóm chỉ là thư mục. "Chuyến của tôi" = mọi chuyến xem được, xếp theo thư mục (cần supabase/026) */
+const SYS_GROUP='00000000-0000-0000-0000-000000000001';
+let myTrips=null;
+async function loadMyTrips(){try{const {data,error}=await sb.rpc('my_trips');myTrips=error?[]:(data||[]);}catch(e){myTrips=[];}
+  if(curTab==='group'&&typeof renderGroupTab==='function')try{renderGroupTab();}catch(e){}}
+function myTripsCard(){
+  if(isAnon()&&!(myTrips||[]).length)return groupsCard();
+  if(myTrips===null)return `<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi</b></div><div class="hint">Đang tải…</div></div>`;
+  if(!myTrips.length)return groupsCard();
+  const folders=[];myTrips.forEach(t=>{let f=folders.find(x=>x.id===t.group_id);if(!f){f={id:t.group_id,name:t.group_id===SYS_GROUP?'Chưa xếp nhóm':t.group_name,trips:[]};folders.push(f);}f.trips.push(t);});
+  const flat=folders.length===1&&folders[0].id===SYS_GROUP;
+  return `<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi (${myTrips.length})</b></div>`+folders.map(f=>`${flat?'':`<div class="sub">📁 ${esc(f.name)} (${f.trips.length})</div>`}`+f.trips.map(t=>{const on=sbGroup&&sbGroup.id===t.group_id&&R.current===t.id;
+    return `<div class="acc-trip acc-row${on?' on':''}"><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;text-align:left"><b>${esc(t.name)}</b>${t.closed?' <small>· đã chốt sổ</small>':''}
+      <small class="hint" style="display:block;min-height:0">${TRIP_ROLE[t.role]||t.role}</small></span><button type="button" class="btn small${on?' is-open':''}" data-q="otrip" data-g="${esc(t.group_id)}" data-t="${esc(t.id)}">${on?'Đang mở':'Mở'}</button></div>`;}).join('')).join('')+`</div>`;}
 async function loadMyCodes(){try{const {data}=await sb.rpc('my_codes');myCodes=data||[];}catch(e){myCodes=[];}}
 async function loadMyReq(){try{const {data}=await sb.rpc('my_request');myReq=data||null;}catch(e){myReq=null;}}
 async function loadPaid(tid){if(!sb||!sbGroup||!tid||!syncedSet.has(tid))return;paidFor=tid;
@@ -3838,7 +3852,7 @@ async function afterAuth(force){
   if(codePending)return;
   closeDlg();setSync('connecting');applyRole();
   if(isAnon())sbAdmin=false;else{try{const r=await sb.rpc('is_admin');sbAdmin=r.data===true;}catch(e){sbAdmin=false;}}
-  await Promise.all([loadGroups(),loadMyCodes(),loadAccess(),isAnon()?null:loadMyReq(),loadReports(true),loadCodeSet()]);
+  await Promise.all([loadGroups(),loadMyTrips(),loadMyCodes(),loadAccess(),isAnon()?null:loadMyReq(),loadReports(true),loadCodeSet()]);
   applyRole();paintAccount();
   if(!sbGroups.length){disconnectGroup();if(sbGroup){sbGroup=null;dropSyncedLocal();}applyRole();render();
     setSync('off',isAnon()?'Chưa có chuyến nào còn hiệu lực':'Chưa có chuyến nào');showTab('group',true);return;}
@@ -3963,7 +3977,7 @@ function tripMngCard(){
     ${org?'<button type="button" class="btn ghost small" data-tx="viewers">Thông tin hiện tại</button>':''}
     <button type="button" class="btn ghost small" data-tx="hist">Lịch sử thay đổi</button>
     ${ed?'<button type="button" class="btn ghost small" data-tx="people">Thủ quỹ và người hỗ trợ</button>':''}
-    ${ld?'<button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button>':''}
+    ${ld?'<button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button><button type="button" class="btn ghost small" data-tx="movetrip">Chuyển sang nhóm khác</button>':''}
     ${sbGroups.some(g=>g.can_create)?'<button type="button" class="btn ghost small" data-tx="copyto">Sao chép chuyến</button>':''}
   </div></div>`;}
 function renderGroupTab(){
@@ -3972,7 +3986,7 @@ function renderGroupTab(){
   if(!authReady){el.innerHTML='<div class="hint">Đang kiểm tra đăng nhập…</div>';return;}
   if(!sbSession){el.innerHTML='';return;}
   const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
-  let h=reportsCard()+tripMngCard()+trashEntry()+groupsCard()+(sbAdmin?'':codeCard());
+  let h=reportsCard()+myTripsCard()+tripMngCard()+trashEntry()+(sbAdmin?'':codeCard());
   if(sbAdmin){h+=adminHtml()+adminLogCard();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
   /* đang Quản lý 1 nhóm: mọi phần xung quanh xám đi (vẫn bấm được để chuyển) */
@@ -4178,7 +4192,7 @@ function accountsHtml(dis){
         <button type="button" class="lv-tog acc-tog" data-q="accx" data-e="${esc(a.email)}" aria-expanded="${op}"><span class="chev">▸</span><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(a.email)}</b>${a.is_me?' <small>(bạn)</small>':''}
         <span class="row" style="gap:6px;margin-top:4px;display:flex;flex-wrap:wrap">${a.is_admin?'<span class="badge on">Quản trị viên</span>':''}${org.length?`<span class="badge">Được tạo chuyến: ${esc(org.join(', '))}</span>`:''}${!a.is_admin&&!org.length&&!a.trip_roles?'<span class="badge">Chưa có quyền</span>':''}<span class="badge gc-none">${n} chuyến</span></span>
         <small class="hint" style="display:block;min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}${a.created_at?' · tạo '+fd(a.created_at):''}</small></span></button>
-        ${a.is_admin?(a.is_me?'':`<button type="button" class="btn danger-o small" data-q="admrm" data-e="${esc(a.email)}"${dis}>Gỡ quản trị</button>`):`<button type="button" class="btn ghost small" data-q="admset" data-e="${esc(a.email)}"${dis}>Cấp quản trị</button>`}</div>${op?tripsHtml(a.email):''}</div>`;}).join(''):'<div class="hint">Không có tài khoản nào khớp.</div>');}
+        ${a.is_admin?(a.is_me?'':`<button type="button" class="btn danger-o small" data-q="admrm" data-e="${esc(a.email)}"${dis}>Gỡ quản trị</button>`):`<button type="button" class="btn ghost small" data-q="admset" data-e="${esc(a.email)}"${dis}>Cấp quản trị</button><button type="button" class="btn danger-o small" data-q="accdel" data-e="${esc(a.email)}"${dis} title="Xoá tài khoản (chuyến vẫn giữ)">Xoá</button>`}</div>${op?tripsHtml(a.email):''}</div>`;}).join(''):'<div class="hint">Không có tài khoản nào khớp.</div>');}
 /* v77: bấm ra ngoài tài khoản đang mở thì tự đóng; bấm tài khoản khác thì đóng cái cũ, mở cái mới (xử lý ở accx) */
 document.addEventListener('click',ev=>{if(!window.ACC_OPEN)return;const t=ev.target;if(!t||!t.closest)return;
   if(t.closest('.acc-card.open')||t.closest('[data-q="accx"]')||t.closest('.modal:not([hidden])'))return;
@@ -4253,7 +4267,7 @@ function groupDetailHtml(g,d,dis){
     <div class="gsub lv3 h-code"><div class="sub">🔑 Mã nhóm (tuỳ chọn)</div>${code}</div>
     <div class="gsub lv3 h-hist">${logHead('🕘 Lịch sử nhóm'+(d.histOpen&&d.audit?` (${d.audit.length})`:''),!!d.histOpen,`data-q="gaudit" data-id="${esc(g.id)}"`)}
       ${d.histOpen?(d.audit?`<div class="hist-scroll">${auditHtml(d.audit,false)}</div>`:'<div class="hint">Đang tải…</div>'):''}</div>
-    <div class="gsub lv3 h-del"><button type="button" class="btn danger-o small" data-q="gdel" data-id="${esc(g.id)}"${dis}>🗑 Xoá nhóm</button></div>`;}
+    ${g.id===SYS_GROUP?'':`<div class="gsub lv3 h-del"><button type="button" class="btn danger-o small" data-q="gdel" data-id="${esc(g.id)}"${dis}>🗑 Xoá nhóm (giữ chuyến)</button></div>`}`;}
 async function admLoad(){
   if(!sbAdmin)return;
   const [a,b,c,ov,cd,tc,gt]=await Promise.all([sb.rpc('admin_groups'),Promise.resolve({data:[]}),sb.rpc('admin_audit',{p_limit:200}),sb.rpc('admin_groups_overview'),sb.rpc('admin_group_codes'),sb.rpc('admin_trip_codes'),sb.rpc('admin_group_trash')]);
@@ -4270,7 +4284,7 @@ async function admLoadGroup(gid){
 async function rpcDo(name,args,okMsg){admBusy=true;admMsg='';renderGroupTab();
   const {data,error}=await sb.rpc(name,args);admBusy=false;
   admMsg=error?'Chưa làm được: '+(ERR_VN[error.message]||error.message):(okMsg?'OK:'+okMsg:'');return error?null:(data===null?true:data);}
-const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.'};
+const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.',not_found:'Không tìm thấy.',system_group:'Thư mục "Chưa xếp nhóm" là của hệ thống, không xoá được.',is_admin:'Đây là quản trị viên: gỡ quyền quản trị trước rồi mới xoá tài khoản.'};
 async function qAct(a,b){
   if(!sb)return;const id=b&&b.dataset.id,e=b&&b.dataset.e;
   if(a==='sync'){if(!dbRef){toast('Chưa kết nối nhóm.');return;}R.trips.forEach(t=>{if(!t.sample&&!t.ph&&canEditAny(t.id))schedulePush(t,0);});if(sbUnsub){const g=sbGroup;connectGroup(g);}toast('Đang đồng bộ lại.');return;}
@@ -4330,6 +4344,8 @@ async function qAct(a,b){
     if(!okEmail(v)){admMsg='Email chưa đúng.';renderGroupTab();return;}
     ask(`Cấp quyền quản trị TOÀN HỆ THỐNG cho ${v}? Người này xem, sửa, xoá được mọi nhóm và chuyến.`,{title:'Thêm quản trị viên?',ok:'Cấp quyền'},async()=>{
       if(await rpcDo('admin_set_admin_email',{p_email:v,on_off:true},'Đã thêm quản trị viên '+v+'.'))await admLoadAcc();else renderGroupTab();});return;}
+  if(a==='accdel'){ask(`Xoá tài khoản ${e}? Người này không đăng nhập được nữa và bị gỡ khỏi mọi chuyến. CÁC CHUYẾN VẪN GIỮ NGUYÊN. Không khôi phục được. Gõ XOA để xác nhận.`,{title:'Xoá tài khoản?',ok:'Xoá tài khoản',danger:true,input:{match:'XOA',placeholder:'Gõ XOA'}},async()=>{
+      if(await rpcDo('admin_delete_account',{p_email:e},'Đã xoá tài khoản '+e+'.'))await admLoadAcc();else renderGroupTab();});return;}
   if(a==='admrm'){ask(`Gỡ quyền quản trị của ${e}? Quyền tổ chức nhóm và vai trò trong chuyến (nếu có) vẫn giữ.`,{title:'Gỡ quản trị viên?',ok:'Gỡ quyền',danger:true},async()=>{
       if(await rpcDo('admin_set_admin_email',{p_email:e,on_off:false},'Đã gỡ quyền quản trị của '+e+'.'))await admLoadAcc();else renderGroupTab();});return;}
   if(a==='amore'){const {data}=await sb.rpc('admin_audit',{p_limit:200,p_before:admAudit.length?admAudit[admAudit.length-1].id:null});admAudit=admAudit.concat(data||[]);admAuditMore=(data||[]).length>=200;renderGroupTab();return;}
@@ -4354,8 +4370,8 @@ async function qAct(a,b){
     ask(`Xoá hẳn nhóm "${g.name}" cùng ${g.trips} chuyến? Không khôi phục được nữa. Gõ XOA để xác nhận.`,{title:'Xoá hẳn nhóm?',ok:'Xoá hẳn',input:{match:'XOA',placeholder:'Gõ XOA'}},async()=>{
       if(await rpcDo('purge_group',{gid:id},'Đã xoá hẳn nhóm.')){await admLoad();}else renderGroupTab();});return;}
   if(a==='gdel'){const g=admGroups.find(x=>x.id===id);if(!g)return;
-    ask(`Chuyển nhóm "${g.name}" cùng ${g.trips} chuyến vào thùng rác? Mọi người sẽ không thấy nhóm nữa. Quản trị viên khôi phục được ở mục Thùng rác nhóm. Gõ XOA để xác nhận.`,{title:'Xoá nhóm?',ok:'Xoá nhóm',input:{match:'XOA',placeholder:'Gõ XOA'}},async()=>{
-      if(await rpcDo('delete_group',{gid:id},'Đã chuyển nhóm vào thùng rác.')){admOpen=null;delete admDraft[id];if(sbGroup&&sbGroup.id===id){disconnectGroup();sbGroup=null;lsDel(LS_GROUP);dropSyncedLocal();}await admLoad();await afterAuth(true);showTab('group',true);}else renderGroupTab();});return;}
+    ask(`Xoá thư mục nhóm "${g.name}"? ${g.trips} chuyến trong nhóm VẪN ĐƯỢC GIỮ, chuyển sang "Chưa xếp nhóm" (mã nhóm hết tác dụng). Gõ XOA để xác nhận.`,{title:'Xoá nhóm?',ok:'Xoá nhóm',input:{match:'XOA',placeholder:'Gõ XOA'}},async()=>{
+      if(await rpcDo('delete_group',{gid:id},'Đã xoá nhóm. Các chuyến chuyển sang "Chưa xếp nhóm".')){admOpen=null;delete admDraft[id];if(sbGroup&&sbGroup.id===id){disconnectGroup();sbGroup=null;lsDel(LS_GROUP);dropSyncedLocal();}await admLoad();await afterAuth(true);showTab('group',true);}else renderGroupTab();});return;}
   if(a==='orgadd'){const v=($('#qOrg-'+id).value||'').trim().toLowerCase();if(!okEmail(v)){admMsg='Email chưa đúng.';renderGroupTab();return;}
     if(await rpcDo('add_organizer',{gid:id,p_email:v},'Đã thêm '+v+'. Người này đăng nhập bằng đúng email là tạo được chuyến.')){if(admDraft[id])delete admDraft[id].org;await admLoadGroup(id);await admLoad();}else renderGroupTab();return;}
   if(a==='orgrm'){ask(`Bỏ ${e} khỏi nhóm? Người này không tạo được chuyến mới trong nhóm nữa. Các chuyến họ đang là thủ quỹ vẫn giữ nguyên (gỡ ở từng chuyến nếu cần).`,{title:'Bỏ khỏi nhóm?',ok:'Bỏ khỏi nhóm',danger:true},async()=>{if(await rpcDo('remove_organizer',{gid:id,p_email:e},'Đã bỏ khỏi nhóm: '+e+'.')){await admLoadGroup(id);await admLoad();}else renderGroupTab();});return;}
@@ -4433,6 +4449,15 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
     ask(sbGroups.length>1?'Chọn nhóm để xem các chuyến của nhóm đó.':'Bạn mới có 1 nhóm. Có mã chuyến của nhóm khác thì nhập ở ô bên dưới danh sách chuyến.',{title:'Chọn nhóm',noLabel:'Huỷ',
       choices:sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,ac=myAccess[g.id],n=ac?(ac.trips||[]).length:g.trips;
         return {label:(cur?'✓ ':'')+g.name+(n!=null?' · '+n+' chuyến':''),fn:()=>{if(!cur){connectGroup(g);toast('Đang mở nhóm “'+g.name+'”…');}showTab('trip',true);}};})});return;}
+  if(a==='movetrip'){if(!t||t.ph||!sbGroup)return;const cur=sbGroup.id;
+    const L=sbGroups.filter(g=>g.id!==cur&&g.id!==SYS_GROUP).map(g=>({id:g.id,name:g.name}));if(cur!==SYS_GROUP)L.push({id:SYS_GROUP,name:'Chưa xếp nhóm (không thuộc nhóm nào)'});
+    if(!L.length){toast('Chưa có nhóm nào khác để chuyển sang.');return;}
+    ask(`Chuyển chuyến “${t.name}” sang nhóm nào? Chuyến, thủ quỹ, người hỗ trợ và mã xem vẫn giữ nguyên; nhóm chỉ là thư mục.`,{title:'Chuyển sang nhóm khác',noLabel:'Huỷ',
+      choices:L.map(g=>({label:g.name,fn:async()=>{
+        const {error}=await sb.rpc('move_trip',{tid:t.id,gid:g.id});
+        if(error){toast('Chưa chuyển được: '+(ERR_VN[error.message]||error.message));return;}
+        await Promise.all([loadGroups(),loadAccess(),loadMyTrips()]);toast('Đã chuyển chuyến sang “'+g.name.replace(/ \(.*$/,'')+'”.');
+        const ng=sbGroups.find(x=>x.id===g.id);if(ng)openTrip(g.id,t.id,true);else{afterAuth(true);}}}))});return;}
   if(a==='copyto'){const L=sbGroups.filter(g=>g.can_create);if(!L.length||!t||t.ph)return;const src={name:t.name,color:t.color,data:JSON.parse(JSON.stringify(t.data))};
     ask(`Sao chép chuyến “${src.name}” sang nhóm nào? Bạn sẽ là thủ quỹ của chuyến mới.`,{title:'Sao chép chuyến',noLabel:'Huỷ',
       choices:L.map(g=>({label:g.name+(sbGroup&&g.id===sbGroup.id?' (nhóm này)':''),fn:()=>{

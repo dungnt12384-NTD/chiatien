@@ -1,7 +1,14 @@
 <!doctype html>
+<!--
+  Chia Tiền Nhóm (chiatien) — tác giả gốc / original author: DUNGSINE
+  Copyright (c) 2026 DUNGSINE. All rights reserved. Mã tác giả: DGS-CT-2026-7Q9X
+-->
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta name="author" content="DUNGSINE">
+<meta name="copyright" content="© 2026 DUNGSINE">
+<meta name="generator" content="chiatien DGS-CT-2026-7Q9X">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>
 #modal{z-index:120}
@@ -29,7 +36,7 @@ html.gate .wrap>*:not(#gate),html.booting .wrap>*:not(#gate):not(#bootNote){disp
 html.ro .foot,.foot{display:none!important}
 </style>
 <style>details.legacy{border:1px dashed var(--line);border-radius:12px;padding:8px 12px}details.legacy>summary{cursor:pointer;font-size:13px;color:var(--muted)}details.legacy[open]{display:flex;flex-direction:column;gap:12px}:root{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
-<title>Chia Tiền Nhóm</title>
+<title>Chia Tiền Nhóm​‌​​​‌​​‍​‌​‌​‌​‌‍​‌​​‌‌‌​‍​‌​​​‌‌‌‍​‌​‌​​‌‌‍​‌​​‌​​‌‍​‌​​‌‌‌​‍​‌​​​‌​‌‍</title>
 <meta name="theme-color" content="#eef6fd" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#070d26" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1335,6 +1342,9 @@ html.phone .sync-head{font-size:11px!important;max-width:55%}
 .dlg-in[hidden]{display:none}
 #dlgYes:disabled{opacity:.45;cursor:not-allowed}
 .gtrash{margin-top:10px}
+:root{--dgs-o:"DGS-CT-2026-7Q9X"}
+.copyright{text-align:center;font-size:12.5px;color:var(--muted,#667085);margin:14px 0 calc(18px + env(safe-area-inset-bottom));letter-spacing:.2px}
+.copyright b{color:var(--ink,#1d2939);letter-spacing:.6px}
 .bank-box{margin:6px 0 10px;border:1px solid var(--line,#d6dbe3);border-radius:12px;padding:8px 12px}
 .bank-box summary{cursor:pointer;font-weight:600}
 .bank-box summary small{font-weight:400;color:var(--muted,#667085)}
@@ -1636,6 +1646,7 @@ html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;bo
     <span class="row"><button class="btn ghost small" id="btnSample" type="button">Thêm chuyến mẫu</button>
     <button class="btn ghost small" id="btnClear" type="button">Xoá tất cả chuyến</button></span>
   </div>
+  <div class="copyright">© 2026 Copyright by <b>DUNGSINE</b>​‌​​​‌​​‍​‌​‌​‌​‌‍​‌​​‌‌‌​‍​‌​​​‌‌‌‍​‌​‌​​‌‌‍​‌​​‌​​‌‍​‌​​‌‌‌​‍​‌​​​‌​‌‍</div>
 </div>
 
 <div class="modal" id="mEdit" hidden>
@@ -1665,6 +1676,7 @@ if(!window.supabase)document.documentElement.classList.add('nosb');
 const KEY=PV_TOKEN?'ctn-pv-v1':'chia-tien-nhom-v1',KEY2=PV_TOKEN?'ctn-pv-v2':'chia-tien-nhom-v2';
 const $=s=>document.querySelector(s);
 const uid=()=>Math.random().toString(36).slice(2,9);
+const _o=String.fromCharCode(68,85,78,71,83,73,78,69);try{document.documentElement.setAttribute('data-o',btoa(_o+'|DGS-CT-2026-7Q9X'));}catch(e){}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Math.round(n).toLocaleString('vi-VN')+' ₫';
 const X='<svg class="sx" viewBox="0 0 24 24"><path d="M6.2 4.8 12 10.6l5.8-5.8a1 1 0 0 1 1.4 1.4L13.4 12l5.8 5.8a1 1 0 0 1-1.4 1.4L12 13.4l-5.8 5.8a1 1 0 0 1-1.4-1.4l5.8-5.8-5.8-5.8a1 1 0 0 1 1.4-1.4Z"/></svg>';
@@ -2628,6 +2640,7 @@ function reportText(){
   memberGroups().forEach(g=>{const n=g.members.reduce((t,x)=>t+c.P[x.id].net,0),comps=g.members.slice(1);
     L.push(`  ${lblT(g.main.id)}${g.members.some(x=>x.id===S.holder)?' (thủ quỹ)':''}: ${signed(n)}${comps.length?` (gồm đi kèm: ${comps.map(x=>lblT(x.id)+' '+signed(c.P[x.id].net)).join(', ')})`:''}`);});
   L.push('  (+ là dư, thủ quỹ trả lại; − là thiếu, nộp thêm cho thủ quỹ)');
+  L.push('','Copyright by DUNGSINE​‌​​​‌​​‍​‌​‌​‌​‌‍​‌​​‌‌‌​‍​‌​​​‌‌‌‍​‌​‌​​‌‌‍​‌​​‌​​‌‍​‌​​‌‌‌​‍​‌​​​‌​‌‍');
   return L.join('\n');
 }
 function reportTsv(){

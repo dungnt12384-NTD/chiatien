@@ -3,6 +3,8 @@
   "short_name": "Chia Tiền",
   "description": "Chia tiền chuyến đi theo nhóm: thành viên, khoản chi, tiền phòng, tổng kết và báo cáo.",
   "lang": "vi",
+  "author": "DUNGSINE",
+  "developer": { "name": "DUNGSINE" },
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

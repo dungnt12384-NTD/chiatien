@@ -1,0 +1,14 @@
+Copyright (c) 2026 DUNGSINE. All rights reserved.
+
+Chia Tiền Nhóm (chiatien) — tác giả gốc / original author: DUNGSINE.
+Mã tác giả / author ID: DGS-CT-2026-7Q9X
+
+Mã nguồn này thuộc quyền của tác giả. Không được sao chép, sửa đổi, phân phối
+hoặc dùng cho mục đích thương mại khi chưa có sự đồng ý bằng văn bản của tác giả.
+
+This source code is proprietary. No part of it may be copied, modified,
+distributed or used commercially without the author's prior written permission.
+
+Thư viện bên thứ ba trong thư mục vendor/ giữ giấy phép riêng của chúng:
+  - vendor/supabase.js   (MIT, Supabase)
+  - vendor/qrcode.js     (MIT, Kazuhiko Arase – qrcode-generator)

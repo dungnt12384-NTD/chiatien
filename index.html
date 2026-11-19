@@ -1385,6 +1385,15 @@ html body .admin-card .gsub.perm-sec{gap:6px;padding:8px 10px}
 .admin-card .pbadges{display:inline-flex;margin:0 0 0 6px;vertical-align:middle}
 .admin-card .pbadges .badge{font-size:11px!important;padding:1px 7px!important;font-weight:600}
 .admin-card .perm-det .hint{font-size:12px}
+/* v82: khung Gán thủ quỹ / người phụ trách trong Tra cứu quyền (cỡ theo quy ước chung) */
+.admin-card .perm-add{margin-top:8px;padding:8px 10px;border:1px dashed color-mix(in srgb,var(--brand,var(--accent)) 45%,var(--line));border-radius:10px;background:color-mix(in srgb,var(--brand,var(--accent)) 4%,transparent)}
+html body .admin-card .perm-add .sub{margin:0 0 4px!important;color:var(--fg)!important}
+.admin-card .perm-add .field{margin:0}
+.admin-card .perm-add label{font-size:12px}
+.admin-card .perm-add input,.admin-card .perm-add select{font-size:14px}
+.admin-card .perm-add .tks{margin-top:6px}
+.admin-card .perm-add .hint{margin-top:4px}
+.admin-card .p-rm{flex:0 0 auto;min-width:32px;padding:0 8px!important;color:var(--neg)}
 /* v78: thùng rác chuyến chọn nhiều */
 .tr-bulk{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:6px 0;position:sticky;top:0;background:var(--card,var(--bg));z-index:1}
 .tr-bulk-b{display:flex;gap:6px;flex-wrap:wrap}
@@ -3973,8 +3982,19 @@ function permHtml(){
   const admins=P.filter(r=>r.role==='admin');
   const link=(k,txt)=>`<button type="button" class="plink" data-q="pgo" data-k="${esc(k)}">${esc(txt)}</button>`;
   /* danh sách người theo email (khách chưa đăng nhập gộp thành 1 dòng) */
+  /* v82: gán / gỡ Thủ quỹ, Người phụ trách ngay tại đây (dùng set_trip_person / remove_trip_person như hộp "Thủ quỹ và phụ trách") */
+  const rmBtn=r=>`<button type="button" class="btn ghost small p-rm" data-q="prm2" data-t="${esc(r.trip_id)}" data-e="${esc(r.email)}" data-n="${esc(r.trip_name||'')}" title="Gỡ quyền ${r.role==='leader'?'thủ quỹ':'người phụ trách'}" aria-label="Gỡ quyền">✕</button>`;
+  const D=window.PADD||{},pr=D.r||'leader';
+  const addForm=(tid,email)=>{const tripSel=tid?'':`<div class="field" style="flex:1 1 200px"><label for="qPAddT">Chuyến</label><select id="qPAddT"><option value="">— Chọn chuyến —</option>${admGroups.map(g=>{const ts=((admOv[g.id]||{}).trips||[]);return ts.length?`<optgroup label="${esc(g.name)}">${ts.map(t=>`<option value="${esc(t.id)}"${D.t===t.id?' selected':''}>${esc(t.name)}${t.closed?' (đã chốt)':''}</option>`).join('')}</optgroup>`:'';}).join('')}</select></div>`;
+    const emailIn=email?'':`<div class="field" style="flex:1 1 200px"><label for="qPAddE">Email</label><input type="email" id="qPAddE" list="pAccList" value="${esc(D.e||'')}" placeholder="email@gmail.com" autocapitalize="off" autocomplete="off"></div><datalist id="pAccList">${accs.map(a=>`<option value="${esc(a.email)}">`).join('')}</datalist>`;
+    return `<div class="perm-add"><div class="sub">＋ ${tid?'Gán người cho chuyến này':'Gán tài khoản này vào chuyến'}</div><div class="row" style="align-items:flex-end;gap:8px">${emailIn}${tripSel}
+      <div class="field" style="flex:1 1 150px"><label for="qPAddR">Vai trò</label><select id="qPAddR"><option value="leader"${pr==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${pr==='helper'?' selected':''}>Người phụ trách</option></select></div>
+      <button type="button" class="btn small" data-q="padd2"${tid?` data-t="${esc(tid)}"`:''}${email?` data-e="${esc(email)}"`:''}>Gán</button></div>
+      ${pr==='helper'?`<div class="tks" id="qPAddTabs">${LOCK_TABS.map(k=>`<label class="tk"><input type="checkbox" value="${k}"${(D.tabs||['expense']).includes(k)?' checked':''}>${TAB_NAME[k]}</label>`).join('')}</div>`:''}
+      <div class="hint" style="min-height:0">${pr==='leader'?'Thủ quỹ: làm được mọi việc của chuyến (sửa mọi mục, thêm / gỡ người, mã, link, chốt sổ, xoá chuyến).':'Người phụ trách: chỉ nhập / sửa ở các mục được tick.'} Người được gán đăng nhập bằng đúng email này là có quyền, kể cả khi chưa đăng nhập lần nào.</div></div>`;};
   const people=(rows,where)=>{const m=new Map();let an=0,anOff=0;rows.forEach(r=>{if(!r.email){if(r.active)an++;else anOff++;return;}if(!m.has(r.email))m.set(r.email,[]);m.get(r.email).push(r);});
-    const out=[...m].map(([e,rs])=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${link('a:'+e,e)}<div class="pbadges">${rs.map(r=>pBadge(r,where?where(r):'')).join('')}</div></div></div>`);
+    const out=[...m].map(([e,rs])=>{const tr=rs.find(r=>r.trip_id&&(r.role==='leader'||r.role==='helper'));
+      return `<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${link('a:'+e,e)}<div class="pbadges">${rs.map(r=>pBadge(r,where?where(r):'')).join('')}</div></div>${tr&&!where?rmBtn(tr):''}</div>`;});
     if(an||anOff)out.push(`<div class="acc-trip"><div class="hint" style="min-height:0">👤 Khách chưa đăng nhập xem bằng mã: ${an} đang xem${anOff?` · ${anOff} mã cũ đã tắt / hết hạn`:''}</div></div>`);
     return out.length?out.join(''):'<div class="hint" style="min-height:0">Chưa có ai.</div>';};
   const det=k=>{if(!k)return '';const ty=k[0],id=k.slice(2);let title='',body='';
@@ -3983,12 +4003,12 @@ function permHtml(){
       body=`<div class="sub">Cấp nhóm</div>`+people(admins.concat(own))+`<div class="sub">Theo từng chuyến (${new Set(tr.map(r=>r.trip_id)).size} chuyến)</div>`+people(tr,r=>r.trip_name);}
     else if(ty==='t'){const t=trips.find(x=>x.id===id);if(!t)return '';title='Chuyến '+t.name;
       const grp=P.filter(r=>r.group_id===t.gid&&(r.role==='organizer'||(r.role==='code_group'&&!t.hidden))),own=P.filter(r=>r.trip_id===id);
-      body=`<div class="hint" style="min-height:0">Thuộc nhóm ${link('g:'+t.gid,t.gname)}${t.hidden?' · ẩn với mã nhóm':''}${t.closed?' · đã chốt sổ':''}</div><div class="sub">Quyền riêng của chuyến</div>`+people(own)+`<div class="sub">Có quyền qua nhóm / hệ thống</div>`+people(admins.concat(grp));}
+      body=`<div class="hint" style="min-height:0">Thuộc nhóm ${link('g:'+t.gid,t.gname)}${t.hidden?' · ẩn với mã nhóm':''}${t.closed?' · đã chốt sổ':''}</div><div class="sub">Quyền riêng của chuyến</div>`+people(own)+addForm(id,null)+`<div class="sub">Có quyền qua nhóm / hệ thống</div>`+people(admins.concat(grp));}
     else{const rs=P.filter(r=>r.email===id),a=(admAcc||[]).find(x=>x.email===id);title=id;
       const gs=rs.filter(r=>r.scope==='group'),ts=rs.filter(r=>r.scope==='trip'),ad=rs.find(r=>r.role==='admin');
       body=(a?`<div class="hint" style="min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}</div>`:'')+(ad?`<div class="pbadges">${pBadge(ad)}</div>`:'')+
         `<div class="sub">Nhóm (${gs.length})</div>`+(gs.length?gs.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('g:'+r.group_id,r.group_name||'?')}<div class="pbadges">${pBadge(r)}</div></div></div>`).join(''):'<div class="hint" style="min-height:0">Không có.</div>')+
-        `<div class="sub">Chuyến (${ts.length})</div>`+(ts.length?`<div class="hist-scroll" data-rows="5">`+ts.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('t:'+r.trip_id,r.trip_name)} <small>· ${esc(r.group_name||'')}</small>${r.closed?' <small>· đã chốt sổ</small>':''}<div class="pbadges">${pBadge(r)}</div></div></div>`).join('')+`</div>`:'<div class="hint" style="min-height:0">Không có.</div>');}
+        `<div class="sub">Chuyến (${ts.length})</div>`+(ts.length?`<div class="hist-scroll" data-rows="5">`+ts.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('t:'+r.trip_id,r.trip_name)} <small>· ${esc(r.group_name||'')}</small>${r.closed?' <small>· đã chốt sổ</small>':''}<div class="pbadges">${pBadge(r)}</div></div>${r.role==='leader'||r.role==='helper'?rmBtn(r):''}</div>`).join('')+`</div>`:'<div class="hint" style="min-height:0">Không có.</div>')+addForm(null,id);}
     return `<div class="perm-det"><div class="row" style="align-items:center;flex-wrap:nowrap"><b style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">🔐 ${esc(title)}</b><button type="button" class="btn ghost small" data-q="pgo" data-k="${esc(k)}" aria-label="Đóng">✕</button></div>${body}</div>`;};
   const sec=(ic,name,L,row,ty)=>`<div class="gsub perm-sec"><div class="sub">${ic} ${name} (${L.length}${q?' khớp':''})</div>`+(L.length?`<div class="hist-scroll" data-rows="5">${L.map(x=>`<button type="button" class="perm-item${op===x.k?' cur':''}" data-q="pgo" data-k="${esc(x.k)}">${row(x)}</button>`).join('')}</div>`:'<div class="hint" style="min-height:0">Không có.</div>')+(op[0]===ty?det(op):'')+`</div>`;
   return (window.PERM_ERR?`<div class="note" role="alert">${esc(window.PERM_ERR)}</div>`:'')+
@@ -3997,6 +4017,11 @@ function permHtml(){
     sec('🧳','Chuyến',T,t=>`<b>${fzMark(t.name,q)}</b><small>${fzMark(t.gname,q)}${t.closed?' · đã chốt':''}</small>`,'t')+
     sec('👤','Tài khoản',A,a=>`<b>${fzMark(a.email,q)}</b><small>${a.adm?'Quản trị viên · ':''}${a.n} quyền</small>`,'a');}
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qPermQ'){window.PERM_Q=ev.target.value;renderGroupTab();}});
+/* v82: giữ chữ đang gõ / lựa chọn của khung Gán khi trang tự vẽ lại; đổi vai trò thì vẽ lại để hiện / ẩn ô tick mục */
+document.addEventListener('input',ev=>{const t=ev.target;if(t&&t.id==='qPAddE')(window.PADD=window.PADD||{}).e=t.value;});
+document.addEventListener('change',ev=>{const t=ev.target;if(!t)return;const D=window.PADD=window.PADD||{};
+  if(t.id==='qPAddR'){D.r=t.value;renderGroupTab();}else if(t.id==='qPAddT')D.t=t.value;
+  else if(t.closest&&t.closest('#qPAddTabs'))D.tabs=[...document.querySelectorAll('#qPAddTabs input:checked')].map(x=>x.value);});
 document.addEventListener('click',ev=>{if(!window.PERM_OPEN)return;const t=ev.target;if(!t||!t.closest)return;
   if(t.closest('.perm-det')||t.closest('[data-q="pgo"]')||t.closest('.modal:not([hidden])'))return;
   const had=!!document.querySelector('.perm-det');window.PERM_OPEN=null;if(had)try{renderGroupTab();}catch(e){}});
@@ -4153,6 +4178,20 @@ async function qAct(a,b){
   if(a==='cp'){copyText(b.dataset.v,b);return;}
   if(!sbAdmin)return;
   if(a==='atab'){admTab=b.dataset.v;admMsg='';renderGroupTab();if(admTab==='accounts')admLoadAcc();if(admTab==='perm')admLoadPerm();await admLoad();return;}
+  if(a==='padd2'){const em=(b.dataset.e||(($('#qPAddE')||{}).value||'')).trim().toLowerCase(),tid=b.dataset.t||(($('#qPAddT')||{}).value||''),role=(($('#qPAddR')||{}).value)||'leader';
+    const tabs=role==='helper'?[...document.querySelectorAll('#qPAddTabs input:checked')].map(x=>x.value):[];
+    if(!okEmail(em)){admMsg='Email chưa đúng.';renderGroupTab();return;}if(!tid){admMsg='Chọn chuyến trước.';renderGroupTab();return;}
+    if(role==='helper'&&!tabs.length){admMsg='Người phụ trách cần tick ít nhất 1 mục được nhập.';renderGroupTab();return;}
+    let tn='';admGroups.some(g=>((admOv[g.id]||{}).trips||[]).some(t=>t.id===tid&&(tn=t.name+' ('+g.name+')')));
+    const cur=(window.PERM||[]).find(r=>r.trip_id===tid&&r.email===em&&(r.role==='leader'||r.role==='helper')),rl=role==='leader'?'Thủ quỹ':'Người phụ trách';
+    const go=async()=>{admBusy=true;renderGroupTab();const {error}=await sb.rpc('set_trip_person',{tid,p_email:em,p_role:role,p_tabs:tabs});admBusy=false;
+      admMsg=error?'Chưa gán được: '+(ERR_VN[error.message]||error.message):`OK:Đã gán ${em} làm ${rl} của chuyến ${tn}.`;if(!error)window.PADD={r:role};
+      toast(admMsg.replace(/^OK:/,''));renderGroupTab();if(!error){await admLoadPerm();try{admLoadAcc();}catch(e){}}};
+    if(cur)ask(`${em} đang là ${cur.role==='leader'?'Thủ quỹ':'Người phụ trách'} của chuyến ${tn}. Đổi thành ${rl}${role==='helper'?' ('+tabs.map(k=>TAB_NAME[k]).join(', ')+')':''}?`,{title:'Đổi vai trò?',ok:'Đổi'},go);else go();return;}
+  if(a==='prm2'){const em=b.dataset.e,tid=b.dataset.t,tn=b.dataset.n;
+    ask(`Gỡ quyền của ${em} khỏi chuyến "${tn}"? Người này sẽ không sửa được chuyến nữa.`,{title:'Gỡ quyền?',ok:'Gỡ',danger:true},async()=>{admBusy=true;renderGroupTab();
+      const {error}=await sb.rpc('remove_trip_person',{tid,p_email:em});admBusy=false;admMsg=error?'Chưa gỡ được: '+(ERR_VN[error.message]||error.message):`OK:Đã gỡ ${em} khỏi chuyến "${tn}".`;
+      toast(admMsg.replace(/^OK:/,''));renderGroupTab();if(!error){await admLoadPerm();try{admLoadAcc();}catch(e){}}});return;}
   if(a==='pgo'){const k=b.dataset.k;window.PERM_OPEN=(window.PERM_OPEN===k?null:k);renderGroupTab();const d=document.querySelector('.perm-det');if(d&&d.scrollIntoView)d.scrollIntoView({block:'nearest'});return;}
   if(a==='admadd'||a==='admset'){const v=a==='admadd'?(($('#qAdm')||{}).value||'').trim().toLowerCase():e;
     if(!okEmail(v)){admMsg='Email chưa đúng.';renderGroupTab();return;}

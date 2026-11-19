@@ -15,11 +15,10 @@
   - Nhãn mã chuyến trên từng chuyến; dòng nhóm có nhãn "N chuyến đang bật mã chuyến".
   - Bỏ tab "Yêu cầu" và thẻ "Muốn tổ chức chuyến đi?" của người dùng (quản trị thêm BTC trực tiếp trong Quản lý nhóm). Nhật ký quản trị chỉ hiện entity `admin`, `group`, `organizer`, `quota` (`ADM_ENT`).
   - Tab Chuyến: tên nhóm hiện cạnh tiêu đề "Chuyến đi" (`#tripGrpName`). Quản trị viên / BTC của nhóm có nút "Thông tin hiện tại" (hộp thoại `viewers`): ai có quyền xem, vào bằng gì, từ khi nào, hoạt động lần cuối, số thiết bị.
-- **NGUYÊN TẮC CHUNG (v46): chế độ tập trung.** Bấm mở / thao tác mục nào thì mọi chỗ không liên quan xám đi (opacity .35 + grayscale), vẫn bấm được để chuyển sang. Cách làm: phần tử bao ngoài có class `dimable`, mục đang mở có class `focus`; `renderGroupTab` gắn `has-focus` cho `#grpMain` và `grp-focus` cho `.sec` (các thẻ tĩnh như Tài khoản, Sao lưu cũng xám). Mở nhóm kiểu 1 cái mỗi lúc (`myGrpExp`, `admExp`). Trong bảng Quản lý, đang gõ ở mục nào thì các mục `lv3` khác xám (`:focus-within`). Tính năng mới sau này cũng phải theo nguyên tắc này.
 - Báo sai: chỉ lưu trong `trip_reports`, hiện số chưa xử lý trên nút "Báo sai" cho leader / phụ trách. CHƯA gửi email hay thông báo (chưa có dịch vụ gửi thư). Tab Chuyến bỏ nút "Phần của tôi" (xem ở tab Tổng kết).
 - Người không có quyền sửa: nút `.btn` trong mục bị khoá được làm xám (`lk-off`, disabled) thay vì ẩn; ô nhập bị khoá xám có sọc.
 - Đăng xuất (`doSignOut`): thử `signOut()` 4 giây, rồi `signOut({scope:'local'})` 2 giây; vẫn còn phiên thì xoá khoá `sb-*-auth-token` trong localStorage và tải lại trang (sửa lỗi không đăng xuất được trên Edge/Safari iPad).
-- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v46). Điều hướng dùng network-first, `cache:'no-cache'`.
+- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v47; v46 "chế độ tập trung – làm xám chỗ không liên quan" đã bị anh Dũng bỏ, v47 hoàn tác về giao diện v45). Điều hướng dùng network-first, `cache:'no-cache'`.
 - Chủ dự án nói tiếng Việt. Claude làm hết qua dòng lệnh: sửa, kiểm thử, push (`git push origin HEAD:main`), chạy SQL.
 - Mô hình quyền: xem `docs/PHAN-QUYEN.md` (quản trị viên, người tổ chức, leader, người phụ trách, thành viên xem bằng mã `CH-XXXXXXXX`, link công khai `?v=`).
 

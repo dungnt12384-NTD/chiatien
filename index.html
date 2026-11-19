@@ -3479,7 +3479,9 @@ function accessSrc(a){const s=[];
   if(a.is_organizer)s.push('<b>BTC nhóm</b> (quản trị viên gán): được tạo chuyến mới');
   if(a.group_code==='valid')s.push('<b>Mã nhóm</b>: chỉ xem các chuyến của nhóm'+(a.group_code_expires?', hết hạn '+fd(a.group_code_expires):''));
   else if(a.group_code)s.push('<span style="color:var(--neg)">Mã nhóm đã bị tắt, đổi hoặc hết hạn</span>');
-  if(!s.length)s.push('Xem qua các chuyến bên dưới');
+  if(!s.length){const v=[...new Set((a.trips||[]).map(t=>t.via))];
+    if(v.includes('role'))s.push('<b>Vai trò trong chuyến</b> (leader hoặc người phụ trách gán)');
+    if(v.includes('trip_code'))s.push('<b>Mã chuyến</b> đã nhập: chỉ xem chuyến đó');}
   return 'Bạn thấy nhóm này nhờ: '+s.join(' · ');}
 async function loadAccess(){try{const {data,error}=await sb.rpc('my_group_access');if(error)return;myAccess={};(data||[]).forEach(r=>{myAccess[r.id]=r;});}catch(e){}}
 let pendTrip=null;

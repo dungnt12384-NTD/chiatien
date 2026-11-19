@@ -6,8 +6,10 @@
 ## 1. Dự án "Chia Tiền Nhóm"
 - Ứng dụng PWA một file `index.html` (JS thuần trong một IIFE), chạy trên GitHub Pages: https://dungnt12384-ntd.github.io/chiatien/
 - Backend Supabase (project ref `sqxqltbszsbgdsgbdldo`): RLS, các hàm `security definer`, đăng nhập ẩn danh cho người vào bằng mã chuyến. Migration mới nhất: `supabase/008_quan_ly_tai_khoan.sql` (hàm `admin_accounts`, `admin_set_admin_email` cho mục Quản trị hệ thống → Tài khoản; đã chạy trên production 2026-11-19 qua Supabase connector). Claude được tự chạy SQL chỉ đọc và migration thêm/sửa hàm; xoá dữ liệu, xoá bảng, sửa dữ liệu hàng loạt thì hỏi chủ dự án trước.
+- Migration 010 (`admin_account_trips`) và 011 (`admin_groups_overview`, `my_group_access`) đã chạy: Quản trị hệ thống → Nhóm hiện sẵn chuyến (kèm leader) và BTC (kèm tình trạng đăng nhập từ `auth.sessions`), bấm "Quản lý" mới sửa; thẻ "Nhóm của bạn" hiện từng chuyến, vai trò và nguồn quyền, bấm chuyến là mở chuyến.
+- Người không có quyền sửa: nút `.btn` trong mục bị khoá được làm xám (`lk-off`, disabled) thay vì ẩn; ô nhập bị khoá xám có sọc.
 - Đăng xuất (`doSignOut`): thử `signOut()` 4 giây, rồi `signOut({scope:'local'})` 2 giây; vẫn còn phiên thì xoá khoá `sb-*-auth-token` trong localStorage và tải lại trang (sửa lỗi không đăng xuất được trên Edge/Safari iPad).
-- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v37). Điều hướng dùng network-first, `cache:'no-cache'`.
+- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v40). Điều hướng dùng network-first, `cache:'no-cache'`.
 - Chủ dự án nói tiếng Việt. Claude làm hết qua dòng lệnh: sửa, kiểm thử, push (`git push origin HEAD:main`), chạy SQL.
 - Mô hình quyền: xem `docs/PHAN-QUYEN.md` (quản trị viên, người tổ chức, leader, người phụ trách, thành viên xem bằng mã `CH-XXXXXXXX`, link công khai `?v=`).
 

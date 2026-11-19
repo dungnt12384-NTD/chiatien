@@ -9,10 +9,16 @@
 - Migration 010 (`admin_account_trips`) và 011 (`admin_groups_overview`, `my_group_access`) đã chạy: Quản trị hệ thống → Nhóm hiện sẵn chuyến (kèm leader) và BTC (kèm tình trạng đăng nhập từ `auth.sessions`), bấm "Quản lý" mới sửa; thẻ "Nhóm của bạn" hiện từng chuyến, vai trò và nguồn quyền, bấm chuyến là mở chuyến.
 - Migration 012: BTC (`is_organizer`) xem được mọi chuyến trong nhóm mình, kể cả chuyến ẩn khỏi mã nhóm (chỉ xem; sửa vẫn theo `trip_roles`). `my_group_access` có thêm via `organizer`.
 - v42: "Nhóm của bạn" và Quản trị → Nhóm mặc định thu gọn (nút `.lv-tog` có mũi tên), bấm mới hiện chuyến trong khung `.lv2` nhạt hơn. Nút "Đang mở" / "Đóng quản lý" giống nút thường, chữ vàng (`.btn.is-open`). Bảng Quản lý (`.lv2.mng-panel`) nằm trên danh sách chuyến; mỗi mục `.gsub.lv3` một màu (`h-ren` xanh dương, `h-org` xanh lá, `h-code` cam, `h-hist` tím, `h-del` đỏ). Chỉ quản lý 1 nhóm mỗi lúc: `admSwitch` hỏi Lưu / Không lưu / Quay lại khi còn nháp (`admDraft`: đổi tên, email BTC, ô xoá – ô xoá không bao giờ tự lưu).
-- v43 + migration 013 (`admin_group_codes`): Quản trị → Nhóm có nhãn trạng thái mã trên từng nhóm (`codeBadge`: đang bật màu vàng kèm số người xem và ngày hết hạn). v44 bỏ khung cảnh báo tổng ở đầu danh sách (anh Dũng thấy rối). Tab Chuyến bỏ nút "Phần của tôi" (xem ở tab Tổng kết).
+- v43 + migration 013 (`admin_group_codes`): Quản trị → Nhóm có nhãn trạng thái mã trên từng nhóm (`codeBadge`: đang bật màu vàng kèm số người xem và ngày hết hạn). v44 bỏ khung cảnh báo tổng ở đầu danh sách (anh Dũng thấy rối).
+- v45 + migration 014 (`admin_trip_codes`, `trip_viewers`):
+  - Quản trị → Nhóm: chỉ có nút "＋ Tạo nhóm" (bấm mới hiện ô tên + Xác nhận / Huỷ bỏ; Enter / Esc) và ô tìm `#qAdmQ` (lọc theo tên nhóm hoặc tên chuyến, tô vàng chữ khớp, tự sổ nhóm có chuyến khớp).
+  - Nhãn mã chuyến trên từng chuyến; dòng nhóm có nhãn "N chuyến đang bật mã chuyến".
+  - Bỏ tab "Yêu cầu" và thẻ "Muốn tổ chức chuyến đi?" của người dùng (quản trị thêm BTC trực tiếp trong Quản lý nhóm). Nhật ký quản trị chỉ hiện entity `admin`, `group`, `organizer`, `quota` (`ADM_ENT`).
+  - Tab Chuyến: tên nhóm hiện cạnh tiêu đề "Chuyến đi" (`#tripGrpName`). Quản trị viên / BTC của nhóm có nút "Thông tin hiện tại" (hộp thoại `viewers`): ai có quyền xem, vào bằng gì, từ khi nào, hoạt động lần cuối, số thiết bị.
+- Báo sai: chỉ lưu trong `trip_reports`, hiện số chưa xử lý trên nút "Báo sai" cho leader / phụ trách. CHƯA gửi email hay thông báo (chưa có dịch vụ gửi thư). Tab Chuyến bỏ nút "Phần của tôi" (xem ở tab Tổng kết).
 - Người không có quyền sửa: nút `.btn` trong mục bị khoá được làm xám (`lk-off`, disabled) thay vì ẩn; ô nhập bị khoá xám có sọc.
 - Đăng xuất (`doSignOut`): thử `signOut()` 4 giây, rồi `signOut({scope:'local'})` 2 giây; vẫn còn phiên thì xoá khoá `sb-*-auth-token` trong localStorage và tải lại trang (sửa lỗi không đăng xuất được trên Edge/Safari iPad).
-- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v44). Điều hướng dùng network-first, `cache:'no-cache'`.
+- Service worker `sw.js`: tăng `VERSION` mỗi lần phát hành (hiện v45). Điều hướng dùng network-first, `cache:'no-cache'`.
 - Chủ dự án nói tiếng Việt. Claude làm hết qua dòng lệnh: sửa, kiểm thử, push (`git push origin HEAD:main`), chạy SQL.
 - Mô hình quyền: xem `docs/PHAN-QUYEN.md` (quản trị viên, người tổ chức, leader, người phụ trách, thành viên xem bằng mã `CH-XXXXXXXX`, link công khai `?v=`).
 

@@ -3659,7 +3659,7 @@ let dlgKind='',dlgBusy=false,dlgNote='',tInfo=null,tAudit=[],tAuditMore=false,tT
 let admReady=false,admLoaded=false,admTab='perm',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false,admAcc=null,admAccErr='',admAccQ='',admAccTrips={},admOv={},myAccess={},myGrpExp={},admExp={},admDraft={},admCodes={},admTCodes={},admGQ='',admNewG=false,admLogOpen=false;
 const ADM_ENT=['admin','group','organizer','quota'];   /* nhật ký quản trị: chỉ thao tác trong tab quản trị */
 const paidMap=new Map();let paidFor='',rpCount=new Map(),rpFor='',codeCache=new Map();
-let clRows=null,clCount=new Map(),clFor='',clDraft={},clResend=0;window.CLAIM_PENDING=null;   /* v90: "Tôi đã trả" */
+let clRows=null,clCount=new Map(),clFor='',clDraft={},clResend=0,clSent=null;window.CLAIM_PENDING=null;   /* v90: "Tôi đã trả" */
 function isAnon(){return !!(sbSession&&sbSession.user&&(sbSession.user.is_anonymous||!sbSession.user.email));}
 const ROLE_NAME={admin:'Quản trị viên',leader:'Thủ quỹ',helper:'Người hỗ trợ',viewer:'Người xem'};
 const TAB_NAME={member:'Người đi',advance:'Đã đóng',room:'Phòng',expense:'Khoản chi'};
@@ -4371,7 +4371,7 @@ async function admLoadGroup(gid){
 async function rpcDo(name,args,okMsg){admBusy=true;admMsg='';renderGroupTab();
   const {data,error}=await sb.rpc(name,args);admBusy=false;
   admMsg=error?'Chưa làm được: '+(ERR_VN[error.message]||error.message):(okMsg?'OK:'+okMsg:'');return error?null:(data===null?true:data);}
-const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.',claim_not_rejected:'Chỉ đề nghị bị từ chối mới gửi lại được.',report_not_done:'Báo sai này chưa được xử lý nên chưa báo lại được.',not_found:'Không tìm thấy.',system_group:'Thư mục "Chưa xếp nhóm" là của hệ thống, không xoá được.',is_admin:'Đây là quản trị viên: gỡ quyền quản trị trước rồi mới xoá tài khoản.'};
+const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.',claim_not_rejected:'Chỉ đề nghị bị từ chối mới gửi lại được.',duplicate:'Đề nghị này bạn đã gửi rồi và đang chờ duyệt, không cần gửi lại.',report_not_done:'Báo sai này chưa được xử lý nên chưa báo lại được.',not_found:'Không tìm thấy.',system_group:'Thư mục "Chưa xếp nhóm" là của hệ thống, không xoá được.',is_admin:'Đây là quản trị viên: gỡ quyền quản trị trước rồi mới xoá tài khoản.'};
 async function qAct(a,b){
   if(!sb)return;const id=b&&b.dataset.id,e=b&&b.dataset.e;
   if(a==='sync'){if(!dbRef){toast('Chưa kết nối nhóm.');return;}R.trips.forEach(t=>{if(!t.sample&&!t.ph&&canEditAny(t.id))schedulePush(t,0);});if(sbUnsub){const g=sbGroup;connectGroup(g);}toast('Đang đồng bộ lại.');return;}
@@ -4618,7 +4618,7 @@ async function openDlg(k,opt){dlgKind=k;dlgNote='';dlgBusy=false;$('#authModal')
     if(a.error||b.error)dlgNote='Chưa tải được: '+((a.error||b.error).message);else{tInfo=a.data||{};tAudit=b.data||[];tAuditMore=tAudit.length>=50;}}
   else if(k==='report'){rpItem=opt||null;rpResend=(opt&&opt.resend)||0;if(!rpResend)rpDraft='';}
   else if(k==='reports'){rpRows=null;renderDlg();const {data,error}=await sb.rpc('trip_reports_list',{tid:t.id});rpRows=error?[]:(data||[]);if(error)dlgNote=error.message;rpCount.set(t.id,(rpRows||[]).filter(r=>!r.resolved_at).length);renderTripExtra();}
-  else if(k==='claims'){clResend=(opt&&opt.resend)||0;if(!clResend)clDraft={};clRows=null;renderDlg();await loadClaims(t.id);}
+  else if(k==='claims'){clSent=null;clResend=(opt&&opt.resend)||0;if(!clResend)clDraft={};clRows=null;renderDlg();await loadClaims(t.id);}
   else if(k==='code'){codeInfo=null;renderDlg();const {data,error}=await sb.rpc('trip_code_get',{tid:t.id});codeInfo=data||null;if(error)dlgNote=error.message;else codeCache.set(t.id,data);}
   else if(k==='share'){shareInfo=null;renderDlg();const {data}=await sb.rpc('share_info',{p_trip:t.id});shareInfo=data||{};}
   else if(k==='viewers'){tViewers=null;renderDlg();const {data,error}=await sb.rpc('trip_viewers',{tid:t.id});tViewers=data||[];if(error)dlgNote=ERR_VN[error.message]||error.message;}
@@ -4654,6 +4654,7 @@ function dlgBody(){
       return `<p style="color:var(--muted);font-size:14px;margin:0">Người đi báo đã trả hộ. <b>Duyệt</b> sẽ mở sẵn form khoản chi (đã điền), bạn chọn người chia rồi lưu. Chưa lưu thì đề nghị vẫn chờ.</p>${rows}`;}
     const dr=clDraft||{},me=dr.mem||lsGet('chiatien-me-'+R.current)||'',dsel=dr.day||S.activeDay||'';
     const form=isClosed()?'<div class="hint">Sổ đã chốt, không gửi thêm được.</div>'
+      :clSent?`<div class="gcard"><div class="note info" role="status" style="--c:var(--pos)">✅ ${clSent.again?'Đã gửi lại':'Đã gửi'}: <b>${esc(clSent.desc)} · ${esc(clSent.amt)}</b>. Thủ quỹ sẽ xem và duyệt. Xem trạng thái ở danh sách bên dưới.</div><div class="row"><button type="button" class="btn" data-dl="clmore">Gửi thêm khoản khác</button></div></div>`
       :`<div class="gcard"><div class="sub">${clResend?'Sửa và gửi lại đề nghị bị từ chối':'Gửi đề nghị'}</div><p style="color:var(--muted);font-size:12px;margin:0">${clResend?'Nội dung cũ đã được điền sẵn. Sửa nếu cần rồi gửi lại, vẫn là đề nghị cũ, không tạo thêm.':'Bạn đã trả giúp một khoản? Gửi ở đây, thủ quỹ kiểm tra rồi mới ghi vào chuyến.'}</p>
         <div class="field"><label for="clMem">Người đã trả</label><select id="clMem"><option value="">— chọn —</option>${S.members.map(m=>`<option value="${esc(m.id)}"${m.id===me?' selected':''}>${esc(m.name)}</option>`).join('')}</select></div>
         <div class="field"><label for="clDay">Ngày</label><select id="clDay"><option value="">(không rõ)</option>${S.days.map(d=>`<option value="${esc(d.id)}"${d.id===dsel?' selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
@@ -4726,8 +4727,11 @@ async function dlgAct(a,b){
     if(!(am>0)){dlgNote='Nhập số tiền hợp lệ, ví dụ 150.000 hoặc 150k.';renderDlg();return;}
     const ok=clResend?await dlgRpc('resend_claim',{p_id:clResend,p_day:clDraft.day||null,p_member:clDraft.mem,p_name:m.name,p_desc:clDraft.desc,p_amount:Math.round(am),p_note:clDraft.note||null,p_reporter:clDraft.who},'Đã gửi lại. Thủ quỹ sẽ xem và duyệt.')
       :await dlgRpc('submit_claim',{tid:t.id,p_day:clDraft.day||null,p_member:clDraft.mem,p_name:m.name,p_desc:clDraft.desc,p_amount:Math.round(am),p_note:clDraft.note||null,p_reporter:clDraft.who},'Đã gửi. Thủ quỹ sẽ xem và duyệt.');
-    if(ok){lsSet('chiatien-me-'+R.current,clDraft.mem);lsSet('chiatien-who',clDraft.who);clDraft={};clResend=0;await loadClaims(t.id);loadSentClaims();loadClaimsAll(true);}
+    if(ok){lsSet('chiatien-me-'+R.current,clDraft.mem);lsSet('chiatien-who',clDraft.who);
+      clSent={desc:clDraft.desc,amt:fmt(Math.round(am)),again:!!clResend};clDraft={};clResend=0;dlgNote='';renderDlg();   /* v101: báo đã gửi + xoá form ngay, rồi mới tải lại danh sách */
+      try{await loadClaims(t.id);}catch(e){}try{loadSentClaims();loadClaimsAll(true);}catch(e){}}
     renderDlg();return;}
+  if(a==='clmore'){clSent=null;dlgNote='';renderDlg();return;}
   if(a==='clredo'){const c=(clRows||[]).find(x=>x.id===+b.dataset.id);if(!c)return;
     clResend=c.id;clDraft={mem:c.member_id,day:c.day_id||'',desc:c.descr,amt:Number(c.amount).toLocaleString('vi-VN'),note:c.note||'',who:c.reporter||''};dlgNote='';renderDlg();return;}
   if(a==='rpredo'){const r=(rpRows||[]).find(x=>x.id===+b.dataset.id);if(!r)return;

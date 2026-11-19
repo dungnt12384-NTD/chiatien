@@ -1,0 +1,2 @@
+-- 034: submit_claim chặn đề nghị TRÙNG (cùng người, người đã trả, nội dung, số tiền, ngày) khi bản trước còn chờ duyệt -> lỗi duplicate.
+-- Đã áp dụng trực tiếp (apply_migration 034). Quay lại: tạo lại submit_claim bản 033 (không có đoạn kiểm duplicate).

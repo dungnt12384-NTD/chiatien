@@ -1354,7 +1354,15 @@ html.phone .sync-head{font-size:11px!important;max-width:55%}
 .qr-img svg{width:100%;height:auto;display:block}
 .qr-info{flex:1 1 160px;min-width:0;overflow-wrap:anywhere;display:flex;flex-direction:column;gap:3px}
 .qr-info>b{font-size:20px}
-.qr-btn{border:1px solid var(--line,#d6dbe3);background:transparent;color:inherit;border-radius:8px;font:inherit;font-size:12px;padding:2px 8px;margin-left:6px;cursor:pointer}
+/* v76: nút QR to, nằm ngay dưới số tiền Chốt sổ (không chen vào cột tên, không đẩy các cột khác) */
+html body .qr-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:max-content;max-width:100%;margin:6px 0 0 auto;padding:8px 14px;min-height:38px;
+  border:0;border-radius:999px;background:linear-gradient(135deg,#0f9d58,#1a73e8);color:#fff;font:inherit;font-size:14px;font-weight:700;line-height:1;cursor:pointer;
+  box-shadow:0 2px 6px rgba(26,115,232,.25);white-space:nowrap}
+html body .qr-btn svg{width:20px;height:20px;flex:0 0 auto}
+html body .qr-btn:active{transform:scale(.97)}
+.settle-td{vertical-align:middle}
+html.phone .settle-td{display:flex!important;flex-direction:column!important;align-items:flex-end!important;justify-content:center;gap:0;text-align:right}
+html.phone .settle-td .qr-btn{margin:6px 0 0 0}
 #qrModal .qr-card{justify-content:center}
 html body .acc-trips>.sub{font-size:16px!important;font-weight:700;margin:4px 0 2px}
 html body .org-mail{font-size:14px!important}
@@ -2515,8 +2523,8 @@ function renderResult(c){
     const m=g.main,sum=k=>g.members.reduce((t,x)=>t+c.P[x.id][k],0),open=openBal.has(m.id),comps=g.members.slice(1);
     const note=sumMode==='all'?(!isMain(m)?`<span class="gnote">↳ đi kèm ${m.parent?nameNo(m.parent):''}</span>`:''):(comps.length?`<span class="gnote">Gồm đi kèm: ${comps.map(x=>`${nameNo(x.id)} ${signed(c.P[x.id].net)}`).join(', ')}</span>`:'');
     const no=``;
-    return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togBal" data-id="${m.id}"><td class="stt">${memNo(m.id)}</td><td><div class="who">${avatar(m.id)}<span class="name">${esc(m.name)}${no}${g.members.some(x=>x.id===S.holder)?' <small style="color:var(--c-advance)">· thủ quỹ</small>':''}${note}${g.members.some(x=>x.id===S.holder)?'':paidUi(m.id,Math.round(gnet(g)))+qrBtn(m.id,Math.round(gnet(g)))}</span></div></td>
-    <td class="num">${fmt(sum('adv'))}</td><td class="num">${fmt(sum('paid'))}</td><td class="num">${fmt(sum('share'))}</td><td>${settlePill(m.id,gnet(g))}</td></tr>`+(open?`<tr class="det"><td colspan="6">${personDetail(g,c)}</td></tr>`:'');}).join('')
+    return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togBal" data-id="${m.id}"><td class="stt">${memNo(m.id)}</td><td><div class="who">${avatar(m.id)}<span class="name">${esc(m.name)}${no}${g.members.some(x=>x.id===S.holder)?' <small style="color:var(--c-advance)">· thủ quỹ</small>':''}${note}${g.members.some(x=>x.id===S.holder)?'':paidUi(m.id,Math.round(gnet(g)))}</span></div></td>
+    <td class="num">${fmt(sum('adv'))}</td><td class="num">${fmt(sum('paid'))}</td><td class="num">${fmt(sum('share'))}</td><td class="settle-td">${settlePill(m.id,gnet(g))}${g.members.some(x=>x.id===S.holder)?'':qrBtn(m.id,Math.round(gnet(g)))}</td></tr>`+(open?`<tr class="det"><td colspan="6">${personDetail(g,c)}</td></tr>`:'');}).join('')
     :'<tr><td colspan="6" style="text-align:center;color:var(--muted)">Chưa có thành viên.</td></tr>';
   try{renderMyPart(c);}catch(e){}
 }
@@ -4224,7 +4232,8 @@ function qrCard(id,amount){const b=S.bank,msg=qrMsg(id);
   return `<div class="qr-card"><div class="qr-img" aria-label="Mã QR chuyển ${fmt(amount)}">${qrSvg(vietQr(b,amount,msg))}</div>
     <div class="qr-info"><div class="hint" style="min-height:0">Mở app ngân hàng, quét mã là có sẵn số tiền và nội dung.</div><b class="num" style="color:var(--neg)">${fmt(amount)}</b>
     <div>${esc(bankName(b.bin))} · <b>${esc(b.acc)}</b></div>${b.name?`<div>${esc(b.name)}</div>`:''}<div class="hint" style="min-height:0">Nội dung: ${esc(msg)}</div></div></div>`;}
-function qrBtn(id,n){return n<0&&bankOk()?`<button type="button" class="qr-btn" data-qr="${esc(id)}" data-n="${-n}" title="Mã QR chuyển khoản ${fmt(-n)}">▦ QR</button>`:'';}
+const QR_ICO='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm1-9h2v2H6V6Zm10 0h2v2h-2V6ZM6 16h2v2H6v-2Zm7-3h2v2h-2v-2Zm4 0h4v2h-2v2h-2v-4Zm-4 4h2v4h-2v-4Zm4 2h2v2h-2v-2Zm2-2h2v2h-2v-2Z"/></svg>';
+function qrBtn(id,n){return n<0&&bankOk()?`<button type="button" class="qr-btn" data-qr="${esc(id)}" data-n="${-n}" title="Mã QR chuyển khoản ${fmt(-n)}" aria-label="Mở mã QR chuyển khoản ${fmt(-n)}">${QR_ICO}<span>Quét QR</span></button>`:'';}
 function showQr(id,amount){const m=mem(id);$('#qrTitle').textContent='QR nộp tiền: '+(m?m.name:'');$('#qrBody').innerHTML=qrCard(id,amount);$('#qrModal').hidden=false;$('#qrClose').focus();}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-qr]');if(!b)return;ev.preventDefault();ev.stopPropagation();showQr(b.dataset.qr,+b.dataset.n);},true);
 $('#qrClose').addEventListener('click',()=>{$('#qrModal').hidden=true;});

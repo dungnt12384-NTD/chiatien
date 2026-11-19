@@ -3635,7 +3635,7 @@ async function admSave(gid){const x=admDraft[gid]||{},dt=admDirty(gid);let ok=tr
   await admLoad();await loadGroups();paintAccount();if(!ok)renderGroupTab();return ok;}
 /* chỉ quản lý 1 nhóm mỗi lúc: đổi nhóm / đóng khi còn thay đổi chưa lưu thì hỏi */
 function admSwitch(next){const cur=admOpen;
-  const go=async()=>{if(cur)delete admDraft[cur];Object.values(admDet).forEach(d=>{d.histOpen=false;});admOpen=next;admMsg='';if(next)admExp[next]=true;renderGroupTab();if(next)await admLoadGroup(next);};
+  const go=async()=>{if(cur)delete admDraft[cur];Object.values(admDet).forEach(d=>{d.histOpen=false;});admOpen=next;admMsg='';if(next){admExp={};admExp[next]=true;}renderGroupTab();if(next)await admLoadGroup(next);};
   const dt=cur?admDirty(cur):[];if(!dt.length){go();return;}
   const g=admGroups.find(y=>y.id===cur),L={ren:'tên nhóm mới',org:'email BTC chưa thêm',del:'chữ đã gõ ở ô xoá nhóm (sẽ không xoá)'};
   ask(`Nhóm “${g?g.name:''}” còn thay đổi chưa lưu: ${dt.map(k=>L[k]).join(', ')}. Lưu trước khi ${next?'chuyển sang nhóm khác':'đóng'}?`,
@@ -3690,7 +3690,7 @@ async function qAct(a,b){
   if(a==='logout'){signOutAsk();return;}
   if(a==='pick'){const g=sbGroups.find(x=>x.id===id);if(g){connectGroup(g);goWork();}return;}
   if(a==='otrip'){openTrip(b.dataset.g,b.dataset.t);return;}
-  if(a==='mgx'){myGrpExp[id]=!myGrpExp[id];renderGroupTab();return;}
+  if(a==='mgx'){const o=!myGrpExp[id];myGrpExp={};if(o)myGrpExp[id]=true;renderGroupTab();return;}   /* mở nhóm này thì nhóm trước tự đóng */
   if(a==='gowork'){goWork();return;}
   if(a==='code'){const i=$('#qCode');if(await enterCode(i&&i.value,'#qCodeMsg')&&i)i.value='';return;}
   if(a==='forget'){ask('Bỏ mã này khỏi máy? Muốn xem lại thì phải nhập mã lần nữa.',{title:'Bỏ mã?',ok:'Bỏ mã',danger:true},async()=>{await sb.rpc('forget_code',{p_kind:b.dataset.k,p_target:id});await afterAuth(true);if(curTab!=='group')showTab('group',true);});return;}
@@ -3710,7 +3710,7 @@ async function qAct(a,b){
   if(a==='gnew'){admNewG=true;renderGroupTab();const i=$('#qNewG');if(i)i.focus();return;}
   if(a==='gnewx'){admNewG=false;renderGroupTab();return;}
   if(a==='gopen'){admSwitch(admOpen===id?null:id);return;}
-  if(a==='agx'){if(admOpen===id){admSwitch(null);return;}admExp[id]=!admExp[id];renderGroupTab();return;}
+  if(a==='agx'){if(admOpen===id){admSwitch(null);return;}const o=!admExp[id];admExp={};if(o)admExp[id]=true;renderGroupTab();return;}
   if(a==='gcreate'){const n=($('#qNewG').value||'').trim().replace(/\s+/g,' ');if(!n){admMsg='Nhập tên nhóm.';renderGroupTab();return;}
     const r=await rpcDo('admin_create_group',{p_name:n},'Đã tạo nhóm “'+n+'”. Thêm BTC trong bảng Quản lý.');if(r){admNewG=false;await admLoad();await loadGroups();admSwitch(r);}else renderGroupTab();return;}
   if(a==='gren'){const n=($('#qRen-'+id).value||'').trim().replace(/\s+/g,' ');if(!n)return;const g=admGroups.find(x=>x.id===id);

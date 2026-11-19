@@ -1729,7 +1729,7 @@ function showTab(k,jump){const prevTab=curTab;curTab=k;try{document.documentElem
   renderTabs();syncTopBars();
   if(jump&&isPhone()){window.scrollTo(0,0);return;}
   if(jump){window.scrollTo(0,0);}}
-function useTrip(id){R.current=id;try{if(window.sbGroupId&&window.sbGroupId())localStorage.setItem('chiatien-lt-'+window.sbGroupId(),id);}catch(e){}S=trip().data;migrateAttend(S);syncPresent();mDraft=null;memberSel=null;$('#mEdit').hidden=true;presDraft=null;presDay=null;moveId=null;selMember=null;mvTarget=null;mvQ='';openRooms=new Set();editRooms=new Set();nrDraft=null;rmSig=null;rmInit=false;formRooms=[];formSelf=new Set();pickRoom=null;roomAskSkip=new Set();setTripEdit(false);renamingId=null;formExcl=new Set();resetExpForm();resetAdvForm();render();}
+function useTrip(id){R.current=id;try{if(window.sbGroupId&&window.sbGroupId())localStorage.setItem('chiatien-lt-'+window.sbGroupId(),id);}catch(e){}S=trip().data;migrateAttend(S);syncPresent();mDraft=null;memberSel=null;$('#mEdit').hidden=true;presDraft=null;presDay=null;moveId=null;selMember=null;mvTarget=null;mvQ='';openRooms=new Set();editRooms=new Set();nrDraft=null;rmSig=null;rmInit=false;formRooms=[];formSelf=new Set();pickRoom=null;roomAskSkip=new Set();setTripEdit(false);tripEditorOpen=false;tripFormOpen=false;renamingId=null;formExcl=new Set();resetExpForm();resetAdvForm();render();}
 const tripTotal=t=>t.data.expenses.reduce((s,e)=>s+e.amount,0);
 function copyMembersInto(target,srcData){const map={},byName=new Map(target.members.map(m=>[norm(m.name),m.id])),addedIds=[];
   (srcData.members||[]).forEach(m=>{const k=norm(m.name);if(byName.has(k)){map[m.id]=byName.get(k);return;}const id=uid();map[m.id]=id;byName.set(k,id);target.members.push({id,name:m.name});addedIds.push(id);});
@@ -2524,7 +2524,7 @@ function render(keepAdv){
   if(mDraft&&!mem(mDraft.id)){mDraft=null;$('#mEdit').hidden=true;}
   const c=compute();
   try{applyLocks();}catch(e){}renderTrips();renderTabs(c);renderFund(c);try{renderExpTrash();}catch(e){}syncTopBars0();syncPresent();renderMembers();renderAdvances(c,keepAdv);renderExpenseForm();{const rem=c.advTotal-c.total;$('#expKpi').innerHTML=`<div class="kpi big"><span>Tổng tiền các khoản chi</span><b class="num">${fmt(c.total)}</b></div><div class="kpi"><span>Tổng tiền đã đóng trước</span><b class="num">${fmt(c.advTotal)}</b></div><div class="kpi"><span>Tổng tiền còn lại${rem<0?' (đang thiếu)':''}</span><b class="num" style="color:var(${rem<0?'--neg':'--pos'})">${rem<0?'−':''}${fmt(Math.abs(rem))}</b><small>= đã đóng trước − tổng chi (chưa tính ai tự chi hộ). Chốt sổ từng người xem ở tab Tổng kết.</small></div>`;}renderRoomEditor();renderList(c);renderResult(c);renderReport(c);save();
-  try{fxApply();}catch(e){}
+  try{focusHeal();}catch(e){}
 }
 
 /* ---------- actions ---------- */
@@ -3320,7 +3320,7 @@ function applyLocks(){
   h.toggle('nocreate',sup&&!sbGroup.can_create);
   h.toggle('closed',sup&&isClosed());
   LOCK_TABS.forEach(k=>{document.querySelectorAll(`section.sec[data-tab="${k}"]`).forEach(s=>s.classList.toggle('lock',!!PV_TOKEN||(sup&&!canEditTab(k))));});
-  try{lockUi();lockDayRow();}catch(e){}}
+  try{lockUi();lockDayRow();}catch(e){}try{focusHeal();}catch(e){}}
 function lockMsg(){if(isClosed())return 'Chuyến đã chốt sổ, không sửa được. Leader có thể mở lại sổ.';
   const r=roleOf();return r.role==='helper'?'Bạn chưa được leader cấp quyền nhập ở mục này.':'Bạn chỉ có quyền xem chuyến này. Thấy sai thì bấm "Báo sai".';}
 /* tab chỉ xem: ẩn nút sửa, khoá ô nhập, để người xem không bấm nhầm vào thứ không dùng được */
@@ -4161,7 +4161,13 @@ $('#tripNewCancel').addEventListener('click',()=>{tripFormOpen=false;syncTripUi(
 /* tab Chuyến: đang mở "Sửa chuyến" hoặc "Tạo chuyến mới" = chế độ tập trung: phần khác xám + không bấm được;
    bấm ra ngoài khung = thoát (hỏi lưu nếu đang sửa dở); cú bấm đó không làm gì khác */
 function tripFocusBox(){if(curTab!=='trip'||document.documentElement.classList.contains('empty'))return null;
-  if(tripFormOpen)return $('#tripForm');if(tripEditorOpen)return $('#tripEditor');return null;}
+  const b=tripFormOpen?$('#tripForm'):(tripEditorOpen?$('#tripEditor'):null);
+  return b&&b.offsetParent?b:null;}   /* khung bị ẩn (không có quyền, đổi chuyến/nhóm) thì KHÔNG tập trung, tránh kẹt màn hình xám */
+/* tự gỡ xám bị kẹt: tính lại mọi chế độ tập trung trước mỗi lần chạm / bấm, sau mỗi lần vẽ lại */
+function focusHeal(){try{document.documentElement.classList.toggle('trip-focus',!!tripFocusBox());}catch(e){}
+  try{fxApply();}catch(e){}
+  try{document.querySelectorAll('.sec.mng-focus').forEach(s=>{if(!(sbAdmin&&admTab==='groups'&&admOpen))s.classList.remove('mng-focus');});}catch(e){}}
+document.addEventListener('pointerdown',focusHeal,true);
 function tripCloseAll(){if(editingTrip)setTripEdit(false);tripEditorOpen=false;tripFormOpen=false;syncTripUi();}
 function tripExit(){
   if(tripFormOpen){const n=$('#newTripName').value.trim();

@@ -99,6 +99,8 @@ button,input,select{font:inherit;color:inherit}
 .sw[aria-pressed="true"]{border-color:var(--fg)}
 .tripbar{display:flex;gap:6px 14px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-radius:12px;background:var(--tc,var(--c-trip));color:#fff;font-size:14px}
 .tripbar b{font-size:16px;overflow-wrap:anywhere}
+.rp-card.has{border:1.5px solid var(--neg)}
+.rp-card .rp-item{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .tripbar span{opacity:.92}
 html .tripbar .crumb{background:none;border:0;color:var(--tc,var(--accent));font:inherit;font-weight:600;padding:2px 0;min-height:0;text-decoration:underline;cursor:pointer;overflow-wrap:anywhere;text-align:left}
 #tripExtra{display:grid;gap:12px;margin:4px 0 14px}
@@ -1708,7 +1710,7 @@ function renderFund(c){
 function renderTabs(c){
   c=c||compute();
   const cnt={trip:R.trips.length,member:S.members.length,advance:new Set(S.advances.map(a=>a.member)).size,expense:S.expenses.length,room:S.expenses.filter(e=>e.rooms&&e.rooms.length).length};
-  const vis=visibleTabs();$('#tabs').style.gridTemplateColumns=`repeat(${vis.length},minmax(0,1fr))`;$('#tabs').innerHTML=TAB_DEF.filter(t=>vis.includes(t[0])).map(t=>`<button type="button" class="tab" role="tab" data-go="${t[0]}" data-act="goTab" data-id="${t[0]}" aria-selected="${curTab===t[0]}"><svg viewBox="0 0 24 24" aria-hidden="true">${t[2]}</svg><span class="tl">${t[0]==='group'&&typeof isAnon==='function'&&isAnon()?'Của tôi':t[1]}</span><span class="tls">${t[0]==='group'&&typeof isAnon==='function'&&isAnon()?'Của tôi':(TAB_SHORT[t[0]]||t[1])}</span>${t[0]==='advance'&&c.advTotal<c.total?`<b class="num" style="background:var(--neg);color:#fff" title="Quỹ đang âm">!</b>`:(t[0]==='room'&&roomIssues().length?`<b class="num" style="background:var(--neg);color:#fff" title="Có người chưa gán phòng hoặc không còn có mặt">!</b>`:(cnt[t[0]]!==undefined?`<b class="num">${cnt[t[0]]}</b>`:''))}</button>`).join('');
+  const vis=visibleTabs();$('#tabs').style.gridTemplateColumns=`repeat(${vis.length},minmax(0,1fr))`;$('#tabs').innerHTML=TAB_DEF.filter(t=>vis.includes(t[0])).map(t=>`<button type="button" class="tab" role="tab" data-go="${t[0]}" data-act="goTab" data-id="${t[0]}" aria-selected="${curTab===t[0]}"><svg viewBox="0 0 24 24" aria-hidden="true">${t[2]}</svg><span class="tl">${t[0]==='group'&&typeof isAnon==='function'&&isAnon()?'Của tôi':t[1]}</span><span class="tls">${t[0]==='group'&&typeof isAnon==='function'&&isAnon()?'Của tôi':(TAB_SHORT[t[0]]||t[1])}</span>${t[0]==='group'&&(window.RP_OPEN||[]).length?`<b class="num" style="background:var(--neg);color:#fff" title="Báo sai cần xử lý">${window.RP_OPEN.length}</b>`:''}${t[0]==='advance'&&c.advTotal<c.total?`<b class="num" style="background:var(--neg);color:#fff" title="Quỹ đang âm">!</b>`:(t[0]==='room'&&roomIssues().length?`<b class="num" style="background:var(--neg);color:#fff" title="Có người chưa gán phòng hoặc không còn có mặt">!</b>`:(cnt[t[0]]!==undefined?`<b class="num">${cnt[t[0]]}</b>`:''))}</button>`).join('');
 }
 function syncTopBars0(){const tb=$('#tripBar');if(tb)tb.hidden=false;}
 function syncTopBars(){
@@ -1747,7 +1749,7 @@ function renderTrips(){syncTripUi();try{renderTripExtra();}catch(e){}try{renderT
   const tn=$('#tripName');if(!editingTrip)tn.value=trip().name;
   const cur=trip();document.documentElement.style.removeProperty('--tc');
   $('#tripColors').innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${cur.color===c}" aria-label="Chọn màu ${c}" data-act="pickColor" data-color="${c}"></button>`).join('');
-  $('#tripBar').innerHTML=`${sbSession&&sbGroup?`<button type="button" class="crumb" data-tx="up">${esc(sbGroup.name)}</button><span>›</span>`:'<span>Đang xem chuyến</span>'}<b>${esc(cur.name)}</b><span class="num">${cur.data.members.length} người · ${cur.data.days.length} ngày · ${fmt(tripTotal(cur))}</span>`;
+  $('#tripBar').innerHTML=`${sbSession&&sbGroup?`<button type="button" class="crumb" data-tx="pickgrp" title="Bấm để chọn nhóm">${esc(sbGroup.name)} ▾</button><span>›</span>`:'<span>Đang xem chuyến</span>'}<b>${esc(cur.name)}</b><span class="num">${cur.data.members.length} người · ${cur.data.days.length} ngày · ${fmt(tripTotal(cur))}</span>`;
 }
 
 let swapSnap=null, swapMode=false, swapSel=null, newTripColor='', tripEditorOpen=false, tripFormOpen=false, nrDraft=null, priceWarn=null, editRooms=new Set(), editing=null, formExcl=new Set(), formKind='normal', formRooms=[], formSelf=new Set(), pickRoom=null, roomAskSkip=new Set(), roomAskForce=false;
@@ -3468,7 +3470,7 @@ async function afterAuth(force){
   if(codePending)return;
   closeDlg();setSync('connecting');applyRole();
   if(isAnon())sbAdmin=false;else{try{const r=await sb.rpc('is_admin');sbAdmin=r.data===true;}catch(e){sbAdmin=false;}}
-  await Promise.all([loadGroups(),loadMyCodes(),loadAccess(),isAnon()?null:loadMyReq()]);
+  await Promise.all([loadGroups(),loadMyCodes(),loadAccess(),isAnon()?null:loadMyReq(),loadReports(true)]);
   applyRole();paintAccount();
   if(!sbGroups.length){disconnectGroup();if(sbGroup){sbGroup=null;dropSyncedLocal();}applyRole();render();
     setSync('off',isAnon()?'Chưa có chuyến nào còn hiệu lực':'Chưa có chuyến nào');showTab('group',true);return;}
@@ -3530,6 +3532,23 @@ function accessSrc(a){const s=[];
     if(v.includes('role'))s.push('<b>Vai trò trong chuyến</b> (leader hoặc người phụ trách gán)');
     if(v.includes('trip_code'))s.push('<b>Mã chuyến</b> đã nhập: chỉ xem chuyến đó');}
   return 'Bạn thấy nhóm này nhờ: '+s.join(' · ');}
+/* ---------- Báo sai cần xử lý: hộp chung cho quản trị viên, BTC, leader / người phụ trách (cần supabase/015) ---------- */
+/* ai được xử lý báo sai của chuyến đang mở: quản trị viên, leader / người phụ trách, BTC của nhóm */
+function canHandleRp(){return canEditAny()||sbAdmin||!!(sbGroup&&myAccess[sbGroup.id]&&myAccess[sbGroup.id].is_organizer);}
+function canHandleAnyRp(){return sbAdmin||Object.values(myAccess).some(a=>a.is_organizer||(a.trips||[]).some(t=>t.role==='leader'||t.role==='helper'));}
+async function loadReports(quiet){if(!sb||!sbSession||isAnon()){window.RP_OPEN=[];return;}
+  try{const {data,error}=await sb.rpc('my_open_reports');window.RP_OPEN=error?[]:(data||[]);}catch(e){window.RP_OPEN=[];}
+  try{renderTabs();}catch(e){}if(!quiet&&curTab==='group')renderGroupTab();}
+function reportsCard(){const L=window.RP_OPEN||[];if(!L.length&&!canHandleAnyRp())return '';
+  return `<div class="gcard rp-card${L.length?' has':''}"><div class="gh"><b>🚩 Báo sai cần xử lý${L.length?` (${L.length})`:''}</b></div>`+
+    (L.length?`<div class="hint" style="min-height:0">Báo sai chưa xử lý ở mọi chuyến bạn phụ trách. Trả lời (nếu cần) rồi bấm "Đã xử lý"; người báo sẽ thấy câu trả lời trong mục Báo sai của chuyến.</div>`+
+      L.map(r=>`<div class="rcard rp-item"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(r.trip_name)}</b>${r.group_name?` <small>· ${esc(r.group_name)}</small>`:''}</div>
+          <button type="button" class="btn ghost small" data-q="rpopen" data-g="${esc(r.group_id||'')}" data-t="${esc(r.trip_id)}">Mở chuyến</button></div>
+        <div style="overflow-wrap:anywhere">${r.item_label?`<b>${esc(r.item_label)}</b>: `:''}${esc(r.message)}</div>
+        <div class="hint" style="min-height:0">${r.reporter?esc(r.reporter)+' · ':''}${ago(r.at)} (${fdt(r.at)})</div>
+        <div class="row"><div class="field" style="flex:1 1 200px"><input type="text" id="rpR-${r.id}" maxlength="500" placeholder="Trả lời người báo (không bắt buộc)" aria-label="Trả lời"></div><button type="button" class="btn small" data-q="rpdone" data-id="${r.id}">Đã xử lý</button></div></div>`).join('')
+    :'<div class="hint" style="min-height:0">Không có báo sai nào đang chờ xử lý.</div>')+`</div>`;}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&sbSession)loadReports();});
 async function loadAccess(){try{const {data,error}=await sb.rpc('my_group_access');if(error)return;myAccess={};(data||[]).forEach(r=>{myAccess[r.id]=r;});}catch(e){}}
 let pendTrip=null;
 function openTrip(gid,tid){
@@ -3556,7 +3575,7 @@ function renderGroupTab(){
   if(!authReady){el.innerHTML='<div class="hint">Đang kiểm tra đăng nhập…</div>';return;}
   if(!sbSession){el.innerHTML='';return;}
   const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
-  let h=groupsCard()+(sbAdmin?'':codeCard());
+  let h=reportsCard()+groupsCard()+(sbAdmin?'':codeCard());
   if(sbAdmin){h+=adminHtml();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
   /* đang Quản lý 1 nhóm: mọi phần xung quanh xám đi (vẫn bấm được để chuyển) */
@@ -3714,6 +3733,12 @@ async function qAct(a,b){
   if(a==='logout'){signOutAsk();return;}
   if(a==='pick'){const g=sbGroups.find(x=>x.id===id);if(g){connectGroup(g);goWork();}return;}
   if(a==='otrip'){openTrip(b.dataset.g,b.dataset.t);return;}
+  if(a==='rpopen'){const tid=b.dataset.t;openTrip(b.dataset.g,tid);const until=Date.now()+13000;
+    const w=()=>{if(R.current===tid&&curTab==='trip'){openDlg('reports');return;}if(Date.now()<until)setTimeout(w,300);};setTimeout(w,300);return;}
+  if(a==='rpdone'){const rid=+id,rep=(($('#rpR-'+rid)||{}).value||'').trim();b.disabled=true;
+    const {error}=await sb.rpc('resolve_report',{p_id:rid,p_reply:rep});
+    if(error){b.disabled=false;toast('Chưa xử lý được: '+(ERR_VN[error.message]||error.message));return;}
+    toast('Đã đánh dấu xử lý.');rpCount.clear();rpFor='';await loadReports();try{renderTripExtra();}catch(e){}return;}
   if(a==='mgx'){const o=!myGrpExp[id];myGrpExp={};if(o)myGrpExp[id]=true;renderGroupTab();return;}   /* mở nhóm này thì nhóm trước tự đóng */
   if(a==='gowork'){goWork();return;}
   if(a==='code'){const i=$('#qCode');if(await enterCode(i&&i.value,'#qCodeMsg')&&i)i.value='';return;}
@@ -3796,7 +3821,7 @@ function renderTripExtra(){
   if(t.ph){el.innerHTML=sbGroup.can_create?'':`<div class="gcard"><div class="hint" style="min-height:0">Nhóm này chưa có chuyến nào bạn xem được.</div></div>`;return;}
   if(!synced){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">Chuyến này đang được gửi lên nhóm…</div></div>`;return;}
   if(paidFor!==t.id)loadPaid(t.id);
-  if(ed&&rpFor!==t.id)loadRpCount(t.id);
+  const hr=canHandleRp();if(hr&&rpFor!==t.id)loadRpCount(t.id);
   if(ld&&!codeCache.has(t.id))loadCodeInfo(t.id);
   const ci=codeCache.get(t.id)||{},dl=ci.expires_at?daysLeft(ci.expires_at):99;
   const warn=ld&&ci.code&&ci.enabled&&dl<=7?`<div class="note" role="alert">${dl<=0?'Mã chuyến đã hết hạn, thành viên không vào xem được nữa.':'Mã chuyến còn '+dl+' ngày là hết hạn.'} <button type="button" class="btn ghost small" data-tx="code">Gia hạn</button></div>`:'';
@@ -3808,7 +3833,7 @@ function renderTripExtra(){
     <div class="row tx-row">
       ${sbAdmin||(myAccess[sbGroup.id]&&myAccess[sbGroup.id].is_organizer)?'<button type="button" class="btn ghost small" data-tx="viewers">Thông tin hiện tại</button>':''}
       <button type="button" class="btn ghost small" data-tx="hist">Lịch sử thay đổi</button>
-      <button type="button" class="btn ghost small" data-tx="reports">${ed?'Báo sai'+(rc?` <span class="cnt">${rc}</span>`:''):'Báo sai'}</button>
+      <button type="button" class="btn ghost small" data-tx="reports">${hr?'Báo sai'+(rc?` <span class="cnt">${rc}</span>`:''):'Báo sai'}</button>
       ${ed?`<button type="button" class="btn ghost small" data-tx="code">Mã chuyến</button><button type="button" class="btn ghost small" data-tx="share">Link xem công khai</button><button type="button" class="btn ghost small" data-tx="people">Leader và phụ trách</button>`:''}
       ${ld?`<button type="button" class="btn ghost small" data-tx="${cl?'reopen':'close'}">${cl?'Mở lại sổ':'Chốt sổ'}</button><button type="button" class="btn ghost small" data-tx="trash">Thùng rác chuyến</button>`:''}
     </div></div>`;}
@@ -3818,7 +3843,7 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
   if(a==='pickgrp'){if(!sbGroups.length)return;   /* chọn nhóm ngay tại tab Chuyến */
     ask(sbGroups.length>1?'Chọn nhóm để xem các chuyến của nhóm đó.':'Bạn mới có 1 nhóm. Có mã chuyến của nhóm khác thì nhập ở ô bên dưới danh sách chuyến.',{title:'Chọn nhóm',noLabel:'Huỷ',
       choices:sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,ac=myAccess[g.id],n=ac?(ac.trips||[]).length:g.trips;
-        return {label:(cur?'✓ ':'')+g.name+(n!=null?' · '+n+' chuyến':''),fn:()=>{if(!cur){connectGroup(g);toast('Đang mở nhóm “'+g.name+'”…');}}};})});return;}
+        return {label:(cur?'✓ ':'')+g.name+(n!=null?' · '+n+' chuyến':''),fn:()=>{if(!cur){connectGroup(g);toast('Đang mở nhóm “'+g.name+'”…');}showTab('trip',true);}};})});return;}
   if(a==='me'){showTab('result',true);setTimeout(()=>{const m=$('#myPart');if(m)m.scrollIntoView({behavior:'smooth',block:'start'});},50);return;}
   if(a==='close'||a==='reopen'){const cl=a==='close';
     ask(cl?`Chốt sổ chuyến "${t.name}"? Sau khi chốt, không ai sửa được nữa cho tới khi leader mở lại. Mọi người vẫn xem được.`:`Mở lại sổ chuyến "${t.name}" để sửa tiếp? Việc mở lại được ghi vào lịch sử để mọi người thấy.`,
@@ -3860,7 +3885,7 @@ function dlgBody(){
       <div class="field"><label for="rpMsg">Sai ở đâu?</label><textarea id="rpMsg" rows="3" maxlength="1000" placeholder="Ví dụ: tôi không ăn tối hôm đó, hoặc số tiền phải là 450.000"></textarea></div>
       <div class="field"><label for="dlgName">Tên của bạn (để leader biết ai báo)</label><input type="text" id="dlgName" maxlength="60" value="${esc(myName())}"></div>
       <div class="row"><button type="button" class="btn" data-dl="rpsend"${dis}>Gửi báo sai</button></div>`;}
-  if(dlgKind==='reports'){if(rpRows===null)return wait;
+  if(dlgKind==='reports'){if(rpRows===null)return wait;const ed=canHandleRp();
     const rows=rpRows.length?rpRows.map(r=>`<div class="rcard"><div style="overflow-wrap:anywhere">${r.item_label?`<b>${esc(r.item_label)}</b>: `:''}${esc(r.message)}</div>
       <div class="hint" style="min-height:0">${r.reporter?esc(r.reporter)+' · ':''}${fdt(r.at)}${r.mine?' · bạn gửi':''}</div>
       ${r.resolved_at?`<div class="note info" style="--c:var(--pos)">Đã xử lý ${fdt(r.resolved_at)}${r.reply?': '+esc(r.reply):''}</div>`:(ed?`<div class="row"><div class="field"><input type="text" id="dlgRp-${r.id}" maxlength="500" placeholder="Trả lời (không bắt buộc)" aria-label="Trả lời"></div><button type="button" class="btn small" data-dl="rpdone" data-id="${r.id}"${dis}>Đã xử lý</button></div>`:'<div class="hint" style="min-height:0;color:var(--warn)">Chưa xử lý</div>')}</div>`).join(''):'<div class="hint">Chưa có báo sai nào.</div>';
@@ -3914,7 +3939,7 @@ async function dlgAct(a,b){
   if(a==='rpnew'){openDlg('report');return;}
   if(a==='rpsend'){const m=($('#rpMsg').value||'').trim(),n=($('#dlgName').value||'').trim();if(!m){dlgNote='Viết vài chữ về chỗ sai.';renderDlg();return;}
     const it=rpItem;if(await dlgRpc('report_issue',{tid:t.id,p_item:it?it.id:null,p_label:it?it.label:null,p_msg:m,p_name:n},'Đã gửi. Leader sẽ xem và sửa nếu đúng.')){rpItem=null;rpFor='';renderTripExtra();setTimeout(()=>{if(dlgKind==='report')openDlg('reports');},900);}renderDlg();return;}
-  if(a==='rpdone'){const id=+b.dataset.id,rep=($('#dlgRp-'+id)||{}).value||'';if(await dlgRpc('resolve_report',{p_id:id,p_reply:rep},'Đã đánh dấu xử lý.'))openDlg('reports');else renderDlg();return;}
+  if(a==='rpdone'){const id=+b.dataset.id,rep=($('#dlgRp-'+id)||{}).value||'';if(await dlgRpc('resolve_report',{p_id:id,p_reply:rep},'Đã đánh dấu xử lý.')){openDlg('reports');loadReports();}else renderDlg();return;}
   if(a==='ca'){const act=b.dataset.a;const go=async()=>{const r=await dlgRpc('trip_code_act',{tid:t.id,p_act:act},{renew:'Đã gia hạn 3 tháng.',lock:'Đã tạm khoá mã.',unlock:'Đã mở khoá mã.',rotate:'Đã đổi mã. Mã cũ hết tác dụng, hãy gửi mã mới.'}[act]);if(r){codeInfo=r;codeCache.set(t.id,r);renderTripExtra();}renderDlg();};
     const Q={rotate:['Đổi mã mới? Ai đang xem bằng mã cũ sẽ mất quyền xem cho tới khi nhập mã mới.','Đổi mã chuyến?','Đổi mã',true],
       lock:['Tạm khoá mã chuyến? Người đang xem bằng mã chuyến sẽ không vào xem được cho tới khi mở khoá.','Khoá mã chuyến?','Khoá mã',true],

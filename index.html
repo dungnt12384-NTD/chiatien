@@ -1348,6 +1348,23 @@ html.phone .sync-head{font-size:11px!important;max-width:55%}
 .acc-card .acc-tog .chev{margin-top:1px}
 .acc-card.open{border-color:var(--brand,var(--accent));box-shadow:0 0 0 2px color-mix(in srgb,var(--brand,var(--accent)) 18%,transparent)}
 .acc-scroll{overflow-y:auto;overscroll-behavior:contain}
+/* v78: tra cứu quyền */
+.perm-sec .hist-scroll{overflow-y:auto;overscroll-behavior:contain}
+.perm-item{display:flex;width:100%;align-items:baseline;justify-content:space-between;gap:8px;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line,#e4e7ec);padding:7px 6px;color:inherit;font:inherit;cursor:pointer;border-radius:6px}
+.perm-item b{min-width:0;overflow-wrap:anywhere;font-weight:600}
+.perm-item small{flex:none;color:var(--muted,#667085)}
+.perm-item:hover{background:color-mix(in srgb,var(--brand,var(--accent)) 6%,transparent)}
+.perm-item.cur{background:color-mix(in srgb,var(--brand,var(--accent)) 14%,transparent)}
+.perm-det{margin-top:8px;padding:10px;border:1.5px solid var(--brand,var(--accent));border-radius:12px;box-shadow:0 0 0 2px color-mix(in srgb,var(--brand,var(--accent)) 15%,transparent)}
+.perm-det .sub{margin-top:8px}
+.pbadges{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.plink{background:none;border:0;padding:0;font:inherit;font-weight:600;color:var(--brand,var(--accent));cursor:pointer;text-align:left;overflow-wrap:anywhere;text-decoration:underline dotted}
+/* v78: thùng rác chuyến chọn nhiều */
+.tr-bulk{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:6px 0;position:sticky;top:0;background:var(--card,var(--bg));z-index:1}
+.tr-bulk-b{display:flex;gap:6px;flex-wrap:wrap}
+.tr-row .tr-chk{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.tr-row .tr-chk input{margin-top:3px;width:18px;height:18px;flex:none}
+.tr-row.sel{border-color:var(--brand,var(--accent));background:color-mix(in srgb,var(--brand,var(--accent)) 6%,transparent)}
 .copyright{text-align:center;font-size:12.5px;color:var(--muted,#667085);margin:14px 0 calc(18px + env(safe-area-inset-bottom));letter-spacing:.2px}
 .copyright b{color:var(--ink,#1d2939);letter-spacing:.6px}
 .bank-box{margin:6px 0 10px;border:1px solid var(--line,#d6dbe3);border-radius:12px;padding:8px 12px}
@@ -2012,7 +2029,7 @@ function delMembers(ids){
 function renderMemberList(){
   renderMemberBulk();
   const gs=memberGroups(),all=displayMembers(),q=norm(memberQ.trim());
-  const rows=all.map((m,k)=>({m,no:k+1})).filter(x=>!q||norm(x.m.name).includes(q));
+  const rows=all.map((m,k)=>({m,no:k+1})).filter(x=>!q||fz(x.m.name,q));
   const chips=rows.map(({m,no})=>{const comp=!isMain(m),main=comp?mem(m.parent):null,on=!!(mDraft&&mDraft.id===m.id);
     return `<button type="button" class="chip mchip${comp?' comp':''}${on?' sel':''}${memberSel&&memberSel.has(m.id)?' msel':''}" aria-pressed="${on}" data-act="selMember" data-id="${m.id}" title="${comp?'Đi kèm '+esc(main.name):'Thành viên chính'}">${avatar(m.id)}<span class="n">${esc(m.name)}</span>${comp?ICON_COMP:ICON_MAIN}</button>`;}).join('');
   $('#memberChips').innerHTML=(S.members.length?`<div class="mleg"><span>${ICON_MAIN.replace('class="mic"','class="mic m"')} Thành viên chính</span><span>${ICON_COMP.replace('class="mic"','class="mic c"')} Đi kèm (đi theo 1 thành viên chính)</span><span>Bấm vào tên để sửa hoặc di chuyển</span></div>`:'')+
@@ -2039,7 +2056,7 @@ function placeFirst(m,main){const gs=memberGroups(),g=gs.find(x=>x.main.id===mai
 function renderMeLists(){
   const d=mDraft;if(!d)return;const all=displayMembers(),noOf=id=>all.findIndex(x=>x.id===id)+1;
   const pl=document.getElementById('mePL');
-  if(pl){const q=norm(d.q.trim()),mains=memberGroups().map(g=>g.main).filter(x=>x.id!==d.id&&(!q||norm(x.name).includes(q)));
+  if(pl){const q=norm(d.q.trim()),mains=memberGroups().map(g=>g.main).filter(x=>x.id!==d.id&&(!q||fz(x.name,q)));
     pl.innerHTML=(d.parent&&mem(d.parent)?`<div class="hint" style="min-height:0">Đang chọn đi kèm: <b>${nameNo(d.parent)}</b></div>`:'<div class="hint" style="min-height:0;color:var(--neg)">Chưa chọn thành viên chính để đi kèm. Mỗi người đi kèm chỉ đi theo 1 thành viên chính.</div>')+
       (mains.length?`<div class="mvlist">`+mains.map(x=>`<button type="button" class="chip${d.parent===x.id?' pick':''}" data-act="mePick" data-id="${x.id}">${avatar(x.id,'xs')}<span class="n">${esc(x.name)}</span></button>`).join('')+`</div>`:'<div class="hint" style="min-height:0">Không có thành viên chính nào tên này.</div>');}
   const ml=document.getElementById('meML');
@@ -2436,7 +2453,7 @@ function renderList(c){
   const el=$('#expList');
   if(!S.expenses.length){el.innerHTML='<div class="empty">Chưa có khoản chi nào.</div>';return;}
   el.innerHTML=S.days.map(d=>{
-    const q=norm(expQ.trim()),all=S.expenses.filter(e=>e.dayId===d.id),es=q?all.filter(e=>norm(e.desc).includes(q)||norm(nameOf(e.payer)).includes(q)):all;if(!es.length)return '';
+    const q=norm(expQ.trim()),all=S.expenses.filter(e=>e.dayId===d.id),es=q?all.filter(e=>fz(e.desc+" "+nameOf(e.payer),q)):all;if(!es.length)return '';
     const rn=es.filter(e=>e.rooms&&e.rooms.length).length;
     const dupNote=rn>1?`<div class="note">${esc(d.name)} đang có ${rn} khoản tiền phòng, mỗi ngày chỉ nên có 1. <button class="btn small" type="button" style="--c:#c62828;background:#c62828;color:#fff;margin-left:6px" data-act="dedupeRooms" data-id="${d.id}">Giữ khoản mới nhất, xoá khoản cũ</button></div>`:'';
     const cl=!q&&!openDays.has(d.id);
@@ -3439,7 +3456,7 @@ async function initSync(){
 /* ===== Phân quyền theo chuyến, trang đăng nhập, Quản trị / Của tôi ===== */
 let sbAdmin=false,myReq=null,myCodes=[],codePending=false,gStep='login',gEmail='',gBusy=false,gNote='';
 let dlgKind='',dlgBusy=false,dlgNote='',tInfo=null,tAudit=[],tAuditMore=false,tTrash=[],tPeople=[],codeInfo=null,shareInfo=null,rpRows=[],rpItem=null,tViewers=null,tLogOpen=false;
-let admReady=false,admLoaded=false,admTab='groups',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false,admAcc=null,admAccErr='',admAccQ='',admAccTrips={},admOv={},myAccess={},myGrpExp={},admExp={},admDraft={},admCodes={},admTCodes={},admGQ='',admNewG=false,admLogOpen=false;
+let admReady=false,admLoaded=false,admTab='perm',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false,admAcc=null,admAccErr='',admAccQ='',admAccTrips={},admOv={},myAccess={},myGrpExp={},admExp={},admDraft={},admCodes={},admTCodes={},admGQ='',admNewG=false,admLogOpen=false;
 const ADM_ENT=['admin','group','organizer','quota'];   /* nhật ký quản trị: chỉ thao tác trong tab quản trị */
 const paidMap=new Map();let paidFor='',rpCount=new Map(),rpFor='',codeCache=new Map();
 function isAnon(){return !!(sbSession&&sbSession.user&&(sbSession.user.is_anonymous||!sbSession.user.email));}
@@ -3774,10 +3791,10 @@ function adminLogCard(){const rows=admAudit.filter(x=>ADM_ENT.includes(x.entity)
 function adminHtml(){
   const dis=admBusy?' disabled':'';
   if(admTab==='reqs'||admTab==='audit')admTab='groups';
-  const tabs=[['groups','Nhóm'],['accounts','Tài khoản'],['codes','Cài đặt mã']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
+  const tabs=[['perm','🔎 Tra cứu quyền'],['groups','Nhóm'],['accounts','Tài khoản'],['codes','Cài đặt mã']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
   let body='';
   if(admTab==='groups'){
-    const q=admGQ.trim().toLowerCase(),hit=s=>!!q&&(s||'').toLowerCase().includes(q),mk=s=>{const v=esc(s);if(!q)return v;const i=(s||'').toLowerCase().indexOf(q);return i<0?v:esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));};
+    const q=fzW(admGQ).join(' '),hit=s=>!!q&&fz(s,q),mk=s=>fzMark(s,q);
     const shown=admGroups.filter(g=>!q||hit(g.name)||((admOv[g.id]||{}).trips||[]).some(t=>hit(t.name)));
     body=`<div class="row adm-tools"><button type="button" class="btn" data-q="gnew"${admNewG?' disabled':''}>＋ Tạo nhóm</button>
         <div class="field" style="flex:1 1 200px"><input type="search" id="qAdmQ" value="${esc(admGQ)}" placeholder="🔍 Tìm nhóm hoặc chuyến" autocomplete="off" aria-label="Tìm nhóm hoặc chuyến"></div></div>`+
@@ -3798,6 +3815,7 @@ function adminHtml(){
             ${tc&&tc.active?`<span class="badge ${codeWarn('trip',true)?'gc-on':'gc-off'}">🔑 ${tc.viewers} người xem bằng mã · hết hạn ${fd(tc.expires_at)}</span>`:`<span class="badge ${tc&&codeWarn('trip',false)?'gc-on':'gc-off'}">${tc?(codeWarn('trip',false)?'⚠️ ':'')+'Mã '+(tc.enabled?'hết hạn':'tắt'):'Chưa có mã'}</span>`}</div><button type="button" class="btn small" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}" title="Mở chuyến này ở tab Chuyến">Mở</button></div>`;}).join(''):'<div class="hint" style="min-height:0">Chưa có chuyến nào.</div>')+`</div>`:'')+
           (ex&&ol&&!op?`<div class="acc-trips"><div class="sub">Ban tổ chức – BTC (${ol.length})</div>`+(ol.length?ol.map(o=>orgRowHtml(o,'')).join(''):'<div class="hint" style="min-height:0">Chưa có ai trong BTC. Bấm Quản lý để thêm.</div>')+`</div>`:'')+
           (ex?`</div>`:'')+`</div>`;}).join(''):`<div class="hint">${q?'Không có nhóm hoặc chuyến nào khớp.':'Chưa có nhóm nào.'}</div>`)+gtrashHtml(dis);}
+  else if(admTab==='perm')body=permHtml();
   else if(admTab==='accounts')body=accountsHtml(dis);
   else if(admTab==='codes')body=codeSetHtml(dis);
   return `<div class="gcard admin-card"><div class="gh"><b>🛡 Quản trị hệ thống</b></div>${msgHtml(admMsg)}<div class="seg">${tabs}</div>${body}</div>`;}
@@ -3835,6 +3853,65 @@ function codeSetHtml(dis){const D=window.CS_DRAFT||{};
 document.addEventListener('input',ev=>{const t=ev.target,m=t&&t.id&&/^qCs(En|Days)-(trip|group)$/.exec(t.id);if(!m)return;
   const D=window.CS_DRAFT=window.CS_DRAFT||{},d=D[m[2]]=D[m[2]]||{};if(m[1]==='En')d.en=t.value==='1';else d.days=t.value;});
 document.addEventListener('change',ev=>{const t=ev.target;if(t&&t.id&&/^qCsEn-/.test(t.id))t.dispatchEvent(new Event('input',{bubbles:true}));});
+/* v78: tìm "gần giống" dùng chung cho mọi ô tìm: không phân biệt hoa / thường, có / không dấu, dấu câu;
+   gõ nhiều từ thì mỗi từ nằm ở đâu trong chữ cũng được (không cần đúng thứ tự). */
+function fzN(t){return String(t==null?'':t).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[^a-z0-9@]+/g,' ');}
+function fzW(q){return fzN(q).split(' ').filter(Boolean);}
+function fz(s,q){const W=fzW(q);if(!W.length)return true;const S=fzN(s);return W.every(w=>S.includes(w));}
+/* tô vàng các từ khớp (giữ nguyên chữ gốc có dấu) */
+function fzMark(s,q){s=String(s==null?'':s);const W=fzW(q);if(!W.length)return esc(s);const ch=[...s];if(ch.length!==s.length)return esc(s);
+  const S=ch.map(c=>fzN(c)[0]||' ').join(''),on=new Array(s.length).fill(false);
+  W.forEach(w=>{let i=S.indexOf(w);while(i>=0){for(let k=i;k<i+w.length;k++)on[k]=true;i=S.indexOf(w,i+1);}});
+  let out='',o=false;ch.forEach((c,i)=>{if(on[i]!==o){out+=on[i]?'<mark>':'</mark>';o=on[i];}out+=esc(c);});return out+(o?'</mark>':'');}
+/* v78: Tra cứu quyền (cần supabase/020): 1 ô tìm chung nhóm / chuyến / tài khoản.
+   Bấm nhóm/chuyến -> ai có quyền gì; bấm tài khoản -> có quyền gì ở nhóm/chuyến nào. Mở 1 mục mỗi lúc, bấm ngoài tự đóng. */
+window.PERM=null;window.PERM_ERR='';window.PERM_Q='';window.PERM_OPEN=null;
+async function admLoadPerm(){try{const {data,error}=await sb.rpc('admin_permissions');window.PERM=error?[]:(data||[]);
+    window.PERM_ERR=error?(/admin_permissions|schema cache|does not exist|not find/i.test(error.message||'')?'Chưa bật chức năng này: cần chạy supabase/020_tra_cuu_quyen.sql.':'Không tải được quyền: '+(ERR_VN[error.message]||error.message)):'';}catch(e){window.PERM=[];}
+  if(admAcc===null){try{await admLoadAcc();}catch(e){}}if(curTab==='group')renderGroupTab();}
+const P_ROLE={admin:'Quản trị viên – toàn quyền',organizer:'BTC nhóm – tạo / quản lý mọi chuyến',leader:'Leader',helper:'Người phụ trách',code_group:'Xem bằng mã nhóm',code_trip:'Xem bằng mã chuyến'};
+function pBadge(r,where){let t=P_ROLE[r.role]||r.role;if(r.role==='helper')t+=': '+((r.tabs||[]).map(k=>TAB_NAME[k]||k).join(', ')||'—');
+  const code=r.role==='code_group'||r.role==='code_trip';if(code&&!r.active)t+=' (mã tắt / hết hạn)';
+  const on=r.role==='admin'||r.role==='organizer'||r.role==='leader';
+  return `<span class="badge${on?' on':''}${code&&!r.active?' gc-none':''}">${where?esc(where)+' · ':''}${esc(t)}${r.deleted?' · trong thùng rác':''}</span>`;}
+function permHtml(){
+  const P=window.PERM;if(P===null)return '<div class="hint">Đang tải quyền…</div>';
+  const q=fzW(window.PERM_Q||'').join(' '),has=s=>fz(s,q),op=window.PERM_OPEN||'';
+  const groups=admGroups.map(g=>({k:'g:'+g.id,id:g.id,name:g.name,n:g.trips}));
+  const trips=[];admGroups.forEach(g=>((admOv[g.id]||{}).trips||[]).forEach(t=>trips.push({k:'t:'+t.id,id:t.id,name:t.name,gid:g.id,gname:g.name,hidden:t.hidden,closed:t.closed})));
+  const em=new Set((admAcc||[]).map(a=>a.email));P.forEach(r=>{if(r.email)em.add(r.email);});
+  const accs=[...em].sort().map(e=>({k:'a:'+e,email:e,n:P.filter(r=>r.email===e).length,adm:P.some(r=>r.email===e&&r.role==='admin')}));
+  const G=groups.filter(g=>has(g.name)),T=trips.filter(t=>has(t.name+' '+t.gname)),A=accs.filter(a=>has(a.email));
+  const admins=P.filter(r=>r.role==='admin');
+  const link=(k,txt)=>`<button type="button" class="plink" data-q="pgo" data-k="${esc(k)}">${esc(txt)}</button>`;
+  /* danh sách người theo email (khách chưa đăng nhập gộp thành 1 dòng) */
+  const people=(rows,where)=>{const m=new Map();let an=0,anOff=0;rows.forEach(r=>{if(!r.email){if(r.active)an++;else anOff++;return;}if(!m.has(r.email))m.set(r.email,[]);m.get(r.email).push(r);});
+    const out=[...m].map(([e,rs])=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${link('a:'+e,e)}<div class="pbadges">${rs.map(r=>pBadge(r,where?where(r):'')).join('')}</div></div></div>`);
+    if(an||anOff)out.push(`<div class="acc-trip"><div class="hint" style="min-height:0">👤 Khách chưa đăng nhập xem bằng mã: ${an} đang xem${anOff?` · ${anOff} mã cũ đã tắt / hết hạn`:''}</div></div>`);
+    return out.length?out.join(''):'<div class="hint" style="min-height:0">Chưa có ai.</div>';};
+  const det=k=>{if(!k)return '';const ty=k[0],id=k.slice(2);let title='',body='';
+    if(ty==='g'){const g=groups.find(x=>x.id===id);if(!g)return '';title='Nhóm '+g.name;
+      const own=P.filter(r=>r.group_id===id&&r.scope==='group'),tr=P.filter(r=>r.group_id===id&&r.scope==='trip');
+      body=`<div class="sub">Cấp nhóm</div>`+people(admins.concat(own))+`<div class="sub">Theo từng chuyến (${new Set(tr.map(r=>r.trip_id)).size} chuyến)</div>`+people(tr,r=>r.trip_name);}
+    else if(ty==='t'){const t=trips.find(x=>x.id===id);if(!t)return '';title='Chuyến '+t.name;
+      const grp=P.filter(r=>r.group_id===t.gid&&(r.role==='organizer'||(r.role==='code_group'&&!t.hidden))),own=P.filter(r=>r.trip_id===id);
+      body=`<div class="hint" style="min-height:0">Thuộc nhóm ${link('g:'+t.gid,t.gname)}${t.hidden?' · ẩn với mã nhóm':''}${t.closed?' · đã chốt sổ':''}</div><div class="sub">Quyền riêng của chuyến</div>`+people(own)+`<div class="sub">Có quyền qua nhóm / hệ thống</div>`+people(admins.concat(grp));}
+    else{const rs=P.filter(r=>r.email===id),a=(admAcc||[]).find(x=>x.email===id);title=id;
+      const gs=rs.filter(r=>r.scope==='group'),ts=rs.filter(r=>r.scope==='trip'),ad=rs.find(r=>r.role==='admin');
+      body=(a?`<div class="hint" style="min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}</div>`:'')+(ad?`<div class="pbadges">${pBadge(ad)}</div>`:'')+
+        `<div class="sub">Nhóm (${gs.length})</div>`+(gs.length?gs.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('g:'+r.group_id,r.group_name||'?')}<div class="pbadges">${pBadge(r)}</div></div></div>`).join(''):'<div class="hint" style="min-height:0">Không có.</div>')+
+        `<div class="sub">Chuyến (${ts.length})</div>`+(ts.length?`<div class="hist-scroll" data-rows="5">`+ts.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('t:'+r.trip_id,r.trip_name)} <small>· ${esc(r.group_name||'')}</small>${r.closed?' <small>· đã chốt sổ</small>':''}<div class="pbadges">${pBadge(r)}</div></div></div>`).join('')+`</div>`:'<div class="hint" style="min-height:0">Không có.</div>');}
+    return `<div class="perm-det"><div class="row" style="align-items:center;flex-wrap:nowrap"><b style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">🔐 ${esc(title)}</b><button type="button" class="btn ghost small" data-q="pgo" data-k="${esc(k)}" aria-label="Đóng">✕</button></div>${body}</div>`;};
+  const sec=(ic,name,L,row,ty)=>`<div class="gsub perm-sec"><div class="sub">${ic} ${name} (${L.length}${q?' khớp':''})</div>`+(L.length?`<div class="hist-scroll" data-rows="5">${L.map(x=>`<button type="button" class="perm-item${op===x.k?' cur':''}" data-q="pgo" data-k="${esc(x.k)}">${row(x)}</button>`).join('')}</div>`:'<div class="hint" style="min-height:0">Không có.</div>')+(op[0]===ty?det(op):'')+`</div>`;
+  return (window.PERM_ERR?`<div class="note" role="alert">${esc(window.PERM_ERR)}</div>`:'')+
+    `<div class="row"><div class="field" style="flex:1 1 200px"><input type="search" id="qPermQ" value="${esc(window.PERM_Q||'')}" placeholder="🔍 Tìm nhóm, chuyến hoặc email" autocapitalize="off" autocomplete="off" aria-label="Tìm nhóm, chuyến hoặc tài khoản"></div></div>`+
+    sec('👥','Nhóm',G,g=>`<b>${fzMark(g.name,q)}</b><small>${g.n} chuyến</small>`,'g')+
+    sec('🧳','Chuyến',T,t=>`<b>${fzMark(t.name,q)}</b><small>${fzMark(t.gname,q)}${t.closed?' · đã chốt':''}</small>`,'t')+
+    sec('👤','Tài khoản',A,a=>`<b>${fzMark(a.email,q)}</b><small>${a.adm?'Quản trị viên · ':''}${a.n} quyền</small>`,'a');}
+document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qPermQ'){window.PERM_Q=ev.target.value;renderGroupTab();}});
+document.addEventListener('click',ev=>{if(!window.PERM_OPEN)return;const t=ev.target;if(!t||!t.closest)return;
+  if(t.closest('.perm-det')||t.closest('[data-q="pgo"]')||t.closest('.modal:not([hidden])'))return;
+  const had=!!document.querySelector('.perm-det');window.PERM_OPEN=null;if(had)try{renderGroupTab();}catch(e){}});
 /* Quản lý tài khoản: danh sách tài khoản email, thêm / gỡ quản trị viên (cần supabase/008_quan_ly_tai_khoan.sql) */
 function accountsHtml(dis){
   const add=`<div class="rcard"><div class="sub">Thêm quản trị viên</div><div class="hint" style="min-height:0">Người này đăng nhập bằng đúng email là có toàn quyền quản trị (kể cả khi chưa đăng nhập lần nào).</div>
@@ -3842,7 +3919,7 @@ function accountsHtml(dis){
   if(admAccErr)return add+`<div class="note" role="alert">${esc(admAccErr)}</div>`;
   if(admAcc===null)return add+'<div class="hint">Đang tải danh sách tài khoản…</div>';
   const q=admAccQ.trim().toLowerCase(),tr=e=>admAccTrips[e]||[];
-  const list=admAcc.filter(a=>!q||a.email.includes(q)||tr(a.email).some(t=>(t.trip_name+' '+(t.group_name||'')).toLowerCase().includes(q))||(a.organizer_of||[]).some(g=>g.toLowerCase().includes(q)));
+  const list=admAcc.filter(a=>!q||fz([a.email].concat(tr(a.email).map(t=>t.trip_name+' '+(t.group_name||'')),a.organizer_of||[]).join(' '),q));
   /* v77: chỉ tài khoản đang mở mới hiện danh sách chuyến, khung cuộn 5 dòng */
   const tripsHtml=e=>{const rows=tr(e);if(!rows.length)return '<div class="acc-trips"><div class="hint" style="min-height:0">Chưa có quyền theo chuyến nào.</div></div>';
     return `<div class="acc-trips"><div class="sub">Quyền theo chuyến (${rows.length})</div><div class="hist-scroll acc-scroll" data-rows="5">`+rows.map(t=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(t.trip_name)}</b>${t.group_name?` <small>· ${esc(t.group_name)}</small>`:''}${t.deleted?' <small style="color:var(--neg)">· trong thùng rác</small>':t.closed?' <small>· đã chốt sổ</small>':''}
@@ -3935,6 +4012,7 @@ async function admLoad(){
   if(!sbAdmin)return;
   const [a,b,c,ov,cd,tc,gt]=await Promise.all([sb.rpc('admin_groups'),Promise.resolve({data:[]}),sb.rpc('admin_audit',{p_limit:200}),sb.rpc('admin_groups_overview'),sb.rpc('admin_group_codes'),sb.rpc('admin_trip_codes'),sb.rpc('admin_group_trash')]);
   window.ADM_GTRASH=gt&&!gt.error?gt.data||[]:[];
+  if(admTab==='perm'&&window.PERM===null)admLoadPerm();
   admTCodes={};(tc&&tc.data||[]).forEach(x=>{admTCodes[x.trip_id]=x;});
   admOv={};(ov&&ov.data||[]).forEach(x=>{admOv[x.id]=x;});
   admCodes={};(cd&&cd.data||[]).forEach(x=>{admCodes[x.group_id]=x;});
@@ -3977,7 +4055,8 @@ async function qAct(a,b){
     if(error){toast('Chưa gửi được: '+(ERR_VN[error.message]||error.message));return;}await loadMyReq();renderGroupTab();toast('Đã gửi yêu cầu.');return;}
   if(a==='cp'){copyText(b.dataset.v,b);return;}
   if(!sbAdmin)return;
-  if(a==='atab'){admTab=b.dataset.v;admMsg='';renderGroupTab();if(admTab==='accounts')admLoadAcc();await admLoad();return;}
+  if(a==='atab'){admTab=b.dataset.v;admMsg='';renderGroupTab();if(admTab==='accounts')admLoadAcc();if(admTab==='perm')admLoadPerm();await admLoad();return;}
+  if(a==='pgo'){const k=b.dataset.k;window.PERM_OPEN=(window.PERM_OPEN===k?null:k);renderGroupTab();const d=document.querySelector('.perm-det');if(d&&d.scrollIntoView)d.scrollIntoView({block:'nearest'});return;}
   if(a==='admadd'||a==='admset'){const v=a==='admadd'?(($('#qAdm')||{}).value||'').trim().toLowerCase():e;
     if(!okEmail(v)){admMsg='Email chưa đúng.';renderGroupTab();return;}
     ask(`Cấp quyền quản trị TOÀN HỆ THỐNG cho ${v}? Người này xem, sửa, xoá được mọi nhóm và chuyến.`,{title:'Thêm quản trị viên?',ok:'Cấp quyền'},async()=>{
@@ -4126,7 +4205,7 @@ async function openDlg(k,opt){dlgKind=k;dlgNote='';dlgBusy=false;$('#authModal')
   else if(k==='share'){shareInfo=null;renderDlg();const {data}=await sb.rpc('share_info',{p_trip:t.id});shareInfo=data||{};}
   else if(k==='viewers'){tViewers=null;renderDlg();const {data,error}=await sb.rpc('trip_viewers',{tid:t.id});tViewers=data||[];if(error)dlgNote=ERR_VN[error.message]||error.message;}
   else if(k==='people'){tPeople=null;renderDlg();const {data,error}=await sb.rpc('trip_people',{tid:t.id});tPeople=data||[];if(error)dlgNote=error.message;}
-  else if(k==='trash'){tTrash=null;renderDlg();const {data,error}=await sb.rpc('trip_trash',{gid});tTrash=data||[];if(error)dlgNote=error.message;}
+  else if(k==='trash'){tTrash=null;try{TR_SEL.clear();}catch(e){}renderDlg();const {data,error}=await sb.rpc('trip_trash',{gid});tTrash=data||[];if(error)dlgNote=error.message;}
   if(dlgKind===k)renderDlg();}
 const codeUrl=c=>location.origin+location.pathname+'?c='+encodeURIComponent(c);
 function myName(){const k=lsGet('chiatien-me-'+R.current);const m=k&&mem(k);return m?m.name:'';}
@@ -4180,7 +4259,12 @@ function dlgBody(){
         <div class="tks" id="dlgTabs">${LOCK_TABS.map(k=>`<label class="tk"><input type="checkbox" value="${k}"${k==='expense'?' checked':''}>${TAB_NAME[k]}</label>`).join('')}</div>
         <div class="row"><button type="button" class="btn" data-dl="padd"${dis}>Thêm</button></div></div>`:''}`;}
   if(dlgKind==='trash'){if(tTrash===null)return wait;
-    return `<p style="color:var(--muted);font-size:14px;margin:0">Chuyến đã xoá được giữ 30 ngày rồi tự dọn.</p>`+(tTrash.length?tTrash.map(x=>`<div class="rcard"><div style="overflow-wrap:anywhere"><b>${esc(x.name)}</b></div><div class="hint" style="min-height:0">Xoá ${fdt(x.deleted_at)}${x.deleted_by_email?' bởi '+esc(x.deleted_by_email):''} · còn ${x.days_left} ngày</div>
+    /* v78: chọn nhiều chuyến để khôi phục / xoá hẳn cùng lúc */
+    const ids=new Set(tTrash.map(x=>x.id));[...TR_SEL].forEach(i=>{if(!ids.has(i))TR_SEL.delete(i);});const ns=TR_SEL.size,all=tTrash.length&&ns===tTrash.length;
+    return `<p style="color:var(--muted);font-size:14px;margin:0">Chuyến đã xoá được giữ 30 ngày rồi tự dọn.</p>`+(tTrash.length?
+      `<div class="tr-bulk"><label class="tk"><input type="checkbox" data-trs="*"${all?' checked':''}${dis}> Chọn tất cả (${tTrash.length})</label>
+        <span class="tr-bulk-b"><button type="button" class="btn small" data-dl="trrestoreM"${ns&&!dlgBusy?'':' disabled'}>Khôi phục${ns?' ('+ns+')':''}</button><button type="button" class="btn danger-o small" data-dl="trpurgeM"${ns&&!dlgBusy?'':' disabled'}>Xoá hẳn${ns?' ('+ns+')':''}</button></span></div>`+
+      tTrash.map(x=>`<div class="rcard tr-row${TR_SEL.has(x.id)?' sel':''}"><label class="tr-chk"><input type="checkbox" data-trs="${esc(x.id)}"${TR_SEL.has(x.id)?' checked':''}${dis} aria-label="Chọn ${esc(x.name)}"><span style="overflow-wrap:anywhere;min-width:0"><b>${esc(x.name)}</b><span class="hint" style="display:block;min-height:0">Xoá ${fdt(x.deleted_at)}${x.deleted_by_email?' bởi '+esc(x.deleted_by_email):''} · còn ${x.days_left} ngày</span></span></label>
       <div class="row"><button type="button" class="btn small" data-dl="trrestore" data-id="${esc(x.id)}"${dis}>Khôi phục</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-dl="trpurge" data-id="${esc(x.id)}" data-n="${esc(x.name)}"${dis}>Xoá hẳn</button></div></div>`).join(''):'<div class="hint">Thùng rác trống.</div>');}
   return '';}
 function renderDlg(){if(!dlgKind)return;$('#authTitle').textContent=DLG_TITLE[dlgKind]||'';
@@ -4217,7 +4301,19 @@ async function dlgAct(a,b){
   if(a==='prm'){const em=b.dataset.e;ask(`Gỡ ${em} khỏi chuyến? Họ không sửa được nữa.`,{title:'Gỡ khỏi chuyến?',ok:'Gỡ',danger:true},async()=>{if(await dlgRpc('remove_trip_person',{tid:t.id,p_email:em},'Đã gỡ.'))openDlg('people');else renderDlg();});return;}
   if(a==='trrestore'){if(await dlgRpc('restore_trip',{gid,tid:b.dataset.id},'Đã khôi phục, chuyến sẽ hiện lại trong vài giây.')){const {data}=await sb.rpc('trip_trash',{gid});tTrash=data||[];if(sbGroup)connectGroup(sbGroup);}renderDlg();return;}
   if(a==='trpurge'){const id=b.dataset.id,nm=b.dataset.n;ask(`Xoá hẳn chuyến "${nm}"? Không khôi phục được nữa.`,{ok:'Xoá hẳn',danger:true,title:'Xoá hẳn chuyến?'},async()=>{
-    if(await dlgRpc('purge_trip',{gid,tid:id},'Đã xoá hẳn.')){const {data}=await sb.rpc('trip_trash',{gid});tTrash=data||[];}renderDlg();});return;}}
+    if(await dlgRpc('purge_trip',{gid,tid:id},'Đã xoá hẳn.')){const {data}=await sb.rpc('trip_trash',{gid});tTrash=data||[];}renderDlg();});return;}
+  if(a==='trrestoreM'||a==='trpurgeM'){const sel=tTrash.filter(x=>TR_SEL.has(x.id));if(!sel.length)return;const purge=a==='trpurgeM';
+    const run=async()=>{dlgBusy=true;dlgNote='';renderDlg();let ok=0;const bad=[];
+      for(const x of sel){const {error}=await sb.rpc(purge?'purge_trip':'restore_trip',{gid,tid:x.id});if(error)bad.push(x.name+': '+(ERR_VN[error.message]||error.message));else{ok++;TR_SEL.delete(x.id);}}
+      const {data}=await sb.rpc('trip_trash',{gid});tTrash=data||[];dlgBusy=false;
+      dlgNote=bad.length?`Đã ${purge?'xoá hẳn':'khôi phục'} ${ok}/${sel.length} chuyến. Chưa làm được: `+bad.join('; '):`OK:Đã ${purge?'xoá hẳn':'khôi phục'} ${ok} chuyến.`;
+      if(!purge&&ok&&sbGroup)connectGroup(sbGroup);renderDlg();};
+    const names=sel.slice(0,5).map(x=>'“'+x.name+'”').join(', ')+(sel.length>5?` và ${sel.length-5} chuyến khác`:'');
+    if(purge)ask(`Xoá hẳn ${sel.length} chuyến: ${names}? Không khôi phục được nữa.`,{title:`Xoá hẳn ${sel.length} chuyến?`,ok:'Xoá hẳn',danger:true,input:{match:'XOA',placeholder:'Gõ XOA để xác nhận'}},run);
+    else ask(`Khôi phục ${sel.length} chuyến: ${names}?`,{title:`Khôi phục ${sel.length} chuyến?`,ok:'Khôi phục'},run);return;}}
+const TR_SEL=new Set();
+document.addEventListener('change',ev=>{const b=ev.target;if(!b||!b.dataset||b.dataset.trs==null||dlgKind!=='trash')return;const v=b.dataset.trs;
+  if(v==='*'){if(b.checked)(tTrash||[]).forEach(x=>TR_SEL.add(x.id));else TR_SEL.clear();}else if(b.checked)TR_SEL.add(v);else TR_SEL.delete(v);renderDlg();});
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-dl]');if(!b||b.tagName==='INPUT')return;ev.preventDefault();dlgAct(b.dataset.dl,b);});
 document.addEventListener('change',ev=>{const b=ev.target;if(b&&b.matches&&b.matches('input[data-dl="hide"]'))dlgAct('hide',b);});
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-rp]');if(!b)return;ev.preventDefault();ev.stopPropagation();

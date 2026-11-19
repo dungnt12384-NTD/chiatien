@@ -1245,6 +1245,9 @@ html #grpMain .gcard .rcard.cur{border-color:var(--brand,var(--accent))!importan
 html #grpMain .gcard .lv2{box-shadow:none!important}
 .trip-code{margin-top:10px;padding:10px 12px;border:1.5px dashed var(--line);border-radius:18px}
 .trip-code .field{margin:0}
+/* hàng nhật ký gọn: ít khoảng cách */
+html .hist-scroll .rmrow{gap:1px!important;padding:4px 0!important;line-height:1.3}
+html .hist-scroll .rmrow .hint{font-size:12px}
 .hist-scroll{position:relative;overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--surface)}
 button.grp-tag{border:0;font-family:inherit;cursor:pointer;line-height:1.5}
 button.grp-tag:hover{filter:brightness(.95);text-decoration:underline}
@@ -3920,8 +3923,8 @@ function dlgBody(){
   if(dlgKind==='privacy')return PRIVACY_HTML;
   if(dlgKind==='hist'){if(!tInfo)return wait;const i=tInfo;
     return `<div class="gcard"><div class="sub">Chuyến ${esc(t.name)}</div><div class="hint" style="min-height:0">Tạo bởi <b>${esc(i.creator||'không rõ')}</b>${i.created_at?' · '+fdt(i.created_at):''}</div><div class="hint" style="min-height:0">Sửa lần cuối ${i.updated_at?fdt(i.updated_at):'—'}</div>${i.closed_at?`<div class="hint" style="min-height:0">Chốt sổ ${fdt(i.closed_at)}${i.closed_by?' bởi '+esc(i.closed_by):''}</div>`:''}</div>
-      <div class="gcard">${logHead('🕘 Ai thêm, sửa, xoá gì'+(tLogOpen?` (${tAudit.length})`:''),tLogOpen,'data-dl="hlog"')}
-        ${tLogOpen?`<div class="hist-scroll">${auditHtml(tAudit,false)}</div>${tAuditMore?'<button type="button" class="btn ghost small" data-dl="hmore">Tải thêm nhật ký cũ hơn</button>':''}`:''}</div>`;}
+      <div class="gcard"><div class="sub">🕘 Ai thêm, sửa, xoá gì (${tAudit.length})</div>
+        <div class="hist-scroll">${auditHtml(tAudit,false)}</div>${tAuditMore?'<button type="button" class="btn ghost small" data-dl="hmore">Tải thêm nhật ký cũ hơn</button>':''}</div>`;}
   if(dlgKind==='report'){const it=rpItem;
     return `<p style="color:var(--muted);font-size:14px;margin:0">${it?`Báo sai khoản <b>${esc(it.label)}</b>. `:''}Lời nhắn được gửi tới leader và người phụ trách của chuyến.</p>
       <div class="field"><label for="rpMsg">Sai ở đâu?</label><textarea id="rpMsg" rows="3" maxlength="1000" placeholder="Ví dụ: tôi không ăn tối hôm đó, hoặc số tiền phải là 450.000"></textarea></div>

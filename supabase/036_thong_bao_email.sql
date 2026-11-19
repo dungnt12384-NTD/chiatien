@@ -1,0 +1,4 @@
+-- 036: thông báo email khi có báo sai / đề nghị "Tôi đã trả" mới (hoặc được gửi lại).
+--   Trigger notify_item() -> pg_net gọi Edge Function notify-item (Gmail SMTP). Hàm chỉ gửi tới Thủ quỹ của chuyến + quản trị viên, mỗi mục 1 lần (cột notified_at).
+--   Cần 2 secret trong Supabase (Edge Functions > Secrets): GMAIL_USER, GMAIL_APP_PASSWORD (mật khẩu ứng dụng Gmail). Chưa đặt thì hàm bỏ qua, không gửi, không báo lỗi cho người dùng.
+-- Quay lại: drop trigger trg_notify_report on public.trip_reports; drop trigger trg_notify_claim on public.trip_claims; drop function public.notify_item(); xoá Edge Function notify-item.

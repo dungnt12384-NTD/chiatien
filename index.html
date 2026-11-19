@@ -1343,6 +1343,11 @@ html.phone .sync-head{font-size:11px!important;max-width:55%}
 #dlgYes:disabled{opacity:.45;cursor:not-allowed}
 .gtrash{margin-top:10px}
 :root{--dgs-o:"DGS-CT-2026-7Q9X"}
+/* v77: tài khoản – chỉ cái đang mở hiện danh sách chuyến (cuộn 5 dòng) */
+.acc-card .acc-tog{align-items:flex-start}
+.acc-card .acc-tog .chev{margin-top:1px}
+.acc-card.open{border-color:var(--brand,var(--accent));box-shadow:0 0 0 2px color-mix(in srgb,var(--brand,var(--accent)) 18%,transparent)}
+.acc-scroll{overflow-y:auto;overscroll-behavior:contain}
 .copyright{text-align:center;font-size:12.5px;color:var(--muted,#667085);margin:14px 0 calc(18px + env(safe-area-inset-bottom));letter-spacing:.2px}
 .copyright b{color:var(--ink,#1d2939);letter-spacing:.6px}
 .bank-box{margin:6px 0 10px;border:1px solid var(--line,#d6dbe3);border-radius:12px;padding:8px 12px}
@@ -3838,17 +3843,23 @@ function accountsHtml(dis){
   if(admAcc===null)return add+'<div class="hint">Đang tải danh sách tài khoản…</div>';
   const q=admAccQ.trim().toLowerCase(),tr=e=>admAccTrips[e]||[];
   const list=admAcc.filter(a=>!q||a.email.includes(q)||tr(a.email).some(t=>(t.trip_name+' '+(t.group_name||'')).toLowerCase().includes(q))||(a.organizer_of||[]).some(g=>g.toLowerCase().includes(q)));
-  const tripsHtml=e=>{const rows=tr(e);if(!rows.length)return '';
-    return `<div class="acc-trips"><div class="sub">Quyền theo chuyến (${rows.length})</div>`+rows.map(t=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(t.trip_name)}</b>${t.group_name?` <small>· ${esc(t.group_name)}</small>`:''}${t.deleted?' <small style="color:var(--neg)">· trong thùng rác</small>':t.closed?' <small>· đã chốt sổ</small>':''}
+  /* v77: chỉ tài khoản đang mở mới hiện danh sách chuyến, khung cuộn 5 dòng */
+  const tripsHtml=e=>{const rows=tr(e);if(!rows.length)return '<div class="acc-trips"><div class="hint" style="min-height:0">Chưa có quyền theo chuyến nào.</div></div>';
+    return `<div class="acc-trips"><div class="sub">Quyền theo chuyến (${rows.length})</div><div class="hist-scroll acc-scroll" data-rows="5">`+rows.map(t=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(t.trip_name)}</b>${t.group_name?` <small>· ${esc(t.group_name)}</small>`:''}${t.deleted?' <small style="color:var(--neg)">· trong thùng rác</small>':t.closed?' <small>· đã chốt sổ</small>':''}
       ${t.role==='helper'?`<div class="hint" style="min-height:0">Nhập liệu: ${(t.tabs||[]).map(k=>TAB_NAME[k]||k).join(', ')||'—'}</div>`:''}</div>
-      <span class="badge${t.role==='leader'?' on':''}">${t.role==='leader'?'Leader':'Người phụ trách'}</span></div>`).join('')+`</div>`;};
+      <span class="badge${t.role==='leader'?' on':''}">${t.role==='leader'?'Leader':'Người phụ trách'}</span></div>`).join('')+`</div></div>`;};
   return add+`<div class="row"><div class="field"><input type="search" id="qAccQ" value="${esc(admAccQ)}" placeholder="Tìm theo email, tên chuyến, tên nhóm" autocapitalize="off" autocomplete="off" aria-label="Tìm tài khoản"></div></div>
     <div class="hint" style="min-height:0">${admAcc.length} tài khoản · ${admAcc.filter(a=>a.is_admin).length} quản trị viên${q?` · đang lọc ${list.length}`:''}</div>`+
-    (list.length?list.map(a=>{const org=a.organizer_of||[];
-      return `<div class="rcard"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(a.email)}</b>${a.is_me?' <small>(bạn)</small>':''}
-        <div class="row" style="gap:6px;margin-top:4px">${a.is_admin?'<span class="badge on">Quản trị viên</span>':''}${org.length?`<span class="badge">Tổ chức: ${esc(org.join(', '))}</span>`:''}${!a.is_admin&&!org.length&&!a.trip_roles?'<span class="badge">Chưa có quyền</span>':''}</div>
-        <div class="hint" style="min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}${a.created_at?' · tạo '+fd(a.created_at):''}</div></div>
-        ${a.is_admin?(a.is_me?'':`<button type="button" class="btn danger-o small" data-q="admrm" data-e="${esc(a.email)}"${dis}>Gỡ quản trị</button>`):`<button type="button" class="btn ghost small" data-q="admset" data-e="${esc(a.email)}"${dis}>Cấp quản trị</button>`}</div>${tripsHtml(a.email)}</div>`;}).join(''):'<div class="hint">Không có tài khoản nào khớp.</div>');}
+    (list.length?list.map(a=>{const org=a.organizer_of||[],op=window.ACC_OPEN===a.email,n=tr(a.email).length;
+      return `<div class="rcard acc-card${op?' open':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap">
+        <button type="button" class="lv-tog acc-tog" data-q="accx" data-e="${esc(a.email)}" aria-expanded="${op}"><span class="chev">▸</span><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(a.email)}</b>${a.is_me?' <small>(bạn)</small>':''}
+        <span class="row" style="gap:6px;margin-top:4px;display:flex;flex-wrap:wrap">${a.is_admin?'<span class="badge on">Quản trị viên</span>':''}${org.length?`<span class="badge">Tổ chức: ${esc(org.join(', '))}</span>`:''}${!a.is_admin&&!org.length&&!a.trip_roles?'<span class="badge">Chưa có quyền</span>':''}<span class="badge gc-none">${n} chuyến</span></span>
+        <small class="hint" style="display:block;min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}${a.created_at?' · tạo '+fd(a.created_at):''}</small></span></button>
+        ${a.is_admin?(a.is_me?'':`<button type="button" class="btn danger-o small" data-q="admrm" data-e="${esc(a.email)}"${dis}>Gỡ quản trị</button>`):`<button type="button" class="btn ghost small" data-q="admset" data-e="${esc(a.email)}"${dis}>Cấp quản trị</button>`}</div>${op?tripsHtml(a.email):''}</div>`;}).join(''):'<div class="hint">Không có tài khoản nào khớp.</div>');}
+/* v77: bấm ra ngoài tài khoản đang mở thì tự đóng; bấm tài khoản khác thì đóng cái cũ, mở cái mới (xử lý ở accx) */
+document.addEventListener('click',ev=>{if(!window.ACC_OPEN)return;const t=ev.target;if(!t||!t.closest)return;
+  if(t.closest('.acc-card.open')||t.closest('[data-q="accx"]')||t.closest('.modal:not([hidden])'))return;
+  const had=!!document.querySelector('.acc-card.open');window.ACC_OPEN=null;if(had)try{renderGroupTab();}catch(e){}});
 async function admLoadAcc(){
   const [{data,error},rt]=await Promise.all([sb.rpc('admin_accounts'),sb.rpc('admin_account_trips')]);
   admAccTrips={};(rt&&rt.data||[]).forEach(t=>{(admAccTrips[t.email]=admAccTrips[t.email]||[]).push(t);});
@@ -3975,6 +3986,7 @@ async function qAct(a,b){
       if(await rpcDo('admin_set_admin_email',{p_email:e,on_off:false},'Đã gỡ quyền quản trị của '+e+'.'))await admLoadAcc();else renderGroupTab();});return;}
   if(a==='amore'){const {data}=await sb.rpc('admin_audit',{p_limit:200,p_before:admAudit.length?admAudit[admAudit.length-1].id:null});admAudit=admAudit.concat(data||[]);admAuditMore=(data||[]).length>=200;renderGroupTab();return;}
   if(a==='alog'){admLogOpen=!admLogOpen;renderGroupTab();return;}
+  if(a==='accx'){const e=b.dataset.e;window.ACC_OPEN=(window.ACC_OPEN===e?null:e);renderGroupTab();const c=document.querySelector('.acc-card.open');if(c&&c.scrollIntoView)c.scrollIntoView({block:'nearest'});return;}
   if(a==='alogs'){window.ADM_LOG_SHOW=!window.ADM_LOG_SHOW;if(!window.ADM_LOG_SHOW)admLogOpen=false;renderGroupTab();return;}
   if(a==='gnew'){admNewG=true;renderGroupTab();const i=$('#qNewG');if(i)i.focus();return;}
   if(a==='gnewx'){admNewG=false;renderGroupTab();return;}

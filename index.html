@@ -3411,7 +3411,7 @@ async function gateAct(a){
   if(a==='privacy'){openDlg('privacy');return;}
   if(a==='code'){const i=$('#gCode');await enterCode(i&&i.value,'#gCodeMsg');return;}
   if(a==='back'){gStep='login';gNote='';renderGate();return;}
-  if(a==='google'){gBusy=true;renderGate();const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
+  if(a==='google'){gBusy=true;renderGate();const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname,queryParams:{prompt:'select_account'}}});
     if(error){gBusy=false;gNote='Chưa đăng nhập được bằng Google: '+error.message;renderGate();}return;}
   if(a==='send'||a==='resend'){const em=(a==='send'?($('#gEmail').value||''):gEmail).trim().toLowerCase();
     if(!okEmail(em)){gNote='Email chưa đúng, ví dụ ban@gmail.com.';renderGate();return;}

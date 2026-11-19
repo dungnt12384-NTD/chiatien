@@ -1385,7 +1385,34 @@ html body .admin-card .gsub.perm-sec{gap:6px;padding:8px 10px}
 .admin-card .pbadges{display:inline-flex;margin:0 0 0 6px;vertical-align:middle}
 .admin-card .pbadges .badge{font-size:11px!important;padding:1px 7px!important;font-weight:600}
 .admin-card .perm-det .hint{font-size:12px}
-/* v82: khung Gán thủ quỹ / người phụ trách trong Tra cứu quyền (cỡ theo quy ước chung) */
+/* v83: Thùng rác tổng (cỡ theo quy ước: tên 14.5px, chữ phụ 12px, nút nhỏ) */
+.ta-entry{padding:0!important;overflow:hidden}
+.ta-open{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:transparent;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.ta-open:hover{background:color-mix(in srgb,var(--brand,var(--accent)) 6%,transparent)}
+.ta-open-i{font-size:20px;flex:none}
+.ta-open-t{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.ta-open-t b{font-size:15px}
+.ta-open-t small{font-size:12px;color:var(--muted)}
+.ta-open .chev{flex:none;color:var(--brand,var(--accent))}
+.ta-head{display:flex;flex-direction:column;gap:8px;position:sticky;top:-1px;z-index:2;background:var(--surface,#fff);padding-bottom:6px}
+.ta-kinds{display:flex;flex-wrap:wrap;gap:6px}
+.ta-k{border:1px solid var(--line);background:var(--surface2,transparent);color:inherit;font:inherit;font-size:13px;font-weight:600;padding:4px 10px;border-radius:99px;cursor:pointer}
+.ta-k small{font-size:11px;color:var(--muted);font-weight:700;margin-left:2px}
+.ta-k[aria-pressed="true"]{background:var(--brand,var(--accent));border-color:var(--brand,var(--accent));color:#fff}
+.ta-k[aria-pressed="true"] small{color:rgba(255,255,255,.85)}
+.ta-list{display:flex;flex-direction:column}
+.ta-row{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ta-row.sel{background:color-mix(in srgb,var(--brand,var(--accent)) 7%,transparent);border-radius:8px}
+.ta-row .tr-chk{display:flex;gap:8px;align-items:flex-start;flex:1 1 240px;min-width:0;cursor:pointer}
+.ta-row .tr-chk input{margin-top:3px;width:17px;height:17px;flex:none}
+.ta-ic{flex:none;font-size:17px;line-height:1.2}
+.ta-main{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
+.ta-main b{font-size:14.5px;font-weight:600}
+.ta-main .hint{font-size:12px;min-height:0}
+.ta-btns{display:flex;gap:6px;flex:0 0 auto;margin-left:auto}
+.ta-btns .ta-del{color:var(--neg)}
+html.phone .ta-btns{width:100%;justify-content:flex-end}
+/* v82: khung Gán thủ quỹ / người hỗ trợ trong Tra cứu quyền (cỡ theo quy ước chung) */
 .admin-card .perm-add{margin-top:8px;padding:8px 10px;border:1px dashed color-mix(in srgb,var(--brand,var(--accent)) 45%,var(--line));border-radius:10px;background:color-mix(in srgb,var(--brand,var(--accent)) 4%,transparent)}
 html body .admin-card .perm-add .sub{margin:0 0 4px!important;color:var(--fg)!important}
 .admin-card .perm-add .field{margin:0}
@@ -1967,7 +1994,7 @@ function pickExtTrip(){const sel=$('#copyFrom'),back=()=>{sel.value=window.COPY_
     if(!L.length){toast('Nhóm “'+g.name+'” chưa có chuyến nào bạn xem được.');back();return;}
     ask('Chọn chuyến để nhân bản.',{title:'Chuyến của nhóm “'+g.name+'”',noLabel:'Huỷ',choices:L.map(t=>({label:`${t.name} · ${t.data.members.length} người`,fn:()=>{
       window.COPY_EXT={label:`${t.name} · nhóm ${g.name} (${t.data.members.length} người)`,name:t.name,color:t.color,data:t.data};sel.dataset.init='';fillCopyFrom();sel.value='ext';$('#copyModeF').hidden=false;}}))},null,back);}}))},null,back);}
-function cloneFull(src){const d=JSON.parse(JSON.stringify(src));delete d.trashExp;return d;}
+function cloneFull(src){const d=JSON.parse(JSON.stringify(src));delete d.trashExp;delete d.trash;return d;}
 function cloneMembers(src){const d=blank();if(src&&src.members&&src.members.length){const r=copyMembersInto(d,src);d.days[0].present=d.members.map(m=>m.id);d.holder=src.holder?r.map[src.holder]||null:null;}return d;}
 /* v72: sao chép chuyến đang mở sang nhóm khác (hoặc chính nhóm này) */
 async function copyTripTo(g,src,full){
@@ -2096,6 +2123,7 @@ function delMembers(ids){
   ids=ids.filter(mem);if(!ids.length)return;
   const set=new Set(ids),used=ids.filter(usedBy),n=ids.length;
   const apply=()=>{
+    try{trashMembers(ids);}catch(e){}
     S.members=S.members.filter(m=>!set.has(m.id));
     S.members.forEach(m=>{if(m.parent&&set.has(m.parent))delete m.parent;});
     S.days.forEach(d=>d.present=d.present.filter(i=>!set.has(i)));
@@ -2946,7 +2974,7 @@ document.addEventListener('click',ev=>{
     const oldT=rs.reduce((t,a)=>t+a.amount,0),newAmt=a=>Math.round(v*(bkEditMul?bkGs(a):1)),newT=rs.reduce((t,a)=>t+newAmt(a),0);
     ask(`Đổi số tiền đợt "${n}" thành ${fmt(v)}/người${bkEditMul?', nhân theo số người trong nhóm (cả đi kèm)':', không nhân theo số người trong nhóm'} cho ${rs.length} ${advMode==='main'?'nhóm':'người'}?\nTổng ${fmt(oldT)} → ${fmt(newT)}. Kết quả sẽ tính lại.`,{ok:'Lưu thay đổi',success:true,title:'Đổi số tiền cả đợt?'},()=>{rs.forEach(a=>{a.amount=newAmt(a);a.bulk=1;});bkEdit=null;bkEditVal='';render();});return;}
   if(act==='bkDelBatch'){const rs=batchRecs(id);if(!rs.length)return;const tot=rs.reduce((t,a)=>t+a.amount,0);
-    ask(`Xoá cả đợt "${id}" (${rs.length} người, tổng ${fmt(tot)})? Các khoản đóng này bị xoá khỏi từng người, coi như đã hoàn lại. Kết quả sẽ tính lại và không hoàn tác được.`,{ok:'Xoá cả đợt',danger:true,title:'Xoá cả đợt thu chung?'},()=>{S.advances=S.advances.filter(a=>!rs.includes(a));bkEdit=null;render();});return;}
+    ask(`Xoá cả đợt "${id}" (${rs.length} người, tổng ${fmt(tot)})? Các khoản đóng này bị xoá khỏi từng người, coi như đã hoàn lại. Kết quả sẽ tính lại. Có thể khôi phục ở Thùng rác.`,{ok:'Xoá cả đợt',danger:true,title:'Xoá cả đợt thu chung?'},()=>{try{trashAdvs(rs,`Đợt “${id}” · ${rs.length} người · ${fmt(tot)}`,id);}catch(e){}S.advances=S.advances.filter(a=>!rs.includes(a));bkEdit=null;render();});return;}
   if(act==='bkTog'){bulkSel.has(id)?bulkSel.delete(id):bulkSel.add(id);renderBulk();return;}
   if(act==='bkAll'){advUnits().forEach(u=>bulkSel.add(u.main.id));renderBulk();return;}
   if(act==='bkNone'){bulkSel.clear();renderBulk();return;}
@@ -2955,7 +2983,7 @@ document.addEventListener('click',ev=>{
   if(act==='repTab'){repTab=id;render();return;}
   if(act==='dedupeRooms'){const rs=S.expenses.filter(e=>e.dayId===id&&e.rooms&&e.rooms.length);if(rs.length<2)return;const keep=rs[rs.length-1];
     ask(`${dayName(id)} có ${rs.length} khoản tiền phòng. Giữ khoản mới nhất "${keep.desc}" (${fmt(keep.amount)}) và xoá ${rs.length-1} khoản còn lại?`,{ok:'Giữ khoản mới nhất',danger:true,title:'Gộp tiền phòng'},
-      ()=>{S.expenses=S.expenses.filter(e=>!(rs.includes(e)&&e!==keep));render();});return;}
+      ()=>{try{rs.filter(e=>e!==keep).forEach(trashExpense);}catch(e){}S.expenses=S.expenses.filter(e=>!(rs.includes(e)&&e!==keep));render();});return;}
   if(act==='togPS'){openPS.has(id)?openPS.delete(id):openPS.add(id);render();return;}
   if(act==='repItemSort'){repItemSort=id;render();return;}
   if(act==='repTogDay'){repOpenDays.has(id)?repOpenDays.delete(id):repOpenDays.add(id);render();return;}
@@ -2994,7 +3022,7 @@ document.addEventListener('click',ev=>{
   if(act==='delRoomDay'){const dId=$('#rmDay').value,ex=roomExpOnDay(dId);
     if(!ex&&!formRooms.length){return;}
     ask(`Xoá toàn bộ chi tiết tiền phòng của ${dayName(dId)}${ex?` (${fmt(ex.amount)})`:''}? Khoản "Tiền phòng ngày ${roomDayNo(dId)}" cũng bị xoá khỏi danh sách khoản chi.`,{ok:'Xoá chi tiết tiền phòng',danger:true},
-      ()=>{if(ex)S.expenses=S.expenses.filter(e=>e!==ex);formRooms=[];formSelf=new Set();pickRoom=null;rmSig='';render();renderRooms();});return;}
+      ()=>{if(ex){try{trashExpense(ex);}catch(e){}S.expenses=S.expenses.filter(e=>e!==ex);}formRooms=[];formSelf=new Set();pickRoom=null;rmSig='';render();renderRooms();});return;}
   if(act==='openPick'){pickRoom=b.dataset.rid;editRooms.add(b.dataset.rid);renderRooms();return;}
   if(act==='donePick'){pickRoom=null;renderRooms();return;}
   if(act==='editRoom'){editRooms.add(id);renderRooms();return;}
@@ -3056,7 +3084,8 @@ document.addEventListener('click',ev=>{
       if(ad2.length)rs.push(`đã đóng trước ${ad2.length} đợt (${fmt(ad2.reduce((t,a)=>t+a.amount,0))})`);
       if(S.holder===id)rs.push('đang là thủ quỹ');
       ask(`${lblT(id)} ${rs.join(' · ')}.\nHãy bỏ các mục này trước khi xoá thành viên.`,{title:'Chưa thể xoá thành viên',ok:'Đã hiểu',info:true});return;}
-    ask(`Xoá "${nameOf(id)}" khỏi nhóm? Người này cũng bị bỏ khỏi mọi khoản chi.`,{ok:'Xoá thành viên',danger:true},()=>{
+    ask(`Xoá "${nameOf(id)}" khỏi nhóm? Người này cũng bị bỏ khỏi mọi khoản chi. Có thể khôi phục ở Thùng rác.`,{ok:'Xoá thành viên',danger:true},()=>{
+      try{trashMembers([id]);}catch(e){}
       S.members=S.members.filter(m=>m.id!==id);S.days.forEach(d=>d.present=d.present.filter(i=>i!==id));
       S.expenses.forEach(e=>e.excluded=e.excluded.filter(i=>i!==id));formExcl.delete(id);
       if(S.holder===id)S.holder=S.members[0]?S.members[0].id:null;render();});
@@ -3067,11 +3096,12 @@ document.addEventListener('click',ev=>{
     if(S.days.length<2){say('#dayMsg','Cần giữ lại ít nhất một ngày.');return;}
     if(S.expenses.some(e=>e.dayId===ad.id)){say('#dayMsg','Ngày này còn khoản chi. Xoá các khoản chi trước.');return;}
     ask(`Xoá "${ad.name}" khỏi chuyến đi? `,{ok:'Xoá ngày',danger:true},()=>{
+      try{trashPut('day',{day:ad,idx:S.days.indexOf(ad)},ad.name+(ad.date?' · '+dmy(ad.date):''));}catch(e){}
       S.days=S.days.filter(d=>d.id!==ad.id);S.activeDay=S.days[0].id;render();});}
   else if(act==='amtMode'){amtMode=id==='unit'?'unit':'total';renderSplit();$('#expAmount').focus();}
   else if(act==='togSplit'){formExcl.has(id)?formExcl.delete(id):formExcl.add(id);renderSplit();}
   else if(act==='delAdv'){const a=S.advances.find(x=>x.id===id);if(!a)return;
-    ask(`Xoá khoản đóng trước ${fmt(a.amount)}${a.note?` (“${a.note}”)`:''} của ${nameOf(a.member)}? Kết quả sẽ tính lại.`,{ok:'Xoá khoản này',danger:true,title:'Xoá tiền đóng?'},()=>{S.advances=S.advances.filter(x=>x.id!==id);render();});}
+    ask(`Xoá khoản đóng trước ${fmt(a.amount)}${a.note?` (“${a.note}”)`:''} của ${nameOf(a.member)}? Kết quả sẽ tính lại.`,{ok:'Xoá khoản này',danger:true,title:'Xoá tiền đóng?'},()=>{try{trashAdvs([a],`${nameOf(a.member)} · ${fmt(a.amount)}${a.note?' · '+a.note:''}`);}catch(e){}S.advances=S.advances.filter(x=>x.id!==id);render();});}
   else if(act==='advEdit'){advStart(id);openAdv.add(id);render();}
   else if(act==='advDone'){advDone();}
   else if(act==='advDraftAdd'){const d=advDraft;if(!d)return;const v=parseMoney(d.newAmt);if(!d.newAmt.trim()||isNaN(v)){advErr('Nhập số tiền hợp lệ cho đợt mới, ví dụ 500.000 hoặc 500k.');return;}
@@ -3085,7 +3115,7 @@ document.addEventListener('click',ev=>{
   else if(act==='expandAdv'){S.members.forEach(m=>openAdv.add(m.id));render();}
   else if(act==='collapseAdv'){openAdv.clear();render();}
   else if(act==='delExp'){const e=S.expenses.find(x=>x.id===id);if(!e)return;
-    ask(`Xoá khoản chi "${e.desc}" (${fmt(e.amount)})? Khoản chi được giữ trong thùng rác 30 ngày, khôi phục được.`,{ok:'Xoá khoản chi',danger:true},()=>{trashExpense(e);S.expenses=S.expenses.filter(x=>x.id!==id);if(editing===id)resetExpForm();render();});}
+    ask(`Xoá khoản chi "${e.desc}" (${fmt(e.amount)})? Khoản chi được giữ trong Thùng rác, khôi phục được.`,{ok:'Xoá khoản chi',danger:true},()=>{trashExpense(e);S.expenses=S.expenses.filter(x=>x.id!==id);if(editing===id)resetExpForm();render();});}
   else if(act==='editExp'){startEdit(id);}
 });
 
@@ -3349,7 +3379,7 @@ async function doPush(id){
         toast('Chuyến "'+t.name+'" đã chốt sổ, phần vừa sửa không được lưu.');}
       else{R.trips=R.trips.filter(x=>x.id!==id);syncedSet.delete(id);lastJson.delete(id);if(!R.trips.length)R.trips.push(placeholder());if(R.current===id)R.current=R.trips[0].id;S=trip().data;toast('Chuyến "'+t.name+'" đã bị thủ quỹ xoá.');}
       saveLocal();applyLocks();render();setSync('ok');return;}
-    setSync('error',e&&e.code==='invalid_argument'?'Bạn không có quyền sửa chuyến này. Thủ quỹ cần thêm bạn làm người phụ trách':(e&&e.code==='quota_exceeded'?'Kho dữ liệu đã đầy':'Chưa gửi được, sẽ thử lại khi có thay đổi tiếp theo'));
+    setSync('error',e&&e.code==='invalid_argument'?'Bạn không có quyền sửa chuyến này. Thủ quỹ cần thêm bạn làm người hỗ trợ':(e&&e.code==='quota_exceeded'?'Kho dữ liệu đã đầy':'Chưa gửi được, sẽ thử lại khi có thay đổi tiếp theo'));
     return;
   }
   q.busy=false;
@@ -3542,7 +3572,7 @@ let admReady=false,admLoaded=false,admTab='perm',admGroups=[],admReqs=[],admAudi
 const ADM_ENT=['admin','group','organizer','quota'];   /* nhật ký quản trị: chỉ thao tác trong tab quản trị */
 const paidMap=new Map();let paidFor='',rpCount=new Map(),rpFor='',codeCache=new Map();
 function isAnon(){return !!(sbSession&&sbSession.user&&(sbSession.user.is_anonymous||!sbSession.user.email));}
-const ROLE_NAME={admin:'Quản trị viên',leader:'Thủ quỹ',helper:'Người phụ trách',viewer:'Thành viên (chỉ xem)'};
+const ROLE_NAME={admin:'Quản trị viên',leader:'Thủ quỹ',helper:'Người hỗ trợ',viewer:'Thành viên (chỉ xem)'};
 const TAB_NAME={member:'Người đi',advance:'Đã đóng',room:'Phòng',expense:'Khoản chi'};
 const okEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 const fdt=v=>{try{return new Date(v).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return v||'';}};
@@ -3776,20 +3806,20 @@ function groupsCard(){
         return `<div class="acc-trip acc-row${on?' on':''}"><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;text-align:left"><b>${esc(t.name)}</b>${t.closed?' <small>· đã chốt sổ</small>':''}
           <small class="hint" style="display:block;min-height:0">Vai trò: ${TRIP_ROLE[t.role]||t.role}${VIA_SHORT[t.via]?' · '+VIA_SHORT[t.via]:''}</small></span><button type="button" class="btn small${on?' is-open':''}" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}" title="Mở chuyến này ở tab Chuyến">${on?'Đang mở':'Mở'}</button></div>`;}).join('')+`</div>`:
         `<div class="hint" style="min-height:0">${a.is_organizer?'Chưa có chuyến nào bạn có vai trò. Bạn tạo chuyến mới ở tab Chuyến.':'Chưa có chuyến nào.'}</div>`)+`</div>`:'')+`</div>`;}).join('')+`</div>`;}
-const TRIP_ROLE={leader:'Thủ quỹ',helper:'Người phụ trách',admin:'Quản trị',viewer:'Chỉ xem'};
+const TRIP_ROLE={leader:'Thủ quỹ',helper:'Người hỗ trợ',admin:'Quản trị',viewer:'Chỉ xem'};
 const VIA_SHORT={role:'',admin:'quản trị viên',organizer:'Nhóm trưởng',trip_code:'nhờ mã chuyến',group_code:'nhờ mã nhóm'};
 const VIA_NAME={role:'Được gán vai trò trong chuyến',admin:'Quyền quản trị viên',organizer:'Nhóm trưởng: xem mọi chuyến',trip_code:'Nhờ mã chuyến đã nhập',group_code:'Nhờ mã nhóm đã nhập'};
 function accessSrc(a){const s=[];
   if(a.is_admin)s.push('<b>Quản trị viên</b>: xem và sửa mọi chuyến');
-  if(a.is_organizer)s.push('<b>Nhóm trưởng</b> (quản trị viên gán): xem mọi chuyến của nhóm, tạo chuyến mới; sửa chuyến mình là thủ quỹ / người phụ trách');
+  if(a.is_organizer)s.push('<b>Nhóm trưởng</b> (quản trị viên gán): xem mọi chuyến của nhóm, tạo chuyến mới; sửa chuyến mình là thủ quỹ / người hỗ trợ');
   if(a.group_code==='valid')s.push('<b>Mã nhóm</b>: chỉ xem các chuyến của nhóm'+(a.group_code_expires?', hết hạn '+fd(a.group_code_expires):''));
   else if(a.group_code)s.push('<span style="color:var(--neg)">Mã nhóm đã bị tắt, đổi hoặc hết hạn</span>');
   if(!s.length){const v=[...new Set((a.trips||[]).map(t=>t.via))];
-    if(v.includes('role'))s.push('<b>Vai trò trong chuyến</b> (thủ quỹ hoặc người phụ trách gán)');
+    if(v.includes('role'))s.push('<b>Vai trò trong chuyến</b> (thủ quỹ hoặc người hỗ trợ gán)');
     if(v.includes('trip_code'))s.push('<b>Mã chuyến</b> đã nhập: chỉ xem chuyến đó');}
   return 'Bạn thấy nhóm này nhờ: '+s.join(' · ');}
-/* ---------- Báo sai cần xử lý: hộp chung cho quản trị viên, nhóm trưởng, thủ quỹ / người phụ trách (cần supabase/015) ---------- */
-/* ai được xử lý báo sai của chuyến đang mở: quản trị viên, thủ quỹ / người phụ trách, Nhóm trưởng của nhóm */
+/* ---------- Báo sai cần xử lý: hộp chung cho quản trị viên, nhóm trưởng, thủ quỹ / người hỗ trợ (cần supabase/015) ---------- */
+/* ai được xử lý báo sai của chuyến đang mở: quản trị viên, thủ quỹ / người hỗ trợ, Nhóm trưởng của nhóm */
 function canHandleRp(){return canEditAny()||sbAdmin||!!(sbGroup&&myAccess[sbGroup.id]&&myAccess[sbGroup.id].is_organizer);}
 function canHandleAnyRp(){return sbAdmin||Object.values(myAccess).some(a=>a.is_organizer||(a.trips||[]).some(t=>t.role==='leader'||t.role==='helper'));}
 async function loadReports(quiet){if(!sb||!sbSession||isAnon()){window.RP_OPEN=[];return;}
@@ -3797,7 +3827,7 @@ async function loadReports(quiet){if(!sb||!sbSession||isAnon()){window.RP_OPEN=[
   try{renderTabs();}catch(e){}if(!quiet&&curTab==='group')renderGroupTab();}
 function reportsCard(){const L=window.RP_OPEN||[];if(!L.length&&!canHandleAnyRp())return '';
   return `<div class="gcard rp-card${L.length?' has':''}"><div class="gh"><b>🚩 Báo sai cần xử lý${L.length?` (${L.length})`:''}</b></div>`+
-    (L.length?`<div class="hint" style="min-height:0">Báo sai chưa xử lý ở mọi chuyến bạn phụ trách. Trả lời (nếu cần) rồi bấm "Đã xử lý"; người báo sẽ thấy câu trả lời trong mục Báo sai của chuyến.</div>`+
+    (L.length?`<div class="hint" style="min-height:0">Báo sai chưa xử lý ở mọi chuyến bạn quản lý. Trả lời (nếu cần) rồi bấm "Đã xử lý"; người báo sẽ thấy câu trả lời trong mục Báo sai của chuyến.</div>`+
       L.map(r=>`<div class="rcard rp-item"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(r.trip_name)}</b>${r.group_name?` <small>· ${esc(r.group_name)}</small>`:''}</div>
           <button type="button" class="btn ghost small" data-q="rpopen" data-g="${esc(r.group_id||'')}" data-t="${esc(r.trip_id)}">Mở chuyến</button></div>
         <div style="overflow-wrap:anywhere">${r.item_label?`<b>${esc(r.item_label)}</b>: `:''}${esc(r.message)}</div>
@@ -3830,9 +3860,14 @@ function codeCard(){
   return `<div class="gcard"><div class="gh"><b>🔑 Nhập mã chuyến</b></div>${body}</div>`;}
 function requestCard(){
   if(myReq)return `<div class="gcard"><div class="gh"><b>✋ Xin quyền tổ chức chuyến</b></div><div class="note info" style="--c:var(--accent)">Đã gửi yêu cầu lúc ${fdt(myReq.at)}. Quản trị viên sẽ duyệt và gán bạn vào nhóm.</div>${myReq.note?`<div class="hint" style="min-height:0">Lời nhắn: ${esc(myReq.note)}</div>`:''}<div class="row"><button type="button" class="btn ghost small" data-q="reqagain">Sửa lời nhắn</button></div></div>`;
-  return `<div class="gcard"><div class="gh"><b>✋ Muốn tổ chức chuyến đi?</b></div><div class="hint" style="min-height:0">Nhóm trưởng được tạo chuyến trong nhóm, thêm thủ quỹ và người phụ trách. Quản trị viên sẽ duyệt yêu cầu.</div>
+  return `<div class="gcard"><div class="gh"><b>✋ Muốn tổ chức chuyến đi?</b></div><div class="hint" style="min-height:0">Nhóm trưởng được tạo chuyến trong nhóm, thêm thủ quỹ và người hỗ trợ. Quản trị viên sẽ duyệt yêu cầu.</div>
     <div class="field"><label for="qReq">Lời nhắn cho quản trị viên</label><textarea id="qReq" rows="2" maxlength="300" placeholder="Bạn là ai, muốn tổ chức chuyến cho nhóm nào?"></textarea></div>
     <div class="row"><button type="button" class="btn" data-q="req">Gửi yêu cầu</button></div></div>`;}
+/* v83: lối vào duy nhất của Thùng rác tổng (tab Của tôi) */
+function trashEntry(){try{if(PV_TOKEN||!sbSession||isAnon())return '';
+  const can=sbAdmin||(sbGroups||[]).some(g=>g.can_create)||(R.trips||[]).some(t=>!t.ph&&canEditAny(t.id));if(!can)return '';
+  const n=(R.trips||[]).reduce((s,t)=>s+(t.data?inItems(t.data).length:0),0);
+  return `<div class="gcard ta-entry"><button type="button" class="ta-open" data-tx="trashall"><span class="ta-open-i">🗑</span><span class="ta-open-t"><b>Thùng rác</b><small>Nhóm, chuyến, ngày, người đi, khoản chi, tiền phòng, tiền đóng đã xoá${n?` · ${n} mục trong nhóm đang mở`:''}</small></span><span class="chev">▸</span></button></div>`;}catch(e){return '';}}
 /* v67: các nút quản lý của chuyến đang mở (dời từ tab Chuyến sang) */
 function tripMngCard(){
   if(PV_TOKEN||!sbGroup)return '';const t=trip();
@@ -3840,12 +3875,12 @@ function tripMngCard(){
   /* v73: nhóm chưa / không còn chuyến nào: vẫn có thẻ để chọn chuyến nhóm khác và mở Thùng rác chuyến (khôi phục chuyến đã xoá) */
   if(!t||t.ph||!syncedSet.has(t.id)){if(!(org||sbGroup.can_create))return '';
     return `<div class="gcard"><div class="gh"><button type="button" class="mng-pick" data-tx="pickmng" title="Bấm để chọn chuyến"><b>🧰 Quản lý chuyến:</b> <span>nhóm “${esc(sbGroup.name)}” chưa có chuyến ▾</span></button></div>
-      <div class="row tx-row"><button type="button" class="btn ghost small" data-tx="trash">Thùng rác chuyến</button></div></div>`;}
+      <div class="row tx-row"><button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button></div></div>`;}
   return `<div class="gcard"><div class="gh"><button type="button" class="mng-pick" data-tx="pickmng" title="Bấm để chọn chuyến khác"><b>🧰 Quản lý chuyến:</b> <span>${esc(t.name)} ▾</span></button></div><div class="row tx-row">
     ${org?'<button type="button" class="btn ghost small" data-tx="viewers">Thông tin hiện tại</button>':''}
     <button type="button" class="btn ghost small" data-tx="hist">Lịch sử thay đổi</button>
-    ${ed?'<button type="button" class="btn ghost small" data-tx="people">Thủ quỹ và phụ trách</button>':''}
-    ${ld?'<button type="button" class="btn ghost small" data-tx="trash">Thùng rác chuyến</button>':''}
+    ${ed?'<button type="button" class="btn ghost small" data-tx="people">Thủ quỹ và người hỗ trợ</button>':''}
+    ${ld?'<button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button>':''}
     ${sbGroups.some(g=>g.can_create)?'<button type="button" class="btn ghost small" data-tx="copyto">Sao chép chuyến</button>':''}
   </div></div>`;}
 function renderGroupTab(){
@@ -3854,7 +3889,7 @@ function renderGroupTab(){
   if(!authReady){el.innerHTML='<div class="hint">Đang kiểm tra đăng nhập…</div>';return;}
   if(!sbSession){el.innerHTML='';return;}
   const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
-  let h=reportsCard()+tripMngCard()+groupsCard()+(sbAdmin?'':codeCard());
+  let h=reportsCard()+tripMngCard()+trashEntry()+groupsCard()+(sbAdmin?'':codeCard());
   if(sbAdmin){h+=adminHtml()+adminLogCard();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
   /* đang Quản lý 1 nhóm: mọi phần xung quanh xám đi (vẫn bấm được để chuyển) */
@@ -3893,7 +3928,7 @@ function adminHtml(){
           (op?`<div class="lv2 mng-panel"><div class="hint" style="min-height:0">Tạo ${fd(g.created_at)}${g.creator_email?' bởi '+esc(g.creator_email):''}${g.last_activity?' · sửa gần nhất '+fdt(g.last_activity):''}</div>`+groupDetailHtml(g,d,dis)+`</div>`:'')+
           (ex?`<div class="lv2">`:'')+
           (ex&&tl?`<div class="acc-trips">${tq?`<div class="sub">Chuyến khớp (${tl.length}/${all.length})</div>`:''}`+(tl.length?tl.map(t=>{const tc=admTCodes[t.id];return `<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${mk(t.name)}</b>${t.closed?' <small>· đã chốt sổ</small>':''}${t.hidden?' <small>· ẩn với mã nhóm</small>':''}
-            <div class="hint" style="min-height:0">Thủ quỹ: ${t.leaders&&t.leaders.length?t.leaders.map(esc).join(', '):'chưa có'}${t.helpers?` · ${t.helpers} người phụ trách`:''}</div>
+            <div class="hint" style="min-height:0">Thủ quỹ: ${t.leaders&&t.leaders.length?t.leaders.map(esc).join(', '):'chưa có'}${t.helpers?` · ${t.helpers} người hỗ trợ`:''}</div>
             ${tc&&tc.active?`<span class="badge ${codeWarn('trip',true)?'gc-on':'gc-off'}">🔑 ${tc.viewers} người xem bằng mã · hết hạn ${fd(tc.expires_at)}</span>`:`<span class="badge ${tc&&codeWarn('trip',false)?'gc-on':'gc-off'}">${tc?(codeWarn('trip',false)?'⚠️ ':'')+'Mã '+(tc.enabled?'hết hạn':'tắt'):'Chưa có mã'}</span>`}</div><button type="button" class="btn small" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}" title="Mở chuyến này ở tab Chuyến">Mở</button></div>`;}).join(''):'<div class="hint" style="min-height:0">Chưa có chuyến nào.</div>')+`</div>`:'')+
           (ex&&ol&&!op?`<div class="acc-trips"><div class="sub">Nhóm trưởng (${ol.length})</div>`+(ol.length?ol.map(o=>orgRowHtml(o,'')).join(''):'<div class="hint" style="min-height:0">Chưa có nhóm trưởng. Bấm Quản lý để thêm.</div>')+`</div>`:'')+
           (ex?`</div>`:'')+`</div>`;}).join(''):`<div class="hint">${q?'Không có nhóm hoặc chuyến nào khớp.':'Chưa có nhóm nào.'}</div>`)+gtrashHtml(dis);}
@@ -3916,7 +3951,9 @@ function codeBadgeS(c){if(!c)return '<span class="badge gc-none">chưa có</span
   const tip=c.active?`Mã nhóm đang bật · ${c.viewers} người xem bằng mã · hết hạn ${fd(c.expires_at)}`:'Mã nhóm '+(c.enabled?'đã hết hạn':'đang tắt');
   return `<span class="badge ${w}" title="${esc(tip)}">${w==='gc-on'?'⚠️ ':c.active?'🔑 ':''}nhóm ${c.active?'bật':c.enabled?'hết hạn':'tắt'}</span>`;}
 /* thùng rác nhóm (cần supabase/018): khôi phục / xoá hẳn */
-function gtrashHtml(dis){const L=window.ADM_GTRASH||[];if(!L.length)return '';const o=!!window.GTRASH_OPEN;
+function gtrashHtml(dis){const L=window.ADM_GTRASH||[];if(!L.length)return '';   /* v83: dời vào Thùng rác tổng */
+  return `<div class="gsub gtrash"><div class="row" style="align-items:center;gap:8px"><div class="hint" style="min-height:0;flex:1 1 auto">🗑 ${L.length} nhóm đang trong thùng rác.</div><button type="button" class="btn ghost small" data-tx="trashall">Mở Thùng rác</button></div></div>`;}
+function gtrashHtmlOld(dis){const L=window.ADM_GTRASH||[];if(!L.length)return '';const o=!!window.GTRASH_OPEN;
   return `<div class="gsub gtrash">${logHead('🗑 Thùng rác nhóm ('+L.length+')',o,'data-q="gtrash"')}`+(o?L.map(g=>`<div class="acc-trip acc-row"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(g.name)}</b>
     <div class="hint" style="min-height:0">${g.trips} chuyến · xoá ${fdt(g.deleted_at)}${g.deleted_by?' bởi '+esc(g.deleted_by):''}</div></div>
     <button type="button" class="btn small" data-q="grest" data-id="${esc(g.id)}"${dis}>Khôi phục</button><button type="button" class="btn danger-o small" data-q="gpurge" data-id="${esc(g.id)}"${dis}>Xoá hẳn</button></div>`).join(''):'')+`</div>`;}
@@ -3950,6 +3987,19 @@ function codeSetHtml(dis){const D=window.CS_DRAFT||{};
 document.addEventListener('input',ev=>{const t=ev.target,m=t&&t.id&&/^qCs(En|Days)-(trip|group)$/.exec(t.id);if(!m)return;
   const D=window.CS_DRAFT=window.CS_DRAFT||{},d=D[m[2]]=D[m[2]]||{};if(m[1]==='En')d.en=t.value==='1';else d.days=t.value;});
 document.addEventListener('change',ev=>{const t=ev.target;if(t&&t.id&&/^qCsEn-/.test(t.id))t.dispatchEvent(new Event('input',{bubbles:true}));});
+/* v83: diễn giải quyền của từng vai trò: rê chuột (máy tính) hiện chú thích, chạm (điện thoại) hiện thông báo.
+   Tự gắn cho mọi nhãn / lựa chọn có tên vai trò, không cần sửa từng chỗ. */
+const ROLE_TIP=[
+  [/Quản trị viên/,'Quản trị viên: toàn quyền hệ thống – mọi nhóm, mọi chuyến, tài khoản, nhóm trưởng, cài đặt, thùng rác nhóm.'],
+  [/Nhóm trưởng/,'Nhóm trưởng: tạo chuyến mới trong nhóm (tự thành Thủ quỹ chuyến đó), xem mọi chuyến của nhóm, xử lý báo sai. Sửa chuyến khác thì cần được gán Thủ quỹ / Người hỗ trợ.'],
+  [/Thủ quỹ/,'Thủ quỹ: toàn quyền 1 chuyến – sửa mọi mục, thêm / gỡ thủ quỹ và người hỗ trợ, mã chuyến, link công khai, chốt sổ, xoá / khôi phục chuyến, xử lý báo sai.'],
+  [/(Người )?[Hh]ỗ trợ/,'Người hỗ trợ: chỉ nhập / sửa ở các mục được tick (Người đi, Đã đóng, Phòng, Khoản chi); tạo link công khai, xử lý báo sai. Không thêm / gỡ người, không đổi mã, không chốt sổ, không xoá chuyến.'],
+  [/[Cc]hỉ xem|[Xx]em bằng mã/,'Chỉ xem: xem toàn bộ chuyến, không sửa được; thấy sai thì bấm "Báo sai" để thủ quỹ sửa.']];
+function roleTipOf(txt){txt=String(txt||'').trim();if(!txt||txt.length>90)return '';const r=ROLE_TIP.find(x=>x[0].test(txt));return r?r[1]:'';}
+function roleTipEl(t){if(!t||!t.closest)return null;const el=t.closest('.badge,.pill,option,.tk,.role-tip');return el&&roleTipOf(el.textContent)?el:null;}
+document.addEventListener('mouseover',ev=>{const el=roleTipEl(ev.target);if(el&&!el.title)el.title=roleTipOf(el.textContent);});
+document.addEventListener('change',ev=>{const s=ev.target;if(s&&s.tagName==='SELECT'){const o=s.options[s.selectedIndex];if(o&&roleTipOf(o.textContent))s.title=roleTipOf(o.textContent);}});
+document.addEventListener('click',ev=>{if(!(window.matchMedia&&matchMedia('(hover: none)').matches))return;const el=ev.target.closest&&ev.target.closest('.badge,.pill');if(!el)return;const tip=roleTipOf(el.textContent);if(tip)toast(tip);},true);
 /* v78: tìm "gần giống" dùng chung cho mọi ô tìm: không phân biệt hoa / thường, có / không dấu, dấu câu;
    gõ nhiều từ thì mỗi từ nằm ở đâu trong chữ cũng được (không cần đúng thứ tự). */
 function fzN(t){return String(t==null?'':t).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[^a-z0-9@]+/g,' ');}
@@ -3966,7 +4016,7 @@ window.PERM=null;window.PERM_ERR='';window.PERM_Q='';window.PERM_OPEN=null;
 async function admLoadPerm(){try{const {data,error}=await sb.rpc('admin_permissions');window.PERM=error?[]:(data||[]);
     window.PERM_ERR=error?(/admin_permissions|schema cache|does not exist|not find/i.test(error.message||'')?'Chưa bật chức năng này: cần chạy supabase/020_tra_cuu_quyen.sql.':'Không tải được quyền: '+(ERR_VN[error.message]||error.message)):'';}catch(e){window.PERM=[];}
   if(admAcc===null){try{await admLoadAcc();}catch(e){}}if(curTab==='group')renderGroupTab();}
-const P_ROLE={admin:'Quản trị viên – toàn quyền',organizer:'Nhóm trưởng – tạo / quản lý mọi chuyến',leader:'Thủ quỹ',helper:'Người phụ trách',code_group:'Xem bằng mã nhóm',code_trip:'Xem bằng mã chuyến'};
+const P_ROLE={admin:'Quản trị viên – toàn quyền',organizer:'Nhóm trưởng – tạo / quản lý mọi chuyến',leader:'Thủ quỹ',helper:'Người hỗ trợ',code_group:'Xem bằng mã nhóm',code_trip:'Xem bằng mã chuyến'};
 function pBadge(r,where){let t=P_ROLE[r.role]||r.role;if(r.role==='helper')t+=': '+((r.tabs||[]).map(k=>TAB_NAME[k]||k).join(', ')||'—');
   const code=r.role==='code_group'||r.role==='code_trip';if(code&&!r.active)t+=' (mã tắt / hết hạn)';
   const on=r.role==='admin'||r.role==='organizer'||r.role==='leader';
@@ -3982,16 +4032,16 @@ function permHtml(){
   const admins=P.filter(r=>r.role==='admin');
   const link=(k,txt)=>`<button type="button" class="plink" data-q="pgo" data-k="${esc(k)}">${esc(txt)}</button>`;
   /* danh sách người theo email (khách chưa đăng nhập gộp thành 1 dòng) */
-  /* v82: gán / gỡ Thủ quỹ, Người phụ trách ngay tại đây (dùng set_trip_person / remove_trip_person như hộp "Thủ quỹ và phụ trách") */
-  const rmBtn=r=>`<button type="button" class="btn ghost small p-rm" data-q="prm2" data-t="${esc(r.trip_id)}" data-e="${esc(r.email)}" data-n="${esc(r.trip_name||'')}" title="Gỡ quyền ${r.role==='leader'?'thủ quỹ':'người phụ trách'}" aria-label="Gỡ quyền">✕</button>`;
+  /* v82: gán / gỡ Thủ quỹ, Người hỗ trợ ngay tại đây (dùng set_trip_person / remove_trip_person như hộp "Thủ quỹ và người hỗ trợ") */
+  const rmBtn=r=>`<button type="button" class="btn ghost small p-rm" data-q="prm2" data-t="${esc(r.trip_id)}" data-e="${esc(r.email)}" data-n="${esc(r.trip_name||'')}" title="Gỡ quyền ${r.role==='leader'?'thủ quỹ':'người hỗ trợ'}" aria-label="Gỡ quyền">✕</button>`;
   const D=window.PADD||{},pr=D.r||'leader';
   const addForm=(tid,email)=>{const tripSel=tid?'':`<div class="field" style="flex:1 1 200px"><label for="qPAddT">Chuyến</label><select id="qPAddT"><option value="">— Chọn chuyến —</option>${admGroups.map(g=>{const ts=((admOv[g.id]||{}).trips||[]);return ts.length?`<optgroup label="${esc(g.name)}">${ts.map(t=>`<option value="${esc(t.id)}"${D.t===t.id?' selected':''}>${esc(t.name)}${t.closed?' (đã chốt)':''}</option>`).join('')}</optgroup>`:'';}).join('')}</select></div>`;
     const emailIn=email?'':`<div class="field" style="flex:1 1 200px"><label for="qPAddE">Email</label><input type="email" id="qPAddE" list="pAccList" value="${esc(D.e||'')}" placeholder="email@gmail.com" autocapitalize="off" autocomplete="off"></div><datalist id="pAccList">${accs.map(a=>`<option value="${esc(a.email)}">`).join('')}</datalist>`;
     return `<div class="perm-add"><div class="sub">＋ ${tid?'Gán người cho chuyến này':'Gán tài khoản này vào chuyến'}</div><div class="row" style="align-items:flex-end;gap:8px">${emailIn}${tripSel}
-      <div class="field" style="flex:1 1 150px"><label for="qPAddR">Vai trò</label><select id="qPAddR"><option value="leader"${pr==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${pr==='helper'?' selected':''}>Người phụ trách</option></select></div>
+      <div class="field" style="flex:1 1 150px"><label for="qPAddR">Vai trò</label><select id="qPAddR"><option value="leader"${pr==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${pr==='helper'?' selected':''}>Người hỗ trợ</option></select></div>
       <button type="button" class="btn small" data-q="padd2"${tid?` data-t="${esc(tid)}"`:''}${email?` data-e="${esc(email)}"`:''}>Gán</button></div>
       ${pr==='helper'?`<div class="tks" id="qPAddTabs">${LOCK_TABS.map(k=>`<label class="tk"><input type="checkbox" value="${k}"${(D.tabs||['expense']).includes(k)?' checked':''}>${TAB_NAME[k]}</label>`).join('')}</div>`:''}
-      <div class="hint" style="min-height:0">${pr==='leader'?'Thủ quỹ: làm được mọi việc của chuyến (sửa mọi mục, thêm / gỡ người, mã, link, chốt sổ, xoá chuyến).':'Người phụ trách: chỉ nhập / sửa ở các mục được tick.'} Người được gán đăng nhập bằng đúng email này là có quyền, kể cả khi chưa đăng nhập lần nào.</div></div>`;};
+      <div class="hint" style="min-height:0">${pr==='leader'?'Thủ quỹ: làm được mọi việc của chuyến (sửa mọi mục, thêm / gỡ người, mã, link, chốt sổ, xoá chuyến).':'Người hỗ trợ: chỉ nhập / sửa ở các mục được tick.'} Người được gán đăng nhập bằng đúng email này là có quyền, kể cả khi chưa đăng nhập lần nào.</div></div>`;};
   const people=(rows,where)=>{const m=new Map();let an=0,anOff=0;rows.forEach(r=>{if(!r.email){if(r.active)an++;else anOff++;return;}if(!m.has(r.email))m.set(r.email,[]);m.get(r.email).push(r);});
     const out=[...m].map(([e,rs])=>{const tr=rs.find(r=>r.trip_id&&(r.role==='leader'||r.role==='helper'));
       return `<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${link('a:'+e,e)}<div class="pbadges">${rs.map(r=>pBadge(r,where?where(r):'')).join('')}</div></div>${tr&&!where?rmBtn(tr):''}</div>`;});
@@ -4037,7 +4087,7 @@ function accountsHtml(dis){
   const tripsHtml=e=>{const rows=tr(e);if(!rows.length)return '<div class="acc-trips"><div class="hint" style="min-height:0">Chưa có quyền theo chuyến nào.</div></div>';
     return `<div class="acc-trips"><div class="sub">Quyền theo chuyến (${rows.length})</div><div class="hist-scroll acc-scroll" data-rows="5">`+rows.map(t=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(t.trip_name)}</b>${t.group_name?` <small>· ${esc(t.group_name)}</small>`:''}${t.deleted?' <small style="color:var(--neg)">· trong thùng rác</small>':t.closed?' <small>· đã chốt sổ</small>':''}
       ${t.role==='helper'?`<div class="hint" style="min-height:0">Nhập liệu: ${(t.tabs||[]).map(k=>TAB_NAME[k]||k).join(', ')||'—'}</div>`:''}</div>
-      <span class="badge${t.role==='leader'?' on':''}">${t.role==='leader'?'Thủ quỹ':'Người phụ trách'}</span></div>`).join('')+`</div></div>`;};
+      <span class="badge${t.role==='leader'?' on':''}">${t.role==='leader'?'Thủ quỹ':'Người hỗ trợ'}</span></div>`).join('')+`</div></div>`;};
   return add+`<div class="row"><div class="field"><input type="search" id="qAccQ" value="${esc(admAccQ)}" placeholder="Tìm theo email, tên chuyến, tên nhóm" autocapitalize="off" autocomplete="off" aria-label="Tìm tài khoản"></div></div>
     <div class="hint" style="min-height:0">${admAcc.length} tài khoản · ${admAcc.filter(a=>a.is_admin).length} quản trị viên${q?` · đang lọc ${list.length}`:''}</div>`+
     (list.length?list.map(a=>{const org=a.organizer_of||[],op=window.ACC_OPEN===a.email,n=tr(a.email).length;
@@ -4181,13 +4231,13 @@ async function qAct(a,b){
   if(a==='padd2'){const em=(b.dataset.e||(($('#qPAddE')||{}).value||'')).trim().toLowerCase(),tid=b.dataset.t||(($('#qPAddT')||{}).value||''),role=(($('#qPAddR')||{}).value)||'leader';
     const tabs=role==='helper'?[...document.querySelectorAll('#qPAddTabs input:checked')].map(x=>x.value):[];
     if(!okEmail(em)){admMsg='Email chưa đúng.';renderGroupTab();return;}if(!tid){admMsg='Chọn chuyến trước.';renderGroupTab();return;}
-    if(role==='helper'&&!tabs.length){admMsg='Người phụ trách cần tick ít nhất 1 mục được nhập.';renderGroupTab();return;}
+    if(role==='helper'&&!tabs.length){admMsg='Người hỗ trợ cần tick ít nhất 1 mục được nhập.';renderGroupTab();return;}
     let tn='';admGroups.some(g=>((admOv[g.id]||{}).trips||[]).some(t=>t.id===tid&&(tn=t.name+' ('+g.name+')')));
-    const cur=(window.PERM||[]).find(r=>r.trip_id===tid&&r.email===em&&(r.role==='leader'||r.role==='helper')),rl=role==='leader'?'Thủ quỹ':'Người phụ trách';
+    const cur=(window.PERM||[]).find(r=>r.trip_id===tid&&r.email===em&&(r.role==='leader'||r.role==='helper')),rl=role==='leader'?'Thủ quỹ':'Người hỗ trợ';
     const go=async()=>{admBusy=true;renderGroupTab();const {error}=await sb.rpc('set_trip_person',{tid,p_email:em,p_role:role,p_tabs:tabs});admBusy=false;
       admMsg=error?'Chưa gán được: '+(ERR_VN[error.message]||error.message):`OK:Đã gán ${em} làm ${rl} của chuyến ${tn}.`;if(!error)window.PADD={r:role};
       toast(admMsg.replace(/^OK:/,''));renderGroupTab();if(!error){await admLoadPerm();try{admLoadAcc();}catch(e){}}};
-    if(cur)ask(`${em} đang là ${cur.role==='leader'?'Thủ quỹ':'Người phụ trách'} của chuyến ${tn}. Đổi thành ${rl}${role==='helper'?' ('+tabs.map(k=>TAB_NAME[k]).join(', ')+')':''}?`,{title:'Đổi vai trò?',ok:'Đổi'},go);else go();return;}
+    if(cur)ask(`${em} đang là ${cur.role==='leader'?'Thủ quỹ':'Người hỗ trợ'} của chuyến ${tn}. Đổi thành ${rl}${role==='helper'?' ('+tabs.map(k=>TAB_NAME[k]).join(', ')+')':''}?`,{title:'Đổi vai trò?',ok:'Đổi'},go);else go();return;}
   if(a==='prm2'){const em=b.dataset.e,tid=b.dataset.t,tn=b.dataset.n;
     ask(`Gỡ quyền của ${em} khỏi chuyến "${tn}"? Người này sẽ không sửa được chuyến nữa.`,{title:'Gỡ quyền?',ok:'Gỡ',danger:true},async()=>{admBusy=true;renderGroupTab();
       const {error}=await sb.rpc('remove_trip_person',{tid,p_email:em});admBusy=false;admMsg=error?'Chưa gỡ được: '+(ERR_VN[error.message]||error.message):`OK:Đã gỡ ${em} khỏi chuyến "${tn}".`;
@@ -4243,7 +4293,7 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
 function fmtAudit(a,showGroup){
   const d=a.detail||{},n=esc(a.entity_name||''),g=showGroup&&a.group_name?` <span class="hint" style="min-height:0">· nhóm "${esc(a.group_name)}"</span>`:'';
   const who=a.actor_email?esc(a.actor_email):'Hệ thống',amt=d.amount!=null?' ('+fmt(+d.amount)+')':'',chg=d.from!=null&&d.amount!=null?` (${fmt(+d.from)} → ${fmt(+d.amount)})`:amt;
-  const rl=x=>x==='leader'?'leader':'người phụ trách'+(d.tabs&&d.tabs.length?' ('+d.tabs.map(k=>TAB_NAME[k]||k).join(', ')+')':'');
+  const rl=x=>x==='leader'?'leader':'người hỗ trợ'+(d.tabs&&d.tabs.length?' ('+d.tabs.map(k=>TAB_NAME[k]||k).join(', ')+')':'');
   const K=a.entity+'/'+a.action;
   const m={'admin/code_settings':`đổi cài đặt <b>${n}</b>: mặc định ${d.old_enabled==null?'':(d.old_enabled?'bật':'tắt')+' '+d.old_days+' ngày → '}<b>${d.enabled?'bật':'tắt'}</b>, hạn <b>${esc(String(d.days))} ngày</b>`,'group/create':`tạo nhóm <b>${n}</b>`,'group/rename':`đổi tên nhóm <b>${esc(d.from||'')}</b> thành <b>${esc(d.to||'')}</b>`,'group/delete':`xoá hẳn nhóm <b>${n}</b>`,'group/trash':`chuyển nhóm <b>${n}</b> vào thùng rác`,'group/restore':`khôi phục nhóm <b>${n}</b>`,
     'trip/create':`tạo chuyến <b>${n}</b>`,'trip/rename':`đổi tên chuyến <b>${esc(d.from||'')}</b> thành <b>${esc(d.to||'')}</b>`,'trip/delete':d.purge?`xoá hẳn chuyến <b>${n}</b>`:`chuyển chuyến <b>${n}</b> vào thùng rác`,'trip/restore':`khôi phục chuyến <b>${n}</b>`,'trip/edit':`sửa chuyến <b>${n}</b>`,
@@ -4270,7 +4320,7 @@ function renderTripExtra(){
   if(PV_TOKEN||!window.supabase||!sbSession||!sbGroup){el.innerHTML='';return;}
   const t=trip(),r=roleOf(),cl=isClosed(),ed=canEditAny(),ld=canLead(),synced=syncedSet.has(t.id)&&!t.ph;
   if(t.ph&&(syncState==='connecting'||syncState==='slow')){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">⏳ Đang tải các chuyến của nhóm “${esc(sbGroup.name)}”…${syncState==='slow'?' Mạng đang chậm, chờ thêm chút.':''}</div></div>`;return;}
-  if(t.ph){el.innerHTML=sbGroup.can_create?`<div class="gcard"><div class="row" style="align-items:center;gap:8px"><div class="hint" style="min-height:0;flex:1 1 auto">Nhóm chưa có chuyến nào. Chuyến đã xoá xem ở Thùng rác.</div><button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác chuyến</button></div></div>`:`<div class="gcard"><div class="hint" style="min-height:0">Nhóm này chưa có chuyến nào bạn xem được.</div></div>`;return;}
+  if(t.ph){el.innerHTML=sbGroup.can_create?`<div class="gcard"><div class="row" style="align-items:center;gap:8px"><div class="hint" style="min-height:0;flex:1 1 auto">Nhóm chưa có chuyến nào. Chuyến đã xoá xem ở Thùng rác.</div><button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button></div></div>`:`<div class="gcard"><div class="hint" style="min-height:0">Nhóm này chưa có chuyến nào bạn xem được.</div></div>`;return;}
   if(!synced){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">Chuyến này đang được gửi lên nhóm…</div></div>`;return;}
   if(paidFor!==t.id)loadPaid(t.id);
   const hr=canHandleRp();if(hr&&rpFor!==t.id)loadRpCount(t.id);
@@ -4291,6 +4341,8 @@ function renderTripExtra(){
     </div></div>`;}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-tx]');if(!b)return;ev.preventDefault();
   const a=b.dataset.tx,t=trip();
+  if(a==='trash'||a==='trashall'){openTrashAll();return;}   /* v83: mọi nút thùng rác mở Thùng rác tổng */
+  if(a==='trashexp'){openTrashAll('exp');return;}
   if(a==='up'){showTab('group',true);return;}
   if(a==='pickgrp'){if(!sbGroups.length)return;   /* chọn nhóm ngay tại tab Chuyến */
     ask(sbGroups.length>1?'Chọn nhóm để xem các chuyến của nhóm đó.':'Bạn mới có 1 nhóm. Có mã chuyến của nhóm khác thì nhập ở ô bên dưới danh sách chuyến.',{title:'Chọn nhóm',noLabel:'Huỷ',
@@ -4321,11 +4373,11 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
   openDlg(a);});
 
 /* ---------- hộp thoại ---------- */
-const DLG_TITLE={viewers:'Thông tin hiện tại: ai đang xem chuyến',hist:'Lịch sử thay đổi',reports:'Báo sai',report:'Báo sai',code:'Mã chuyến',share:'Link xem công khai',people:'Thủ quỹ và người phụ trách',trash:'Thùng rác chuyến',privacy:'Quyền riêng tư'};
+const DLG_TITLE={viewers:'Thông tin hiện tại: ai đang xem chuyến',hist:'Lịch sử thay đổi',reports:'Báo sai',report:'Báo sai',code:'Mã chuyến',share:'Link xem công khai',people:'Thủ quỹ và người hỗ trợ',trash:'Thùng rác chuyến',tall:'🗑 Thùng rác',privacy:'Quyền riêng tư'};
 function closeDlg(){const m=$('#authModal');if(m)m.hidden=true;dlgKind='';dlgNote='';dlgBusy=false;}
 /* hộp thoại của chuyến (Lịch sử, Báo sai, Mã chuyến…): bấm ra vùng xám bên ngoài = đóng; đang gõ dở thì hỏi trước */
 document.addEventListener('click',ev=>{if(!ev.target||ev.target.id!=='authModal'||!dlgKind)return;
-  const typed=[...$('#authBody').querySelectorAll('input[type="text"],input[type="email"],input[type="search"],input:not([type]),textarea')].some(i=>i.value.trim()&&i.value!==i.defaultValue);
+  const typed=[...$('#authBody').querySelectorAll('input[type="text"],input[type="email"],input[type="search"]:not(#taQ),input:not([type]),textarea')].some(i=>i.value.trim()&&i.value!==i.defaultValue);
   if(!typed){closeDlg();return;}
   ask('Trong hộp này còn nội dung đang gõ chưa gửi / chưa lưu. Đóng và bỏ nội dung đó?',{title:'Bỏ thay đổi?',ok:'Đóng, bỏ thay đổi',noLabel:'Quay lại'},closeDlg);});
 async function openDlg(k,opt){dlgKind=k;dlgNote='';dlgBusy=false;$('#authModal').hidden=false;
@@ -4353,7 +4405,7 @@ function dlgBody(){
       <div class="gcard"><div class="sub">🕘 Ai thêm, sửa, xoá gì (${tAudit.length})</div>
         <div class="hist-scroll">${auditHtml(tAudit,false)}</div>${tAuditMore?'<button type="button" class="btn ghost small" data-dl="hmore">Tải thêm nhật ký cũ hơn</button>':''}</div>`;}
   if(dlgKind==='report'){const it=rpItem;
-    return `<p style="color:var(--muted);font-size:14px;margin:0">${it?`Báo sai khoản <b>${esc(it.label)}</b>. `:''}Lời nhắn được gửi tới thủ quỹ và người phụ trách của chuyến.</p>
+    return `<p style="color:var(--muted);font-size:14px;margin:0">${it?`Báo sai khoản <b>${esc(it.label)}</b>. `:''}Lời nhắn được gửi tới thủ quỹ và người hỗ trợ của chuyến.</p>
       <div class="field"><label for="rpMsg">Sai ở đâu?</label><textarea id="rpMsg" rows="3" maxlength="1000" placeholder="Ví dụ: tôi không ăn tối hôm đó, hoặc số tiền phải là 450.000"></textarea></div>
       <div class="field"><label for="dlgName">Tên của bạn (để thủ quỹ biết ai báo)</label><input type="text" id="dlgName" maxlength="60" value="${esc(myName())}"></div>
       <div class="row"><button type="button" class="btn" data-dl="rpsend"${dis}>Gửi báo sai</button></div>`;}
@@ -4376,24 +4428,25 @@ function dlgBody(){
       :`${s.expired?'<div class="note">Link cũ đã hết hạn.</div>':''}<button type="button" class="btn" data-dl="smake"${dis}>Tạo link xem</button>`}`;}
   if(dlgKind==='viewers'){if(tViewers===null)return wait;
     const V=tViewers,now=Date.now(),on=v=>v.last_active&&(now-new Date(v.last_active))<70*6e4;
-    const VIA={leader:'Thủ quỹ',helper:'Người phụ trách',trip_code:'Vào bằng mã chuyến',group_code:'Vào bằng mã nhóm'};
+    const VIA={leader:'Thủ quỹ',helper:'Người hỗ trợ',trip_code:'Vào bằng mã chuyến',group_code:'Vào bằng mã nhóm'};
     const cnt=k=>V.filter(v=>v.via===k).length;
     return `<div class="gcard"><div class="row" style="gap:6px"><span class="badge on">${V.length} người có quyền xem</span><span class="badge gc-on">${V.filter(on).length} đang dùng</span><span class="badge">${V.filter(v=>v.sessions>0).length} đang đăng nhập</span></div>
-      <div class="hint" style="min-height:0">${cnt('leader')} thủ quỹ · ${cnt('helper')} người phụ trách · ${cnt('trip_code')} vào bằng mã chuyến · ${cnt('group_code')} vào bằng mã nhóm. "Đang dùng" = có hoạt động trong khoảng 1 giờ qua (máy chỉ báo về mỗi giờ một lần nên không chính xác tới từng phút).</div></div>`+
+      <div class="hint" style="min-height:0">${cnt('leader')} thủ quỹ · ${cnt('helper')} người hỗ trợ · ${cnt('trip_code')} vào bằng mã chuyến · ${cnt('group_code')} vào bằng mã nhóm. "Đang dùng" = có hoạt động trong khoảng 1 giờ qua (máy chỉ báo về mỗi giờ một lần nên không chính xác tới từng phút).</div></div>`+
       (V.length?V.map(v=>`<div class="rcard"><div style="overflow-wrap:anywhere"><b>${v.email?esc(v.email):'Khách (không đăng nhập email)'}</b> ${on(v)?'<span class="badge on">Đang dùng</span>':''}</div>
         <div class="hint" style="min-height:0">${VIA[v.via]||esc(v.via)}${v.since?' · từ '+fdt(v.since):''}</div>
         <div class="hint" style="min-height:0">${v.last_active?'Hoạt động '+ago(v.last_active)+' ('+fdt(v.last_active)+')':'Chưa thấy hoạt động'}${v.sessions>0?' · đăng nhập trên '+v.sessions+' thiết bị':v.last_active?' · đã thoát':''}</div></div>`).join(''):'<div class="hint">Chưa có ai.</div>');}
   if(dlgKind==='people'){if(tPeople===null)return wait;
     const ck=(p,k)=>`<label class="tk"><input type="checkbox" data-pt="${esc(p.email)}" value="${k}"${p.tabs.includes(k)?' checked':''}${ld&&p.role==='helper'?'':' disabled'}>${TAB_NAME[k]}</label>`;
     const rows=tPeople.map(p=>`<div class="rcard"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(p.email)}</b>${p.signed_in?'':' <small style="color:var(--muted)">(chưa đăng nhập)</small>'}</div>
-        ${ld?`<select data-pr="${esc(p.email)}" aria-label="Vai trò"><option value="leader"${p.role==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${p.role==='helper'?' selected':''}>Phụ trách</option></select>`:`<span class="badge on">${p.role==='leader'?'Thủ quỹ':'Phụ trách'}</span>`}</div>
+        ${ld?`<select data-pr="${esc(p.email)}" aria-label="Vai trò"><option value="leader"${p.role==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${p.role==='helper'?' selected':''}>Hỗ trợ</option></select>`:`<span class="badge on">${p.role==='leader'?'Thủ quỹ':'Hỗ trợ'}</span>`}</div>
       ${p.role==='helper'?`<div class="tks">${LOCK_TABS.map(k=>ck(p,k)).join('')}</div>`:''}
       ${ld?`<div class="row"><button type="button" class="btn ghost small" data-dl="psave" data-e="${esc(p.email)}"${dis}>Lưu</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-dl="prm" data-e="${esc(p.email)}"${dis}>Gỡ</button></div>`:''}</div>`).join('');
-    return `<p style="color:var(--muted);font-size:14px;margin:0"><b>Thủ quỹ</b> làm được mọi việc của chuyến. <b>Người phụ trách</b> chỉ nhập ở các mục được tick. Mỗi người đăng nhập bằng đúng email này.</p>${rows||'<div class="hint">Chưa có ai.</div>'}
+    return `<p style="color:var(--muted);font-size:14px;margin:0"><b>Thủ quỹ</b> làm được mọi việc của chuyến. <b>Người hỗ trợ</b> chỉ nhập ở các mục được tick. Mỗi người đăng nhập bằng đúng email này.</p>${rows||'<div class="hint">Chưa có ai.</div>'}
       ${ld?`<div class="gcard"><div class="sub">Thêm người</div><div class="field"><label for="dlgEmail">Email</label><input type="email" id="dlgEmail" autocapitalize="off" placeholder="email@gmail.com"></div>
-        <div class="row" style="align-items:center"><select id="dlgRole" aria-label="Vai trò"><option value="helper">Người phụ trách</option><option value="leader">Thủ quỹ</option></select></div>
+        <div class="row" style="align-items:center"><select id="dlgRole" aria-label="Vai trò"><option value="helper">Người hỗ trợ</option><option value="leader">Thủ quỹ</option></select></div>
         <div class="tks" id="dlgTabs">${LOCK_TABS.map(k=>`<label class="tk"><input type="checkbox" value="${k}"${k==='expense'?' checked':''}>${TAB_NAME[k]}</label>`).join('')}</div>
         <div class="row"><button type="button" class="btn" data-dl="padd"${dis}>Thêm</button></div></div>`:''}`;}
+  if(dlgKind==='tall')return taBody();
   if(dlgKind==='trash'){if(tTrash===null)return wait;
     /* v78: chọn nhiều chuyến để khôi phục / xoá hẳn cùng lúc */
     const ids=new Set(tTrash.map(x=>x.id));[...TR_SEL].forEach(i=>{if(!ids.has(i))TR_SEL.delete(i);});const ns=TR_SEL.size,all=tTrash.length&&ns===tTrash.length;
@@ -4411,6 +4464,7 @@ async function dlgRpc(name,args,okMsg){dlgBusy=true;dlgNote='';renderDlg();const
 async function dlgAct(a,b){
   const t=trip(),gid=sbGroup&&sbGroup.id;
   if(a==='close'){closeDlg();return;}
+  if(/^ta(K|R|P|RM|PM)$/.test(a)){taAct(a,b);return;}
   if(a==='cp'){copyText(b.dataset.v,b);return;}
   if(a==='hlog'){tLogOpen=!tLogOpen;renderDlg();return;}
   if(a==='hmore'){const {data}=await sb.rpc('trip_audit',{gid,tid:t.id,p_limit:50,p_before:tAudit.length?tAudit[tAudit.length-1].id:null});tAudit=tAudit.concat(data||[]);tAuditMore=(data||[]).length>=50;renderDlg();return;}
@@ -4525,22 +4579,157 @@ function renderMyPart(c){
     <details class="mp-det"><summary>Xem các khoản bạn tham gia</summary>${personDetail1(g.main,c,g.members)}</details></div>`;}
 document.addEventListener('change',ev=>{const s=ev.target;if(!s||s.id!=='myName')return;const k='chiatien-me-'+R.current;if(s.value)lsSet(k,s.value);else lsDel(k);try{renderMyPart(compute());}catch(e){}});
 
-/* ---------- thùng rác khoản chi ---------- */
-function trashExpense(e){S.trashExp=(S.trashExp||[]).filter(x=>Date.now()-(x.deletedAt||0)<30*864e5);S.trashExp.push(Object.assign(JSON.parse(JSON.stringify(e)),{deletedAt:Date.now()}));}
-function renderExpTrash(){
-  const el=$('#expTrash');if(!el)return;const L=(S.trashExp||[]).filter(x=>Date.now()-(x.deletedAt||0)<30*864e5);
-  if(!L.length){el.innerHTML='';return;}
-  el.innerHTML=`<details class="bulk"><summary>Thùng rác khoản chi (${L.length})</summary><div class="hint" style="min-height:0">Khoản chi đã xoá được giữ 30 ngày.</div>`+
-    L.slice().reverse().map(x=>`<div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(x.desc)}</b> <span class="num">${fmt(x.amount)}</span><div class="hint" style="min-height:0">${dayName(x.dayId)||'(ngày đã xoá)'} · xoá ${fdt(x.deletedAt)}</div></div><button type="button" class="btn ghost small" data-xt="${x.id}">Khôi phục</button></div>`).join('')+`</details>`;}
-document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-xt]');if(!b)return;ev.preventDefault();
-  const x=(S.trashExp||[]).find(y=>y.id===b.dataset.xt);if(!x)return;
-  const e=JSON.parse(JSON.stringify(x));delete e.deletedAt;if(!day(e.dayId)&&S.days[0])e.dayId=S.days[0].id;
-  if(S.expenses.some(y=>y.id===e.id))e.id=uid();
-  S.trashExp=S.trashExp.filter(y=>y!==x);S.expenses.push(e);render();toast('Đã khôi phục khoản chi “'+e.desc+'”.');});
+/* ===================== v83: THÙNG RÁC TỔNG =====================
+   Một chỗ duy nhất (nút 🗑 Thùng rác) gom mọi thứ đã xoá, chia theo loại:
+     Nhóm (quản trị viên) · Chuyến (thủ quỹ / quản trị) — lưu trên máy chủ như cũ (groups.deleted_at, trips.deleted);
+     Ngày · Người đi · Khoản chi · Tiền phòng · Tiền đóng trước — lưu NGAY TRONG dữ liệu chuyến (S.trash), đồng bộ cùng chuyến.
+   Mỗi mục trong chuyến lưu đúng món bị xoá + bối cảnh (ngày, ai có mặt, phòng, khoản chi lúc xoá…) để khôi phục chính xác.
+   KHÔNG GHI ĐÈ: khôi phục chỉ THÊM lại món đã xoá; trùng mã thì cấp mã mới; chỗ cũ không còn (ngày đã xoá, người đã xoá,
+   trùng tên, ngày trùng ngày diễn ra, đã có tiền phòng khác) thì hỏi chọn cách xử lý; khôi phục hàng loạt bỏ qua các mục cần hỏi.
+   Khoản chi tạo SAU lúc xoá người không tự tính người đó khi khôi phục (đưa vào danh sách không tham gia).
+   Tự dọn theo Quản trị > Cài đặt (trash_days, 0 = không tự dọn). Thùng rác khoản chi cũ (S.trashExp) vẫn đọc được. */
+const TK={grp:['👥','Nhóm'],trip:['🧳','Chuyến'],day:['📅','Ngày'],mem:['🧍','Người đi'],exp:['💸','Khoản chi'],room:['🛏','Tiền phòng'],adv:['💰','Tiền đóng trước']};
+const TK_ORDER=['day','mem','exp','room','adv'];
+function trashDays(){const d=+((window.APP_PREFS||{}).trash_days??30);return isNaN(d)?30:d;}
+function trashLeft(at){const d=trashDays();return d>0?Math.max(0,d-Math.floor((Date.now()-at)/864e5)):null;}
+function myMail(){try{return (sbSession&&sbSession.user&&sbSession.user.email)||'';}catch(e){return '';}}
+function withS(D,fn){const k=S;S=D;try{return fn();}finally{S=k;}}
+function trashPut(kind,data,label){const d=trashDays();S.trash=(S.trash||[]).filter(x=>!(d>0)||Date.now()-x.at<d*864e5);
+  S.trash.push({tid:uid(),kind,at:Date.now(),by:myMail(),label:label||'',data:JSON.parse(JSON.stringify(data))});}
+function trashExpense(e){trashPut(e.rooms&&e.rooms.length?'room':'exp',{exp:e,dl:dayName(e.dayId),mids:S.members.map(m=>m.id)},`${e.desc} · ${fmt(e.amount)}`);}
+function memSnap(id){const m=S.members.find(x=>x.id===id);if(!m)return null;const rooms=[];
+  S.expenses.forEach(e=>(e.rooms||[]).forEach(r=>{if((r.people||[]).includes(id))rooms.push({e:e.id,r:r.id,chk:(r.chk||[]).includes(id)});}));
+  return {m,present:S.days.filter(d=>(d.present||[]).includes(id)).map(d=>d.id),excl:S.expenses.filter(e=>(e.excluded||[]).includes(id)).map(e=>e.id),
+    payer:S.expenses.filter(e=>e.payer===id).map(e=>e.id),self:S.expenses.filter(e=>(e.selfRoom||[]).includes(id)).map(e=>e.id),rooms,
+    kids:S.members.filter(x=>x.parent===id).map(x=>x.id),advs:S.advances.filter(a=>a.member===id),eids:S.expenses.map(e=>e.id)};}
+function trashMembers(ids){ids.forEach(id=>{const s=memSnap(id);if(!s)return;const ad=s.advs.reduce((t,a)=>t+a.amount,0);trashPut('mem',s,s.m.name+(ad?` · đã đóng ${fmt(ad)}`:''));});}
+function trashAdvs(advs,label,batch){const names={};advs.forEach(a=>{names[a.member]=nameOf(a.member);});trashPut('adv',{advs,names,batch:batch||''},label);}
+/* quyền khôi phục mục trong chuyến: đúng quyền của mục đó (ngày = thủ quỹ) */
+function inCan(tid,kind){if(!window.supabase)return true;if(isClosed(tid)||!canEditAny(tid))return false;
+  return kind==='day'?canLead(tid):canEditTab({mem:'member',exp:'expense',room:'room',adv:'advance'}[kind]||'expense',tid);}
+/* danh sách mục trong 1 chuyến (gồm thùng rác khoản chi kiểu cũ trashExp) */
+function inItems(D){const L=(D.trash||[]).slice();
+  (D.trashExp||[]).forEach(e=>{const c=JSON.parse(JSON.stringify(e));delete c.deletedAt;L.push({tid:'L'+e.id+'_'+(e.deletedAt||0),kind:c.rooms&&c.rooms.length?'room':'exp',at:e.deletedAt||0,by:'',label:`${c.desc} · ${fmt(c.amount)}`,data:{exp:c},legacy:e});});
+  const d=trashDays();return L.filter(x=>!(d>0)||Date.now()-x.at<d*864e5);}
+function inDrop(D,x){if(x.legacy)D.trashExp=(D.trashExp||[]).filter(y=>y!==x.legacy);else D.trash=(D.trash||[]).filter(y=>y.tid!==x.tid);}
+/* khôi phục 1 mục vào chuyến t. Cần người dùng chọn -> throw {need, choices:[{label,opt}]} */
+function inRestore(t,x,opt){opt=Object.assign({},opt||{});const D=t.data;
+  if(opt.withDay){const y=inItems(D).find(z=>z.tid===opt.withDay);delete opt.withDay;if(y)inRestore(t,y,{nodate:1});return inRestore(t,x,opt);}
+  if(opt.withMem){const ids=opt.withMem;delete opt.withMem;ids.forEach(id=>{const y=inItems(D).find(z=>z.tid===id);if(y)inRestore(t,y,{rename:1});});return inRestore(t,x,opt);}
+  const msg=withS(D,()=>{const ok=()=>new Set(S.members.map(m=>m.id));
+    if(x.kind==='exp'||x.kind==='room'){const e=JSON.parse(JSON.stringify(x.data.exp));let note='';
+      if(!S.days.some(d=>d.id===e.dayId)){
+        if(opt.day)e.dayId=opt.day;
+        else{const dt=inItems(D).find(y=>y.kind==='day'&&y.data.day&&y.data.day.id===e.dayId);
+          throw {need:`Ngày của khoản này (${x.data.dl||'ngày cũ'}) đã bị xoá. ${dt?'Khôi phục cả ngày đó, hoặc chọn ngày khác để đưa khoản vào:':'Chọn ngày để đưa khoản vào:'}`,
+            choices:(dt?[{label:'Khôi phục cả '+(x.data.dl||dt.label||'ngày đó'),opt:{withDay:dt.tid}}]:[]).concat(S.days.map(d=>({label:'Đưa vào '+d.name,opt:{day:d.id}})))};}}
+      if(x.kind==='room'&&!opt.dupOk&&S.expenses.some(y=>y.dayId===e.dayId&&y.rooms&&y.rooms.length))
+        throw {need:`${dayName(e.dayId)} đã có khoản tiền phòng khác. Khôi phục sẽ thành 2 khoản tiền phòng trong cùng ngày (sau đó dùng "Gộp tiền phòng" để giữ 1).`,choices:[{label:'Vẫn khôi phục',opt:Object.assign({},opt,{dupOk:1})}]};
+      if(S.expenses.some(y=>y.id===e.id))e.id=uid();
+      const has=ok(),mids=x.data.mids?new Set(x.data.mids):null;e.excluded=(e.excluded||[]).filter(i=>has.has(i));
+      if(mids)S.members.forEach(m=>{if(!mids.has(m.id)&&!e.excluded.includes(m.id))e.excluded.push(m.id);});
+      if(e.payer&&e.payer!=='fund'&&!has.has(e.payer)){e.payer='fund';note=' Người chi đã bị xoá nên tính là chi từ quỹ.';}
+      (e.rooms||[]).forEach(r=>{r.people=(r.people||[]).filter(i=>has.has(i));if(r.chk)r.chk=r.chk.filter(i=>has.has(i));});if(e.selfRoom)e.selfRoom=e.selfRoom.filter(i=>has.has(i));
+      S.expenses.push(e);return `Đã khôi phục ${x.kind==='room'?'tiền phòng':'khoản chi'} “${e.desc}” vào ${dayName(e.dayId)}.${note}`;}
+    if(x.kind==='day'){const d=JSON.parse(JSON.stringify(x.data.day));if(S.days.some(y=>y.id===d.id))return 'Ngày này đã có sẵn.';
+      const has=ok();d.present=(d.present||[]).filter(i=>has.has(i));let idx=Math.min(x.data.idx??S.days.length,S.days.length),note='';
+      if(d.date&&S.days.some(y=>y.date===d.date)){if(!opt.nodate)throw {need:`Chuyến đã có ngày khác trùng ngày diễn ra ${dmy(d.date)}.`,choices:[{label:'Khôi phục, bỏ trống ngày diễn ra',opt:{nodate:1}}]};d.date='';note=' Đã bỏ trống ngày diễn ra vì trùng.';}
+      if(d.date){const i=S.days.findIndex(y=>y.date&&y.date>d.date);idx=i<0?S.days.length:i;}
+      S.days.splice(idx,0,d);try{syncDayNames();}catch(e){}return `Đã khôi phục ${d.name}.${note}`;}
+    if(x.kind==='mem'){const s=x.data,m=JSON.parse(JSON.stringify(s.m));if(S.members.some(y=>y.id===m.id))return `${m.name} đã có sẵn trong chuyến.`;
+      if(S.members.some(y=>fzN(y.name).trim()===fzN(m.name).trim())){if(!opt.rename)throw {need:`Chuyến đã có người tên “${m.name}”.`,choices:[{label:`Thêm lại với tên “${m.name} (2)”`,opt:{rename:1}}]};
+        let k=2;while(S.members.some(y=>fzN(y.name).trim()===fzN(m.name+' ('+k+')').trim()))k++;m.name=m.name+' ('+k+')';}
+      if(m.parent&&!S.members.some(y=>y.id===m.parent))delete m.parent;S.members.push(m);const eids=new Set(s.eids||[]);
+      S.days.forEach(d=>{if((s.present||[]).includes(d.id)&&!(d.present||[]).includes(m.id))(d.present=d.present||[]).push(m.id);});
+      S.expenses.forEach(e=>{const was=eids.has(e.id);e.excluded=e.excluded||[];
+        if((!was||(s.excl||[]).includes(e.id))&&!e.excluded.includes(m.id))e.excluded.push(m.id);
+        if(was&&(s.payer||[]).includes(e.id)&&e.payer==='fund')e.payer=m.id;
+        if(was&&(s.self||[]).includes(e.id)){e.selfRoom=e.selfRoom||[];if(!e.selfRoom.includes(m.id))e.selfRoom.push(m.id);}});
+      (s.rooms||[]).forEach(q=>{const e=S.expenses.find(y=>y.id===q.e),r=e&&(e.rooms||[]).find(y=>y.id===q.r);if(!r||e.rooms.some(y=>(y.people||[]).includes(m.id)))return;r.people.push(m.id);if(q.chk)(r.chk=r.chk||[]).push(m.id);});
+      (s.kids||[]).forEach(k=>{const c=S.members.find(y=>y.id===k);if(c&&!c.parent)c.parent=m.id;});
+      let na=0;(s.advs||[]).forEach(a=>{if(!S.advances.some(y=>y.id===a.id)){S.advances.push(JSON.parse(JSON.stringify(a)));na++;}});
+      return `Đã khôi phục ${m.name}${na?` cùng ${na} lần đóng tiền`:''}.`;}
+    if(x.kind==='adv'){const A=x.data.advs||[],has=ok(),miss=[...new Set(A.map(a=>a.member))].filter(i=>!has.has(i));
+      if(miss.length&&!opt.skipMiss){const inT=inItems(D).filter(y=>y.kind==='mem'&&y.data.m&&miss.includes(y.data.m.id)),nm=miss.map(i=>(x.data.names||{})[i]||'?').join(', ');
+        const ch=(inT.length?[{label:'Khôi phục cả người đó',opt:{withMem:inT.map(y=>y.tid)}}]:[]).concat(A.some(a=>has.has(a.member))?[{label:'Chỉ phần của người còn trong chuyến',opt:{skipMiss:1}}]:[]);
+        throw {need:`${nm} đã bị xoá khỏi chuyến.`+(ch.length?' Chọn cách khôi phục:':' Hãy khôi phục người đó trước.'),choices:ch};}
+      let n=0,sum=0;A.forEach(a=>{if(!has.has(a.member)||S.advances.some(y=>y.id===a.id))return;S.advances.push(JSON.parse(JSON.stringify(a)));n++;sum+=a.amount;});
+      return n?`Đã khôi phục ${n} lần đóng tiền (${fmt(sum)}).`:'Các khoản đóng này đã có sẵn.';}
+    return 'Không rõ loại mục.';});
+  inDrop(D,x);return msg;}
+/* ----- hộp thoại Thùng rác tổng ----- */
+var TA={k:'all',q:'',trip:'',sel:new Set(),grp:null,trips:null,loading:false};
+function openTrashAll(kind){dlgKind='tall';dlgNote='';dlgBusy=false;TA.k=kind||'all';TA.q='';TA.trip='';TA.sel=new Set();$('#authModal').hidden=false;renderDlg();taLoad();}
+async function taLoad(){if(!sb||!sbSession||isAnon()){TA.grp=[];TA.trips=[];renderDlg();return;}TA.loading=true;renderDlg();
+  const gs=(sbGroups||[]).filter(g=>sbAdmin||g.can_create);
+  const [gr,...ts]=await Promise.all([sbAdmin?sb.rpc('admin_group_trash'):Promise.resolve({data:[]})].concat(gs.map(g=>sb.rpc('trip_trash',{gid:g.id}).then(r=>({g,r})))));
+  TA.grp=gr&&!gr.error?gr.data||[]:[];TA.trips=[];ts.forEach(({g,r})=>{(r&&r.data||[]).forEach(x=>TA.trips.push(Object.assign({},x,{gid:g.id,gname:g.name})));});
+  TA.loading=false;if(dlgKind==='tall')renderDlg();}
+function taRows(){const rows=[],gn=sbGroup?sbGroup.name:'';
+  (TA.grp||[]).forEach(g=>rows.push({key:'g:'+g.id,kind:'grp',name:g.name,path:g.trips+' chuyến bên trong',at:Date.parse(g.deleted_at)||0,by:g.deleted_by||'',left:null,gid:g.id,src:'grp',can:!!sbAdmin}));
+  (TA.trips||[]).forEach(x=>rows.push({key:'t:'+x.id,kind:'trip',name:x.name,path:'Nhóm '+x.gname,at:Date.parse(x.deleted_at)||0,by:x.deleted_by_email||'',left:x.days_left,gid:x.gid,tid:x.id,src:'trip',can:true}));
+  (R.trips||[]).forEach(t=>{if(t.ph||!t.data)return;inItems(t.data).forEach(x=>{const dl=x.data&&x.data.exp?(withS(t.data,()=>dayName(x.data.exp.dayId))||x.data.dl||'ngày đã xoá'):'';
+    rows.push({key:'i:'+t.id+':'+x.tid,kind:x.kind,name:x.label||TK[x.kind][1],path:[gn,t.name,dl].filter(Boolean).join(' › '),at:x.at,by:x.by,left:trashLeft(x.at),tid:t.id,tname:t.name,src:'in',x,t,can:inCan(t.id,x.kind)});});});
+  return rows.sort((a,b)=>(b.at||0)-(a.at||0));}
+function taBody(){const all=taRows(),dis=dlgBusy?' disabled':'',cnt=k=>all.filter(r=>k==='all'||r.kind===k).length;
+  const kinds=['all','grp','trip','day','mem','exp','room','adv'].filter(k=>k==='all'||cnt(k)||TA.k===k);
+  const trips=[...new Map(all.filter(r=>r.tid).map(r=>[r.tid,r.tname||r.name])).entries()];
+  const L=all.filter(r=>(TA.k==='all'||r.kind===TA.k)&&(!TA.trip||r.tid===TA.trip)&&fz(r.name+' '+r.path+' '+(r.by||'')+' '+TK[r.kind][1],TA.q));
+  [...TA.sel].forEach(k=>{if(!L.some(r=>r.key===k))TA.sel.delete(k);});const ns=TA.sel.size,allSel=L.length&&L.every(r=>TA.sel.has(r.key));
+  const d=trashDays();
+  return `<div class="ta-head"><div class="hint" style="min-height:0">${d>0?`Mục đã xoá được giữ ${d} ngày rồi tự dọn.`:'Mục đã xoá được giữ cho tới khi bấm Xoá hẳn.'} Mục bên trong chuyến (ngày, người đi, khoản chi…) hiện theo nhóm đang mở${sbGroup?` “${esc(sbGroup.name)}”`:''}.${TA.loading?' Đang tải…':''}</div>
+    <div class="ta-kinds">${kinds.map(k=>`<button type="button" class="ta-k" data-dl="taK" data-k="${k}" aria-pressed="${TA.k===k}">${k==='all'?'Tất cả':TK[k][0]+' '+TK[k][1]} <small>${cnt(k)}</small></button>`).join('')}</div>
+    <div class="row" style="gap:6px"><div class="field" style="flex:1 1 180px"><input type="search" id="taQ" value="${esc(TA.q)}" placeholder="🔍 Tìm tên, chuyến, người xoá" autocomplete="off" aria-label="Tìm trong thùng rác"></div>
+      ${trips.length>1?`<div class="field" style="flex:1 1 150px"><select id="taTrip" aria-label="Lọc theo chuyến"><option value="">Mọi chuyến</option>${trips.map(([id,n])=>`<option value="${esc(id)}"${TA.trip===id?' selected':''}>${esc(n)}</option>`).join('')}</select></div>`:''}</div>
+    ${L.length?`<div class="tr-bulk"><label class="tk"><input type="checkbox" data-tas="*"${allSel?' checked':''}${dis}> Chọn tất cả (${L.length})</label><span class="tr-bulk-b"><button type="button" class="btn small" data-dl="taRM"${ns&&!dlgBusy?'':' disabled'}>Khôi phục${ns?' ('+ns+')':''}</button><button type="button" class="btn danger-o small" data-dl="taPM"${ns&&!dlgBusy?'':' disabled'}>Xoá hẳn${ns?' ('+ns+')':''}</button></span></div>`:''}</div>`+
+    (L.length?`<div class="ta-list">`+L.map(r=>`<div class="ta-row${TA.sel.has(r.key)?' sel':''}"><label class="tr-chk"><input type="checkbox" data-tas="${esc(r.key)}"${TA.sel.has(r.key)?' checked':''}${dis}><span class="ta-ic" title="${TK[r.kind][1]}">${TK[r.kind][0]}</span>
+      <span class="ta-main"><b>${fzMark(r.name,TA.q)}</b><span class="hint">${TK[r.kind][1]} · ${fzMark(r.path,TA.q)}</span><span class="hint">Xoá ${r.at?fdt(r.at):'?'}${r.by?' · bởi '+esc(r.by):''}${r.left==null?'':` · còn ${r.left} ngày`}</span></span></label>
+      <span class="ta-btns"><button type="button" class="btn small" data-dl="taR" data-k="${esc(r.key)}"${r.can&&!dlgBusy?'':' disabled'}${r.can?'':' title="Bạn không có quyền khôi phục mục này"'}>Khôi phục</button><button type="button" class="btn ghost small ta-del" data-dl="taP" data-k="${esc(r.key)}"${r.can&&!dlgBusy?'':' disabled'}>Xoá hẳn</button></span></div>`).join('')+`</div>`
+      :`<div class="hint">${TA.loading?'Đang tải…':all.length?'Không có mục nào khớp.':'Thùng rác trống.'}</div>`);}
+/* khôi phục / xoá hẳn: 1 mục (có hỏi khi cần chọn) hoặc nhiều mục (bỏ qua mục cần chọn) */
+async function taRestore(rows,interactive){const done=[],skip=[],srvG=new Set();
+  const ord=r=>r.src==='grp'?0:r.src==='trip'?1:2+TK_ORDER.indexOf(r.kind);rows=rows.slice().sort((a,b)=>ord(a)-ord(b));
+  for(const r of rows){if(!r.can){skip.push(r.name+': không có quyền');continue;}
+    if(r.src==='grp'||r.src==='trip'){const {error}=await sb.rpc(r.src==='grp'?'restore_group':'restore_trip',r.src==='grp'?{gid:r.gid}:{gid:r.gid,tid:r.tid});
+      if(error)skip.push(r.name+': '+(error.message==='group_in_trash'?'nhóm của chuyến đang trong thùng rác, khôi phục nhóm trước':(ERR_VN[error.message]||error.message)));else{done.push(r);srvG.add(r.gid);TA.sel.delete(r.key);}continue;}
+    const x=inItems(r.t.data).find(y=>y.tid===r.x.tid);if(!x){TA.sel.delete(r.key);continue;}
+    try{const m=inRestore(r.t,x,{});done.push(r);TA.sel.delete(r.key);if(interactive)toast(m);}
+    catch(c){if(!c||!c.need)throw c;
+      if(interactive){ask(c.need,{title:'Khôi phục “'+r.name+'”',noLabel:'Huỷ',choices:c.choices.map(o=>({label:o.label,fn:()=>{try{const m=inRestore(r.t,x,o.opt);TA.sel.delete(r.key);save();render();toast(m);}catch(c2){toast(c2&&c2.need?c2.need:'Chưa khôi phục được.');}renderDlg();}}))});}
+      else skip.push(r.name+': cần chọn cách khôi phục (bấm Khôi phục riêng mục này)');}}
+  if(rows.some(r=>r.src==='in'))save();
+  if(srvG.size){if(sbGroup&&srvG.has(sbGroup.id))connectGroup(sbGroup);try{await loadGroups();}catch(e){}if(sbAdmin)try{admLoad();}catch(e){}}
+  try{render();}catch(e){}return {done,skip};}
+async function taPurge(rows){const done=[],skip=[];
+  for(const r of rows){if(!r.can){skip.push(r.name+': không có quyền');continue;}
+    if(r.src==='grp'||r.src==='trip'){const {error}=await sb.rpc(r.src==='grp'?'purge_group':'purge_trip',r.src==='grp'?{gid:r.gid}:{gid:r.gid,tid:r.tid});if(error)skip.push(r.name+': '+(ERR_VN[error.message]||error.message));else{done.push(r);TA.sel.delete(r.key);}continue;}
+    const x=inItems(r.t.data).find(y=>y.tid===r.x.tid);if(x)inDrop(r.t.data,x);done.push(r);TA.sel.delete(r.key);}
+  if(rows.some(r=>r.src==='in'))save();return {done,skip};}
+async function taAct(a,b){const rows=taRows(),one=b&&b.dataset.k?rows.find(r=>r.key===b.dataset.k):null;
+  if(a==='taK'){TA.k=b.dataset.k;renderDlg();return;}
+  if(a==='taR'&&one){dlgBusy=true;renderDlg();const res=await taRestore([one],true);dlgBusy=false;
+    dlgNote=res.skip.length?'Chưa khôi phục được: '+res.skip.join('; '):'';if(res.done.length&&one.src!=='in')dlgNote='OK:Đã khôi phục “'+one.name+'”.';await taLoad();renderDlg();return;}
+  if(a==='taP'&&one){ask(`Xoá hẳn “${one.name}” (${TK[one.kind][1]})? Không khôi phục được nữa.`,{title:'Xoá hẳn?',ok:'Xoá hẳn',danger:true},async()=>{dlgBusy=true;renderDlg();const res=await taPurge([one]);dlgBusy=false;
+      dlgNote=res.skip.length?'Chưa xoá được: '+res.skip.join('; '):'OK:Đã xoá hẳn “'+one.name+'”.';await taLoad();renderDlg();});return;}
+  if(a==='taRM'||a==='taPM'){const sel=rows.filter(r=>TA.sel.has(r.key));if(!sel.length)return;const purge=a==='taPM';
+    const sum=Object.entries(sel.reduce((o,r)=>{o[TK[r.kind][1]]=(o[TK[r.kind][1]]||0)+1;return o;},{})).map(([k,n])=>n+' '+k.toLowerCase()).join(', ');
+    const run=async()=>{dlgBusy=true;renderDlg();const res=purge?await taPurge(sel):await taRestore(sel,false);dlgBusy=false;
+      dlgNote=(res.done.length?`OK:Đã ${purge?'xoá hẳn':'khôi phục'} ${res.done.length}/${sel.length} mục.`:'')+(res.skip.length?(res.done.length?' ':'')+'Bỏ qua: '+res.skip.join('; '):'');
+      if(!res.done.length&&res.skip.length)dlgNote='Chưa làm được: '+res.skip.join('; ');await taLoad();renderDlg();};
+    if(purge)ask(`Xoá hẳn ${sel.length} mục (${sum})? Không khôi phục được nữa.`,{title:`Xoá hẳn ${sel.length} mục?`,ok:'Xoá hẳn',danger:true,input:{match:'XOA',placeholder:'Gõ XOA để xác nhận'}},run);
+    else ask(`Khôi phục ${sel.length} mục (${sum})? Mục nào cần chọn cách khôi phục (ngày / người đã xoá, trùng tên…) sẽ được bỏ qua để bạn khôi phục riêng.`,{title:`Khôi phục ${sel.length} mục?`,ok:'Khôi phục'},run);return;}}
+document.addEventListener('change',ev=>{const b=ev.target;if(!b||dlgKind!=='tall')return;
+  if(b.dataset&&b.dataset.tas!=null){const v=b.dataset.tas;if(v==='*'){const L=[...document.querySelectorAll('#authBody [data-tas]')].map(x=>x.dataset.tas).filter(k=>k!=='*');if(b.checked)L.forEach(k=>TA.sel.add(k));else TA.sel.clear();}
+    else if(b.checked)TA.sel.add(v);else TA.sel.delete(v);renderDlg();return;}
+  if(b.id==='taTrip'){TA.trip=b.value;renderDlg();}});
+document.addEventListener('input',ev=>{const b=ev.target;if(!b||b.id!=='taQ'||dlgKind!=='tall')return;TA.q=b.value;const p=b.selectionStart;renderDlg();const n=$('#taQ');if(n){n.focus();try{n.setSelectionRange(p,p);}catch(e){}}});
+/* tab Khoản chi: chỉ còn nút mở Thùng rác tổng (lọc khoản chi + tiền phòng) */
+function renderExpTrash(){const el=$('#expTrash');if(!el)return;const n=inItems(S).filter(x=>x.kind==='exp'||x.kind==='room').length;
+  el.innerHTML=n?`<div class="row"><button type="button" class="btn ghost small" data-tx="trashexp">🗑 Thùng rác (${n} khoản chi đã xoá)</button></div>`:'';}
 
 const PRIVACY_HTML=`<div class="privacy">
 <h4>Ai xem được dữ liệu chuyến đi của bạn?</h4>
-<ul><li>Thủ quỹ và người phụ trách của chuyến: xem và sửa theo quyền được cấp.</li>
+<ul><li>Thủ quỹ và người hỗ trợ của chuyến: xem và sửa theo quyền được cấp.</li>
 <li>Người có mã hoặc link của chuyến: chỉ xem, và chỉ thấy chuyến đó.</li>
 <li>Link công khai: chỉ thấy Tổng kết và Báo cáo.</li>
 <li>Quản trị viên hệ thống: có thể xem mọi dữ liệu để vận hành và hỗ trợ.</li></ul>
@@ -4550,7 +4739,7 @@ const PRIVACY_HTML=`<div class="privacy">
 <ul><li>Xem ai đã thêm, sửa, xoá khoản chi nào và lúc nào.</li>
 <li>Báo sai một khoản chi cho thủ quỹ.</li>
 <li>Yêu cầu xoá hoặc ẩn tên của bạn: liên hệ thủ quỹ của chuyến hoặc quản trị viên.</li>
-<li>Tải dữ liệu chuyến về máy để tự giữ (thủ quỹ và người phụ trách).</li></ul>
+<li>Tải dữ liệu chuyến về máy để tự giữ (thủ quỹ và người hỗ trợ).</li></ul>
 <p>Chúng tôi không bán và không chia sẻ dữ liệu cho bên thứ ba.</p></div>`;
 
 /* ---- sao lưu và khôi phục bằng file ---- */

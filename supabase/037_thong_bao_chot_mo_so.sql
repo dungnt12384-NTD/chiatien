@@ -1,0 +1,2 @@
+-- 037: email báo khi chốt / mở lại sổ (trigger trg_notify_trip_state -> Edge Function notify-item, kind=trip; chống gửi trùng bằng cột trips.state_notified).
+-- Quay lại: drop trigger trg_notify_trip_state on public.trips; drop function public.notify_trip_state();

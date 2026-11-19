@@ -3542,7 +3542,10 @@ function makeAdapter(gid){
   const fetchAll=async()=>{
     const [a,b]=await Promise.all([sb.from('trips').select('id,data,rev').eq('group_id',gid).eq('deleted',false),sb.rpc('my_trip_roles',{gid})]);
     if(a.error)throw sbErr(a.error);
-    if(!b.error){const m=new Map();(b.data||[]).forEach(r=>m.set(r.trip_id,{role:r.role,tabs:r.tabs||[],hide_in_group:r.hide_in_group,closed_at:r.closed_at}));tripRoles=m;}
+    if(!b.error){const old=tripRoles,m=new Map();(b.data||[]).forEach(r=>m.set(r.trip_id,{role:r.role,tabs:r.tabs||[],hide_in_group:r.hide_in_group,closed_at:r.closed_at}));tripRoles=m;
+      /* v103: người khác chốt / mở lại sổ -> báo ngay và vẽ lại (trước đây phải tải lại trang mới thấy) */
+      try{let chg=false;m.forEach((v,id)=>{const o=old.get(id);if(o&&!!o.closed_at!==!!v.closed_at){const t=R.trips.find(x=>x.id===id);chg=true;toast('Chuyến "'+(t?t.name:'')+'" '+(v.closed_at?'đã được chốt sổ.':'đã được mở lại sổ.'));}});
+        if(chg)setTimeout(()=>{try{applyLocks();render();renderTripExtra();}catch(e){}},0);}catch(e){}}
     return a.data||[];};
   const toSnap=rows=>({metadata:{fromCache:false},docs:rows.map(r=>({id:r.id,rev:r.rev,exists:true,data:()=>r.data}))});
   return {

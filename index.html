@@ -1235,6 +1235,9 @@ html #grpMain .gcard .lv2{box-shadow:none!important}
 .trip-code{margin-top:10px;padding:10px 12px;border:1.5px dashed var(--line);border-radius:18px}
 .trip-code .field{margin:0}
 .hist-scroll{position:relative;overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--surface)}
+button.grp-tag{border:0;font-family:inherit;cursor:pointer;line-height:1.5}
+button.grp-tag:hover{filter:brightness(.95);text-decoration:underline}
+button.grp-tag:empty{display:none}
 .grp-tag:not(:empty){display:inline-block;margin-left:10px;padding:2px 10px;border-radius:999px;font-size:14px;font-weight:600;vertical-align:middle;color:var(--brand,var(--accent));background:color-mix(in srgb,var(--brand,var(--accent)) 12%,transparent)}
 .adm-tools{align-items:center;gap:8px;margin:4px 0 8px}
 .adm-tools .field{margin:0}
@@ -1290,7 +1293,7 @@ html.phone #toast{bottom:calc(82px + env(safe-area-inset-bottom,0px))!important}
   <section class="sec tripsec" data-tab="trip">
     <div class="sec-h">
       <div class="ico"><svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>
-      <div class="grow"><h2>Chuyến đi<span id="tripGrpName" class="grp-tag"></span></h2><p>Chọn chuyến để xem hoặc nhập. Mỗi chuyến tách riêng hoàn toàn</p></div>
+      <div class="grow"><h2>Chuyến đi<button type="button" id="tripGrpName" class="grp-tag" data-tx="pickgrp" title="Bấm để chọn nhóm khác"></button></h2><p>Chọn chuyến để xem hoặc nhập. Mỗi chuyến tách riêng hoàn toàn</p></div>
     </div>
     <div class="sec-b">
       <div class="trips" id="tripTabs" role="tablist"></div>
@@ -3783,7 +3786,7 @@ const auditHtml=(rows,showGroup)=>rows.length?rows.map(a=>fmtAudit(a,showGroup))
 /* ---------- tab Chuyến: khối "Chuyến này" ---------- */
 function renderTripExtra(){
   const el=document.getElementById('tripExtra');if(!el)return;
-  const gn=document.getElementById('tripGrpName');if(gn)gn.textContent=!PV_TOKEN&&sbSession&&sbGroup?sbGroup.name:'';
+  const gn=document.getElementById('tripGrpName');if(gn)gn.textContent=!PV_TOKEN&&sbSession&&sbGroup?sbGroup.name+' ▾':'';
   if(PV_TOKEN||!window.supabase||!sbSession||!sbGroup){el.innerHTML='';return;}
   const t=trip(),r=roleOf(),cl=isClosed(),ed=canEditAny(),ld=canLead(),synced=syncedSet.has(t.id)&&!t.ph;
   if(t.ph){el.innerHTML=sbGroup.can_create?'':`<div class="gcard"><div class="hint" style="min-height:0">Nhóm này chưa có chuyến nào bạn xem được.</div></div>`;return;}
@@ -3808,6 +3811,10 @@ function renderTripExtra(){
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-tx]');if(!b)return;ev.preventDefault();
   const a=b.dataset.tx,t=trip();
   if(a==='up'){showTab('group',true);return;}
+  if(a==='pickgrp'){if(!sbGroups.length)return;   /* chọn nhóm ngay tại tab Chuyến */
+    ask(sbGroups.length>1?'Chọn nhóm để xem các chuyến của nhóm đó.':'Bạn mới có 1 nhóm. Có mã chuyến của nhóm khác thì nhập ở ô bên dưới danh sách chuyến.',{title:'Chọn nhóm',noLabel:'Huỷ',
+      choices:sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,ac=myAccess[g.id],n=ac?(ac.trips||[]).length:g.trips;
+        return {label:(cur?'✓ ':'')+g.name+(n!=null?' · '+n+' chuyến':''),fn:()=>{if(!cur){connectGroup(g);toast('Đang mở nhóm “'+g.name+'”…');}}};})});return;}
   if(a==='me'){showTab('result',true);setTimeout(()=>{const m=$('#myPart');if(m)m.scrollIntoView({behavior:'smooth',block:'start'});},50);return;}
   if(a==='close'||a==='reopen'){const cl=a==='close';
     ask(cl?`Chốt sổ chuyến "${t.name}"? Sau khi chốt, không ai sửa được nữa cho tới khi leader mở lại. Mọi người vẫn xem được.`:`Mở lại sổ chuyến "${t.name}" để sửa tiếp? Việc mở lại được ghi vào lịch sử để mọi người thấy.`,

@@ -3710,8 +3710,12 @@ function requestCard(){
     <div class="row"><button type="button" class="btn" data-q="req">Gửi yêu cầu</button></div></div>`;}
 /* v67: các nút quản lý của chuyến đang mở (dời từ tab Chuyến sang) */
 function tripMngCard(){
-  if(PV_TOKEN||!sbGroup)return '';const t=trip();if(!t||t.ph||!syncedSet.has(t.id))return '';
+  if(PV_TOKEN||!sbGroup)return '';const t=trip();
   const ed=canEditAny(),ld=canLead(),org=sbAdmin||(myAccess[sbGroup.id]&&myAccess[sbGroup.id].is_organizer);
+  /* v73: nhóm chưa / không còn chuyến nào: vẫn có thẻ để chọn chuyến nhóm khác và mở Thùng rác chuyến (khôi phục chuyến đã xoá) */
+  if(!t||t.ph||!syncedSet.has(t.id)){if(!(org||sbGroup.can_create))return '';
+    return `<div class="gcard"><div class="gh"><button type="button" class="mng-pick" data-tx="pickmng" title="Bấm để chọn chuyến"><b>🧰 Quản lý chuyến:</b> <span>nhóm “${esc(sbGroup.name)}” chưa có chuyến ▾</span></button></div>
+      <div class="row tx-row"><button type="button" class="btn ghost small" data-tx="trash">Thùng rác chuyến</button></div></div>`;}
   return `<div class="gcard"><div class="gh"><button type="button" class="mng-pick" data-tx="pickmng" title="Bấm để chọn chuyến khác"><b>🧰 Quản lý chuyến:</b> <span>${esc(t.name)} ▾</span></button></div><div class="row tx-row">
     ${org?'<button type="button" class="btn ghost small" data-tx="viewers">Thông tin hiện tại</button>':''}
     <button type="button" class="btn ghost small" data-tx="hist">Lịch sử thay đổi</button>
@@ -4018,7 +4022,7 @@ function renderTripExtra(){
   if(PV_TOKEN||!window.supabase||!sbSession||!sbGroup){el.innerHTML='';return;}
   const t=trip(),r=roleOf(),cl=isClosed(),ed=canEditAny(),ld=canLead(),synced=syncedSet.has(t.id)&&!t.ph;
   if(t.ph&&(syncState==='connecting'||syncState==='slow')){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">⏳ Đang tải các chuyến của nhóm “${esc(sbGroup.name)}”…${syncState==='slow'?' Mạng đang chậm, chờ thêm chút.':''}</div></div>`;return;}
-  if(t.ph){el.innerHTML=sbGroup.can_create?'':`<div class="gcard"><div class="hint" style="min-height:0">Nhóm này chưa có chuyến nào bạn xem được.</div></div>`;return;}
+  if(t.ph){el.innerHTML=sbGroup.can_create?`<div class="gcard"><div class="row" style="align-items:center;gap:8px"><div class="hint" style="min-height:0;flex:1 1 auto">Nhóm chưa có chuyến nào. Chuyến đã xoá xem ở Thùng rác.</div><button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác chuyến</button></div></div>`:`<div class="gcard"><div class="hint" style="min-height:0">Nhóm này chưa có chuyến nào bạn xem được.</div></div>`;return;}
   if(!synced){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">Chuyến này đang được gửi lên nhóm…</div></div>`;return;}
   if(paidFor!==t.id)loadPaid(t.id);
   const hr=canHandleRp();if(hr&&rpFor!==t.id)loadRpCount(t.id);

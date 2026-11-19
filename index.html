@@ -2118,7 +2118,7 @@ function startEdit(id,scroll){const e=S.expenses.find(x=>x.id===id);if(!e)return
   if(e.rooms&&e.rooms.length){openRoomEditor(e.dayId);return;}
   editing=id;formExcl=new Set(e.excluded);
   amtMode='total';render();$('#expDay').value=e.dayId;$('#expPayer').value=e.payer;$('#expDesc').value=e.desc;$('#expAmount').value=e.amount.toLocaleString('vi-VN');
-  $('#expSubmit').textContent='Lưu thay đổi';$('#expCancel').textContent='Huỷ sửa';renderSplit();
+  $('#expSubmit').textContent='Lưu thay đổi';$('#expCancel').textContent='Huỷ sửa';renderSplit();window.EXP_SNAP=expSig();
   if(scroll!==false){$('#expDesc').scrollIntoView({block:'center',behavior:'smooth'});$('#expDesc').focus();}}
 function copyRoomsFrom(srcId){
   const src=S.expenses.find(e=>e.id===srcId);if(!src)return;
@@ -4194,19 +4194,48 @@ const FX_DEFS=[
      if(!amt&&!note&&!sel&&!bkEdit){done();return;}
      const bits=[amt?'số tiền '+amt:'',note?'tên đợt “'+note+'”':'',sel?sel+' '+(advMode==='main'?'nhóm':'người')+' đã chọn':'',bkEdit?'đang sửa đợt “'+bkEdit+'”':''].filter(Boolean).join(', ');
      if(amt&&sel)ask(`Thu chung nhanh còn dở: ${bits}. Thêm tiền đóng trước khi đóng?`,{title:'Lưu thay đổi?',ok:'Thêm tiền đóng',alt:{label:'Không lưu',fn:done},noLabel:'Quay lại'},()=>{setTimeout(()=>$('#bkAdd').click(),0);});
-     else ask(`Thu chung nhanh còn dở: ${bits}. Bỏ hết và đóng?`,{title:'Bỏ thay đổi?',ok:'Bỏ, đóng lại',noLabel:'Quay lại'},done);}}];
+     else ask(`Thu chung nhanh còn dở: ${bits}. Bỏ hết và đóng?`,{title:'Bỏ thay đổi?',ok:'Bỏ, đóng lại',noLabel:'Quay lại'},done);}},
+  /* các vùng dưới: KHÔNG làm xám, chỉ "bấm ra ngoài = đóng, có thay đổi thì hỏi" */
+  {k:'exp',dim:false,on:()=>curTab==='expense'&&$('#expForm').style.display!=='none',keep:()=>[$('#expForm')],
+   exit:()=>{const done=()=>{resetExpForm();render();};
+     const dirty=editing?expSig()!==window.EXP_SNAP:!!($('#expDesc').value.trim()||$('#expAmount').value.trim());
+     if(!dirty){done();return;}
+     ask(editing?'Khoản chi đang sửa còn thay đổi chưa lưu. Lưu trước khi đóng?':'Khoản chi mới đã nhập nhưng chưa bấm "Thêm khoản chi". Thêm trước khi đóng?',
+       {title:'Lưu thay đổi?',ok:editing?'Lưu thay đổi':'Thêm khoản chi',alt:{label:'Không lưu',fn:done},noLabel:'Quay lại'},
+       ()=>{const f=$('#expForm');setTimeout(()=>{if(f.requestSubmit)f.requestSubmit();else $('#expSubmit').click();},0);});}},
+  {k:'adv',dim:false,on:()=>curTab==='advance'&&!!advDraft,keep:()=>{const b=document.querySelector(`#advList [data-act="togAdv"][data-id="${advDraft.mid}"]`);return [b&&b.closest('.am-wrap')];},
+   exit:()=>{const d=advDraft,done=()=>{advDraft=null;render();};
+     const origs=S.advances.filter(a=>a.member===d.mid);
+     const dirty=!!d.newAmt.trim()||d.rows.length!==origs.length||d.rows.some(r=>!r.old||parseMoney(r.amt)!==r.old.amount||(r.note||'').trim()!==(r.old.note||''));
+     if(!dirty){done();return;}
+     ask(`Tiền đóng của ${nameOf(d.mid)} còn thay đổi chưa lưu. Lưu trước khi đóng?`,{title:'Lưu thay đổi?',ok:'Lưu',alt:{label:'Không lưu',fn:done},noLabel:'Quay lại'},()=>{setTimeout(advDone,0);});}},
+  {k:'ren',dim:false,on:()=>curTab==='member'&&!!renamingId,keep:()=>[document.querySelector('form[data-rename]')],
+   exit:()=>{const f=document.querySelector('form[data-rename]'),v=(f.querySelector('input').value||'').trim().replace(/\s+/g,' '),m=mem(renamingId),done=()=>{renamingId=null;render();};
+     if(!m||!v||v===m.name){done();return;}
+     ask(`Tên “${m.name}” đang sửa thành “${v}” nhưng chưa lưu. Lưu trước khi đóng?`,{title:'Lưu thay đổi?',ok:'Lưu tên',alt:{label:'Không lưu',fn:done},noLabel:'Quay lại'},
+       ()=>{setTimeout(()=>{if(f.requestSubmit)f.requestSubmit();else f.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));},0);});}},
+  {k:'nroom',dim:false,on:()=>curTab==='room'&&!!nrDraft,keep:()=>[$('#roomNew')],
+   exit:()=>{const done=()=>{nrDraft=null;renderRooms();};
+     if(!(nrDraft.price||'').trim()&&!(nrDraft.type||'').trim()){done();return;}
+     ask('Phòng mới đã nhập nhưng chưa bấm "Tạo phòng". Tạo phòng trước khi đóng?',{title:'Lưu thay đổi?',ok:'Tạo phòng',alt:{label:'Không lưu',fn:done},noLabel:'Quay lại'},
+       ()=>{setTimeout(()=>{const b=document.querySelector('#roomNew [data-act="nrCreate"]');if(b)b.click();},0);});}},
+  {k:'eroom',dim:false,on:()=>curTab==='room'&&!swapMode&&(editRooms.size>0||!!pickRoom),
+   keep:()=>{const L=[...new Set([...editRooms,pickRoom].filter(Boolean))].map(id=>document.querySelector(`#roomList [data-card="${id}"]`)).filter(Boolean);return L.length?L:[null];},
+   exit:()=>{editRooms.clear();pickRoom=null;priceWarn=null;renderRooms();}}];
+function expSig(){return [$('#expDay').value,$('#expPayer').value,$('#expDesc').value.trim(),$('#expAmount').value.trim(),amtMode,[...formExcl].sort().join(',')].join('|');}
 function fxCur(){for(const d of FX_DEFS){try{if(d.on()){const keep=d.keep().filter(Boolean);if(keep.length&&keep[0].offsetParent)return {d,keep};}}catch(e){}}return null;}
 const FX_SKIP=new Set(['SCRIPT','STYLE','LINK','TEMPLATE','DATALIST']);
 function fxApply(){document.querySelectorAll('.fx-dim').forEach(e=>e.classList.remove('fx-dim'));
-  const c=fxCur();document.documentElement.classList.toggle('fx-on',!!c);if(!c)return;
+  const c=fxCur(),dim=!!c&&c.d.dim!==false;document.documentElement.classList.toggle('fx-on',dim);if(!dim)return;
   const anc=new Set();c.keep.forEach(e=>{for(let x=e;x&&x!==document.body;x=x.parentElement)anc.add(x);});
   anc.forEach(x=>{const p=x.parentElement;if(!p)return;[...p.children].forEach(s=>{if(anc.has(s)||FX_SKIP.has(s.tagName)||s.classList.contains('modal')||s.id==='toast')return;s.classList.add('fx-dim');});});}
 document.addEventListener('click',ev=>{const c=fxCur();if(!c)return;const t=ev.target;if(!t||!t.closest)return;
-  if(t.closest('.modal')||t.closest('#toast'))return;
+  if(t.closest('.modal')||t.closest('#toast')||document.querySelector('.modal:not([hidden])'))return;   /* đang có hộp hỏi (vd vừa đổi giá phòng) thì để hộp đó xử lý */
+  if(c.d.dim===false&&!t.isConnected)return;
   const inside=c.keep.some(e=>e.contains(t)),sumr=c.d.k==='bulk'&&t.closest('#bulkBox>summary');
   if(inside&&!sumr)return;
   ev.preventDefault();ev.stopPropagation();c.d.exit();},true);
-document.addEventListener('focusin',ev=>{const c=fxCur();if(!c)return;const t=ev.target;
+document.addEventListener('focusin',ev=>{const c=fxCur();if(!c||c.d.dim===false)return;const t=ev.target;
   if(!t||!t.closest||t.closest('.modal')||c.keep.some(e=>e.contains(t)))return;
   const f=c.keep[0].querySelector('input,button,select,summary');if(f)f.focus();});
 $('#bulkBox').addEventListener('toggle',()=>fxApply());

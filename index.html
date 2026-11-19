@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>
 #modal{z-index:120}
+#authModal{background:rgba(60,64,72,.6)!important;-webkit-backdrop-filter:grayscale(1);backdrop-filter:grayscale(1)}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);max-width:min(92vw,420px);padding:10px 16px;border-radius:12px;background:var(--fg);color:var(--bg);font-size:14px;z-index:130;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 html.phone #toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
@@ -3901,6 +3902,11 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
 /* ---------- hộp thoại ---------- */
 const DLG_TITLE={viewers:'Thông tin hiện tại: ai đang xem chuyến',hist:'Lịch sử thay đổi',reports:'Báo sai',report:'Báo sai',code:'Mã chuyến',share:'Link xem công khai',people:'Leader và người phụ trách',trash:'Thùng rác chuyến',privacy:'Quyền riêng tư'};
 function closeDlg(){const m=$('#authModal');if(m)m.hidden=true;dlgKind='';dlgNote='';dlgBusy=false;}
+/* hộp thoại của chuyến (Lịch sử, Báo sai, Mã chuyến…): bấm ra vùng xám bên ngoài = đóng; đang gõ dở thì hỏi trước */
+document.addEventListener('click',ev=>{if(!ev.target||ev.target.id!=='authModal'||!dlgKind)return;
+  const typed=[...$('#authBody').querySelectorAll('input[type="text"],input[type="email"],input[type="search"],input:not([type]),textarea')].some(i=>i.value.trim()&&i.value!==i.defaultValue);
+  if(!typed){closeDlg();return;}
+  ask('Trong hộp này còn nội dung đang gõ chưa gửi / chưa lưu. Đóng và bỏ nội dung đó?',{title:'Bỏ thay đổi?',ok:'Đóng, bỏ thay đổi',noLabel:'Quay lại'},closeDlg);});
 async function openDlg(k,opt){dlgKind=k;dlgNote='';dlgBusy=false;$('#authModal').hidden=false;
   const t=trip(),gid=sbGroup&&sbGroup.id;renderDlg();
   if(k==='privacy')return;

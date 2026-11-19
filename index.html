@@ -1224,6 +1224,10 @@ html .btn.is-open{color:#ffe36e!important}
 .lv2.mng-panel{padding:10px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--brand,var(--accent)) 9%,var(--surface))!important;border:1.5px solid color-mix(in srgb,var(--brand,var(--accent)) 40%,var(--line))}
 html .gcard .gsub.lv3{background:color-mix(in srgb,var(--h) 7%,var(--surface))!important;border:1px solid color-mix(in srgb,var(--h) 30%,var(--line))!important;border-left:4px solid var(--h)!important;border-radius:10px!important;padding:10px!important}
 .gsub.lv3>.sub{color:var(--h)!important;font-weight:700}
+/* chế độ tập trung (nguyên tắc chung): đang mở / thao tác mục nào thì mục khác xám đi; vẫn bấm được để chuyển sang */
+#grpMain.has-focus .dimable:not(.focus):not(:has(.focus)),.sec.grp-focus .gcard:not(#grpMain .gcard){opacity:.35;filter:grayscale(1);transition:opacity .15s,filter .15s}
+#grpMain.has-focus .dimable:not(.focus):not(:has(.focus)):hover,.sec.grp-focus .gcard:not(#grpMain .gcard):hover{opacity:.75;filter:none}
+.mng-panel:has(.lv3:focus-within) .lv3:not(:focus-within){opacity:.4;filter:grayscale(1);transition:opacity .15s}
 .grp-tag:not(:empty){display:inline-block;margin-left:10px;padding:2px 10px;border-radius:999px;font-size:14px;font-weight:600;vertical-align:middle;color:var(--brand,var(--accent));background:color-mix(in srgb,var(--brand,var(--accent)) 12%,transparent)}
 .adm-tools{align-items:center;gap:8px;margin:4px 0 8px}
 .adm-tools .field{margin:0}
@@ -3490,9 +3494,9 @@ function paintAccount(){
     `<div class="row"><button type="button" class="btn ghost" data-q="sync">Đồng bộ lại ngay</button><button type="button" class="btn danger-o" data-q="logout">${isAnon()?'Thoát':'Đăng xuất'}</button></div>`;}
 function groupsCard(){
   if(!sbGroups.length)return `<div class="gcard"><div class="gh"><b>🧳 Chuyến đi của bạn</b></div><div class="hint" style="min-height:0">${isAnon()?'Mã bạn đã nhập hết hạn, bị khoá hoặc đã đổi. Hỏi người tổ chức mã mới rồi nhập bên dưới.':'Bạn chưa tham gia chuyến nào. Nhập mã chuyến bên dưới, hoặc xin quyền tổ chức chuyến đi.'}</div></div>`;
-  return `<div class="gcard"><div class="gh"><b>👥 ${sbGroups.length>1?'Nhóm của bạn':'Nhóm'}</b></div>`+sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,a=myAccess[g.id];
+  return `<div class="gcard dimable"><div class="gh"><b>👥 ${sbGroups.length>1?'Nhóm của bạn':'Nhóm'}</b></div>`+sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,a=myAccess[g.id];
     const trips=a?a.trips||[]:[],ex=!!myGrpExp[g.id];
-    return `<div class="rcard${cur?' cur':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap">
+    return `<div class="rcard dimable${cur?' cur':''}${ex?' focus':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap">
       <button type="button" class="lv-tog" data-q="mgx" data-id="${esc(g.id)}" aria-expanded="${ex}"><span class="chev">▸</span><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(g.name)}</b>
       <small class="hint" style="display:block;min-height:0">${a?trips.length:g.trips} chuyến bạn xem được · ${ex?'bấm để thu gọn':'bấm để xem chuyến'}</small></span></button>
       <button type="button" class="btn small${cur?' is-open':''}" data-q="${cur?'gowork':'pick'}" data-id="${esc(g.id)}">${cur?'Đang mở':'Mở nhóm'}</button></div>`+
@@ -3525,7 +3529,7 @@ function codeCard(){
       <div class="hint" style="min-height:0;${c.valid?'':'color:var(--neg)'}">${c.kind==='group'?'Mã nhóm · ':''}${c.valid?'còn hạn tới '+fd(c.expires_at):'hết hạn, bị khoá hoặc đã đổi mã'}</div></div>
       <button type="button" class="btn ghost small" data-q="forget" data-k="${esc(c.kind)}" data-id="${esc(c.target)}">Bỏ</button></div>`).join(''):'';
   const body=`<div class="row"><div class="field"><label for="qCode">Mã chuyến</label><input type="text" id="qCode" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="CH-XXXXXXXX"></div><button type="button" class="btn" data-q="code">Vào</button></div><div id="qCodeMsg"></div>${list?'<div class="sub">Mã đã nhập trên máy này</div>'+list:''}`;
-  return `<div class="gcard"><div class="gh"><b>🔑 Nhập mã chuyến</b></div>${body}</div>`;}
+  return `<div class="gcard dimable"><div class="gh"><b>🔑 Nhập mã chuyến</b></div>${body}</div>`;}
 function requestCard(){
   if(myReq)return `<div class="gcard"><div class="gh"><b>✋ Xin quyền tổ chức chuyến</b></div><div class="note info" style="--c:var(--accent)">Đã gửi yêu cầu lúc ${fdt(myReq.at)}. Quản trị viên sẽ duyệt và gán bạn vào nhóm.</div>${myReq.note?`<div class="hint" style="min-height:0">Lời nhắn: ${esc(myReq.note)}</div>`:''}<div class="row"><button type="button" class="btn ghost small" data-q="reqagain">Sửa lời nhắn</button></div></div>`;
   return `<div class="gcard"><div class="gh"><b>✋ Muốn tổ chức chuyến đi?</b></div><div class="hint" style="min-height:0">Người tổ chức được tạo chuyến trong nhóm, thêm leader và người phụ trách. Quản trị viên sẽ duyệt yêu cầu.</div>
@@ -3540,6 +3544,9 @@ function renderGroupTab(){
   let h=groupsCard()+(sbAdmin?'':codeCard());
   if(sbAdmin){h+=adminHtml();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
+  /* chế độ tập trung: đang mở / đang thao tác mục nào thì các mục khác trong trang xám đi */
+  const fc=!!el.querySelector('.focus');el.classList.toggle('has-focus',fc);
+  const sec=el.closest('.sec');if(sec)sec.classList.toggle('grp-focus',fc);
   if(keep&&val!=null){const n=document.getElementById(keep);if(n&&(n.tagName==='INPUT'||n.tagName==='TEXTAREA')){n.value=val;n.focus();try{n.setSelectionRange(val.length,val.length);}catch(e){}}}}
 
 /* ---------- quản trị hệ thống (chỉ quản trị viên) ---------- */
@@ -3551,15 +3558,15 @@ function adminHtml(){
   if(admTab==='groups'){
     const q=admGQ.trim().toLowerCase(),hit=s=>!!q&&(s||'').toLowerCase().includes(q),mk=s=>{const v=esc(s);if(!q)return v;const i=(s||'').toLowerCase().indexOf(q);return i<0?v:esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));};
     const shown=admGroups.filter(g=>!q||hit(g.name)||((admOv[g.id]||{}).trips||[]).some(t=>hit(t.name)));
-    body=`<div class="row adm-tools"><button type="button" class="btn" data-q="gnew"${admNewG?' disabled':''}>＋ Tạo nhóm</button>
+    body=`<div class="row adm-tools dimable"><button type="button" class="btn" data-q="gnew"${admNewG?' disabled':''}>＋ Tạo nhóm</button>
         <div class="field" style="flex:1 1 200px"><input type="search" id="qAdmQ" value="${esc(admGQ)}" placeholder="🔍 Tìm nhóm hoặc chuyến" autocomplete="off" aria-label="Tìm nhóm hoặc chuyến"></div></div>`+
-      (admNewG?`<div class="rcard new-g"><div class="sub">Tạo nhóm mới</div><div class="field"><input type="text" id="qNewG" maxlength="60" placeholder="Tên nhóm, ví dụ: Cào Cào Dưỡng Sinh" aria-label="Tên nhóm mới"></div>
+      (admNewG?`<div class="rcard new-g focus"><div class="sub">Tạo nhóm mới</div><div class="field"><input type="text" id="qNewG" maxlength="60" placeholder="Tên nhóm, ví dụ: Cào Cào Dưỡng Sinh" aria-label="Tên nhóm mới"></div>
         <div class="row"><button type="button" class="btn" data-q="gcreate"${dis}>Xác nhận</button><button type="button" class="btn ghost" data-q="gnewx">Huỷ bỏ</button></div></div>`:'')+
       (q&&admReady?`<div class="hint" style="min-height:0">Tìm “${esc(admGQ.trim())}”: ${shown.length} nhóm khớp</div>`:'')+
       (!admReady?'<div class="hint">Đang tải danh sách nhóm…</div>':shown.length?shown.map(g=>{const op=admOpen===g.id,d=admDet[g.id]||{},ov=admOv[g.id],gc=admCodes[g.id];
         const all=ov?ov.trips||[]:null,ol=ov?ov.organizers||[]:null,tq=q&&!hit(g.name)&&all?all.filter(t=>hit(t.name)):null,tl=tq||all,ex=op||!!admExp[g.id]||!!tq;
         const tOn=(all||[]).filter(t=>admTCodes[t.id]&&admTCodes[t.id].active).length;
-        return `<div class="rcard${op?' cur':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap">
+        return `<div class="rcard dimable${op?' cur':''}${!admNewG&&(op||(!admOpen&&admExp[g.id]))?' focus':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap">
           <button type="button" class="lv-tog" data-q="agx" data-id="${esc(g.id)}" aria-expanded="${ex}"><span class="chev">▸</span><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${mk(g.name)}</b>
           <small class="hint" style="display:block;min-height:0">${g.trips} chuyến${ol?' · '+ol.length+' người trong BTC':''}${op?' · đang quản lý':''}</small>${codeBadge(gc)}${tOn?` <span class="badge gc-on">🔑 ${tOn} chuyến đang bật mã chuyến</span>`:''}</span></button>
           <button type="button" class="btn small${op?' is-open':''}" data-q="gopen" data-id="${esc(g.id)}" aria-expanded="${op}">${op?'Đóng quản lý':'Quản lý'}</button></div>`+
@@ -3573,7 +3580,7 @@ function adminHtml(){
   else if(admTab==='accounts')body=accountsHtml(dis);
   else{const rows=admAudit.filter(x=>ADM_ENT.includes(x.entity));
     body=`<div class="rcard"><div class="hint" style="min-height:0">Chỉ ghi các thao tác quản trị: tạo / đổi tên / xoá nhóm, thêm / gỡ BTC, thêm / gỡ quản trị viên.</div>${auditHtml(rows,true)}${admAuditMore?'<button type="button" class="btn ghost" data-q="amore">Xem thêm</button>':''}</div>`;}
-  return `<div class="gcard admin-card"><div class="gh"><b>🛡 Quản trị hệ thống</b></div>${msgHtml(admMsg)}<div class="seg">${tabs}</div>${body}</div>`;}
+  return `<div class="gcard admin-card dimable"><div class="gh"><b>🛡 Quản trị hệ thống</b></div>${msgHtml(admMsg)}<div class="seg dimable">${tabs}</div>${body}</div>`;}
 /* mã nhóm: cảnh báo đầu danh sách nhóm đang bật mã, và nhãn trên từng nhóm (cần supabase/013) */
 function codeBadge(c){if(!c)return '<span class="badge gc-none">Chưa có mã nhóm</span>';
   if(c.active)return `<span class="badge gc-on">🔑 Mã nhóm đang bật · ${c.viewers} người xem bằng mã · hết hạn ${fd(c.expires_at)}</span>`;
@@ -3676,7 +3683,7 @@ async function qAct(a,b){
   if(a==='logout'){signOutAsk();return;}
   if(a==='pick'){const g=sbGroups.find(x=>x.id===id);if(g){connectGroup(g);goWork();}return;}
   if(a==='otrip'){openTrip(b.dataset.g,b.dataset.t);return;}
-  if(a==='mgx'){myGrpExp[id]=!myGrpExp[id];renderGroupTab();return;}
+  if(a==='mgx'){const o=!myGrpExp[id];myGrpExp={};if(o)myGrpExp[id]=true;admExp={};renderGroupTab();return;}
   if(a==='gowork'){goWork();return;}
   if(a==='code'){const i=$('#qCode');if(await enterCode(i&&i.value,'#qCodeMsg')&&i)i.value='';return;}
   if(a==='forget'){ask('Bỏ mã này khỏi máy? Muốn xem lại thì phải nhập mã lần nữa.',{title:'Bỏ mã?',ok:'Bỏ mã',danger:true},async()=>{await sb.rpc('forget_code',{p_kind:b.dataset.k,p_target:id});await afterAuth(true);if(curTab!=='group')showTab('group',true);});return;}
@@ -3696,7 +3703,7 @@ async function qAct(a,b){
   if(a==='gnew'){admNewG=true;renderGroupTab();const i=$('#qNewG');if(i)i.focus();return;}
   if(a==='gnewx'){admNewG=false;renderGroupTab();return;}
   if(a==='gopen'){admSwitch(admOpen===id?null:id);return;}
-  if(a==='agx'){if(admOpen===id){admSwitch(null);return;}admExp[id]=!admExp[id];renderGroupTab();return;}
+  if(a==='agx'){if(admOpen===id){admSwitch(null);return;}const o=!admExp[id];admExp={};if(o)admExp[id]=true;myGrpExp={};renderGroupTab();return;}
   if(a==='gcreate'){const n=($('#qNewG').value||'').trim().replace(/\s+/g,' ');if(!n){admMsg='Nhập tên nhóm.';renderGroupTab();return;}
     const r=await rpcDo('admin_create_group',{p_name:n},'Đã tạo nhóm “'+n+'”. Thêm BTC trong bảng Quản lý.');if(r){admNewG=false;await admLoad();await loadGroups();admSwitch(r);}else renderGroupTab();return;}
   if(a==='gren'){const n=($('#qRen-'+id).value||'').trim().replace(/\s+/g,' ');if(!n)return;

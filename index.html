@@ -3944,9 +3944,14 @@ async function loadReports(quiet){if(!sb||!sbSession||isAnon()){window.RP_OPEN=[
 /* v96: ô số tiền tự chấm hàng nghìn khi gõ toàn chữ số (150000 -> 150.000). Có chữ như 150k, 1,5tr thì để nguyên. */
 document.addEventListener('input',ev=>{const t=ev.target;if(!t||(t.id!=='clAmt'&&t.id!=='expAmount'))return;
   const v=t.value;if(!/^[\d.]+$/.test(v))return;
-  const g=v.split('.');if(g.length>1&&!(g.slice(1,-1).every(x=>x.length===3)&&g[g.length-1].length>=3))return;   /* 1.5 = số lẻ, giữ nguyên */
-  const d=v.replace(/\./g,'');if(d.length<4||d.length>12)return;
-  const f=Number(d).toLocaleString('vi-VN');if(f!==v){t.value=f;try{t.setSelectionRange(f.length,f.length);}catch(e){}}});
+  /* v100: mọi dấu chấm là dấu hàng nghìn: 5.60 (vừa xoá 1 số của 5.600) -> 560; giữ vị trí con trỏ */
+  const d=v.replace(/\./g,'');if(!d||d.length>12)return;
+  const f=d.length>=4?Number(d).toLocaleString('vi-VN'):String(Number(d)===0&&d.length>1?d:d);
+  if(f===v)return;
+  let pos=null;try{pos=t.selectionStart;}catch(e){}
+  const before=pos==null?null:v.slice(0,pos).replace(/\./g,'').length;
+  t.value=f;
+  try{let p=f.length;if(before!=null){let c=0;p=0;while(p<f.length&&c<before){if(f[p]!=='.')c++;p++;}}t.setSelectionRange(p,p);}catch(e){}});
 /* v96: mọi đề nghị "Tôi đã trả" ở các chuyến tôi là Thủ quỹ (hoặc quản trị viên) gom về 1 chỗ, không phải vào từng chuyến (cần supabase/029) */
 window.CL_OPEN=[];window.CL_DONE=null;window.CL_DONE_OPEN=false;
 async function loadClaimsAll(quiet){if(!sb||!sbSession||isAnon()){window.CL_OPEN=[];return;}

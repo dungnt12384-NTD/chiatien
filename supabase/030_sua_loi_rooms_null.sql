@@ -1,0 +1,3 @@
+-- 030: sửa lỗi lưu chuyến 'cannot get array length of a scalar' (khoản chi có rooms = JSON null).
+-- Thêm hàm has_rooms(e jsonb); log_changes và trip_guard dùng has_rooms thay cho jsonb_array_length(coalesce(... -> 'rooms','[]')).
+-- Đã áp dụng trực tiếp lên Supabase (xem định nghĩa hàm trong cơ sở dữ liệu).

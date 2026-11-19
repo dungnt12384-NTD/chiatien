@@ -1,0 +1,2 @@
+-- 029: my_claims(p_pending, p_limit): đề nghị Tôi đã trả của mọi chuyến tôi là Thủ quỹ / quản trị viên, để gom vào tab Quản trị.
+-- Đã áp dụng trực tiếp lên Supabase. Quay lại: drop function public.my_claims(boolean,integer);

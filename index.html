@@ -1359,6 +1359,18 @@ html.phone .sync-head{font-size:11px!important;max-width:55%}
 .perm-det .sub{margin-top:8px}
 .pbadges{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
 .plink{background:none;border:0;padding:0;font:inherit;font-weight:600;color:var(--brand,var(--accent));cursor:pointer;text-align:left;overflow-wrap:anywhere;text-decoration:underline dotted}
+/* v81: nút nổi Hoàn tác / Làm lại (góc dưới phải, cỡ như nút nhỏ) */
+.undo-fab{position:fixed;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;display:flex;gap:2px;padding:3px;border-radius:99px;background:var(--surface,#fff);border:1px solid var(--line,#e4e7ec);box-shadow:0 6px 18px rgba(16,24,40,.18)}
+.undo-fab[hidden]{display:none}
+.undo-fab button{display:flex;align-items:center;gap:4px;height:34px;padding:0 12px;border:0;border-radius:99px;background:transparent;color:var(--fg,inherit);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.undo-fab button:hover:not(:disabled){background:color-mix(in srgb,var(--brand,var(--accent)) 10%,transparent)}
+.undo-fab button:disabled{opacity:.35;cursor:default}
+.undo-fab .ud-i{font-size:16px;line-height:1;color:var(--brand,var(--accent))}
+.undo-fab .ud-n{font-size:11px;font-weight:700;min-width:16px;text-align:center;color:var(--muted)}
+.undo-fab .ud-n:empty{display:none}
+html.phone .undo-fab .ud-t{display:none}
+html.phone .undo-fab button{padding:0 10px}
+@media print{.undo-fab{display:none!important}}
 /* v80: Tra cứu quyền cân cỡ chữ theo các mục khác (tiêu đề mục 14px, tên 14.5px, chữ phụ 12px, nhãn 11px) */
 html body .admin-card .perm-sec>.sub{font-size:14px!important;font-weight:700!important;margin:0}
 html body .admin-card .perm-det .sub{font-size:12.5px!important;font-weight:700!important;color:var(--muted)!important;margin:8px 0 0}
@@ -1774,9 +1786,56 @@ const lastJson=new Map(),syncedSet=new Set(),deletedSet=new Set();
 let dbCanWrite=true,adoptOK=null,dbRef=null,syncState='off',syncNote='',syncAt=0,firstSnap=true;
 function placeholder(){const t=mkTrip('Chuyến đi 1',blank());t.ph=true;lastJson.set(t.id,snapJson(t));return t;}
 const snapJson=t=>JSON.stringify({name:t.name,color:t.color,data:t.data});
-function bumpChanged(){R.trips.forEach(t=>{const j=snapJson(t);if(lastJson.get(t.id)!==j){if(typeof guardEdit==='function'&&syncedSet.has(t.id)&&guardEdit(t,lastJson.get(t.id),j))return;lastJson.set(t.id,j);if(t.ph&&!t.data.members.length&&!t.data.expenses.length&&!t.data.advances.length)return;t.updatedAt=Date.now();delete t.sample;delete t.ph;schedulePush(t);}});}
+function bumpChanged(){R.trips.forEach(t=>{const j=snapJson(t);if(lastJson.get(t.id)!==j){if(typeof guardEdit==='function'&&syncedSet.has(t.id)&&guardEdit(t,lastJson.get(t.id),j))return;try{undoRecord(t,lastJson.get(t.id),j);}catch(e){}lastJson.set(t.id,j);if(t.ph&&!t.data.members.length&&!t.data.expenses.length&&!t.data.advances.length)return;t.updatedAt=Date.now();delete t.sample;delete t.ph;schedulePush(t);}});}
 function saveLocal(){R.syncedIds=[...syncedSet];R.deleted=[...deletedSet];try{localStorage.setItem(KEY2,JSON.stringify(R));}catch(e){}}
 function save(){bumpChanged();saveLocal();}
+/* v81: HOÀN TÁC / LÀM LẠI (giống Excel, Word) cho dữ liệu chuyến: số tiền, khoản chi, người đi, phòng, ngày, tên chuyến…
+   Mỗi lần người dùng sửa (bumpChanged) lưu ảnh chụp trước / sau của chuyến vào ngăn xếp riêng từng chuyến, trên máy này,
+   trong phiên đang mở. Số bước tối đa = APP_PREFS.undo_max (Quản trị > Cài đặt, mặc định 50). Gõ liên tục < 0,8 giây gộp 1 bước.
+   Chỉ đổi "ngày đang xem" thì không tính. Hoàn tác đưa chuyến về ảnh chụp cũ rồi lưu + đồng bộ như một lần sửa bình thường;
+   nếu sau bước đó chuyến đã đổi thêm (người khác sửa, đồng bộ) thì hỏi trước để không ghi đè nhầm. */
+var UNDO=new Map(),undoApplying=false;
+function undoMax(){const n=+((window.APP_PREFS||{}).undo_max||50);return Math.max(5,Math.min(500,n||50));}
+function undoSt(id){let s=UNDO.get(id);if(!s){s={u:[],r:[]};UNDO.set(id,s);}return s;}
+function undoKey(j){try{const o=JSON.parse(j);if(o&&o.data)delete o.data.activeDay;return JSON.stringify(o);}catch(e){return j;}}
+function undoRecord(t,oldJ,newJ){if(undoApplying||!oldJ||oldJ===newJ)return;
+  let lu=0;try{lu=lastUser;}catch(e){}if(Date.now()-lu>2000)return;   /* tự chuẩn hoá khi vẽ, không phải người dùng sửa */
+  const ko=undoKey(oldJ),kn=undoKey(newJ);if(ko===kn)return;
+  const s=undoSt(t.id),now=Date.now(),top=s.u[s.u.length-1];
+  if(top&&now-top.at<800&&top.ka===ko){top.after=newJ;top.ka=kn;top.at=now;}
+  else{s.u.push({before:oldJ,kb:ko,after:newJ,ka:kn,at:now});const m=undoMax();if(s.u.length>m)s.u.splice(0,s.u.length-m);}
+  s.r.length=0;setTimeout(paintUndo,0);}
+function undoDesc(e){try{const a=JSON.parse(e.before),b=JSON.parse(e.after),A=a.data||{},B=b.data||{},P=[];
+  if(a.name!==b.name)P.push('đổi tên chuyến');
+  const cnt=k=>(A[k]||[]).length-(B[k]||[]).length,dif=k=>JSON.stringify(A[k])!==JSON.stringify(B[k]);
+  [['members','người đi'],['days','ngày'],['expenses','khoản chi / phòng'],['advances','tiền đóng trước']].forEach(([k,n])=>{const d=(B[k]||[]).length-(A[k]||[]).length;
+    if(d>0)P.push('thêm '+d+' '+n);else if(d<0)P.push('xoá '+(-d)+' '+n);else if(dif(k))P.push('sửa '+n);});
+  if(!P.length&&dif('holder'))P.push('đổi người giữ tiền');
+  return P.join(', ')||'thay đổi khác';}catch(x){return 'thay đổi';}}
+function undoTime(at){const d=new Date(at);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');}
+function undoDo(dir){const t=trip();if(!t)return;const s=undoSt(t.id),src=dir<0?s.u:s.r,dst=dir<0?s.r:s.u,e=src[src.length-1];
+  if(!e){toast(dir<0?'Không còn bước nào để hoàn tác.':'Không còn bước nào để làm lại.');return;}
+  const target=dir<0?e.before:e.after,expect=dir<0?e.ka:e.kb,lbl=dir<0?'Hoàn tác':'Làm lại';
+  const go=()=>{src.pop();const o=JSON.parse(target),cur=t.data&&t.data.activeDay;
+    if(o.data&&cur&&(o.data.days||[]).some(d=>d.id===cur))o.data.activeDay=cur;
+    undoApplying=true;try{t.name=o.name;t.color=o.color;t.data=o.data;try{normTrip(t);}catch(x){}if(t.id===R.current)S=t.data;lastUser=Date.now();save();}finally{undoApplying=false;}
+    dst.push(e);try{render();}catch(x){}try{if(typeof renderTripExtra==='function')renderTripExtra();}catch(x){}paintUndo();
+    toast((dir<0?'↶ Đã hoàn tác: ':'↷ Đã làm lại: ')+undoDesc(e)+' (lúc '+undoTime(e.at)+')');};
+  if(undoKey(snapJson(t))!==expect){ask(`Sau bước này chuyến đã có thay đổi khác (có thể do người khác sửa hoặc vừa đồng bộ). ${lbl} sẽ đưa chuyến về đúng lúc ${undoTime(e.at)} và bỏ các thay đổi sau đó. Tiếp tục?`,{title:lbl+'?',ok:lbl,danger:true},go);return;}
+  go();}
+function paintUndo(){let el=document.getElementById('undoFab');
+  if(!el){el=document.createElement('div');el.id='undoFab';el.className='undo-fab';el.setAttribute('role','group');el.setAttribute('aria-label','Hoàn tác / Làm lại');
+    el.innerHTML='<button type="button" data-ud="-1"><span class="ud-i">↶</span><span class="ud-t">Hoàn tác</span><b class="ud-n"></b></button><button type="button" data-ud="1"><span class="ud-i">↷</span><span class="ud-t">Làm lại</span><b class="ud-n"></b></button>';
+    document.body.appendChild(el);}
+  let t=null;try{t=trip();}catch(e){}const s=t?undoSt(t.id):{u:[],r:[]},bu=el.children[0],br=el.children[1];
+  el.hidden=!(s.u.length||s.r.length);
+  bu.disabled=!s.u.length;br.disabled=!s.r.length;bu.querySelector('.ud-n').textContent=s.u.length||'';br.querySelector('.ud-n').textContent=s.r.length||'';
+  bu.title=s.u.length?`Hoàn tác (Ctrl+Z): ${undoDesc(s.u[s.u.length-1])} · lúc ${undoTime(s.u[s.u.length-1].at)} · còn ${s.u.length}/${undoMax()} bước`:'Không còn bước để hoàn tác';
+  br.title=s.r.length?`Làm lại (Ctrl+Y): ${undoDesc(s.r[s.r.length-1])} · lúc ${undoTime(s.r[s.r.length-1].at)}`:'Không còn bước để làm lại';}
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-ud]');if(!b)return;ev.preventDefault();undoDo(+b.dataset.ud);});
+document.addEventListener('keydown',ev=>{if(!(ev.ctrlKey||ev.metaKey)||ev.altKey)return;const k=(ev.key||'').toLowerCase();if(k!=='z'&&k!=='y')return;
+  const a=document.activeElement;if(a&&(a.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))return;   /* đang gõ trong ô: để trình duyệt tự hoàn tác chữ */
+  if(document.querySelector('.modal:not([hidden])'))return;ev.preventDefault();undoDo(k==='y'||(k==='z'&&ev.shiftKey)?1:-1);});
 R=load();const sampleIds=new Set(R.trips.filter(t=>t.sample).map(t=>t.id));R.trips.forEach((t,i)=>{if(!t.color)t.color=TRIP_COLORS[i%TRIP_COLORS.length];if(!t.updatedAt)t.updatedAt=Date.now();lastJson.set(t.id,snapJson(t));});
 R.trips.forEach(t=>{S=t.data;normalizeRooms();lastJson.set(t.id,snapJson(t));});   /* chuẩn hoá trước khi đo thay đổi để chuyến mẫu không bị đẩy lên */
 (R.syncedIds||[]).forEach(i=>syncedSet.add(i));(R.deleted||[]).forEach(i=>deletedSet.add(i));S=trip().data;
@@ -2693,7 +2752,7 @@ function reportTsv(){
   S.members.forEach(m=>rd.per[m.id].lines.forEach(l=>rows.push([trip().name,dayName(l.e.dayId),l.e.desc+(l.room?' - '+l.room:''),nameOf(l.e.payer),Math.round(l.e.amount),l.n,m.name,Math.round(l.sh)])));
   return rows.map(r=>r.map(x=>String(x).replace(/[\t\r\n]+/g,' ')).join('\t')).join('\n');
 }
-function render(keepAdv){
+function render(keepAdv){setTimeout(()=>{try{paintUndo();}catch(e){}},0);
   migrateAttend(S);syncPresent();syncDayNames();normalizeRooms();
   if(mDraft&&!mem(mDraft.id)){mDraft=null;$('#mEdit').hidden=true;}
   const c=compute();
@@ -3805,7 +3864,7 @@ function adminLogCard(){const rows=admAudit.filter(x=>ADM_ENT.includes(x.entity)
 function adminHtml(){
   const dis=admBusy?' disabled':'';
   if(admTab==='reqs'||admTab==='audit')admTab='groups';
-  const tabs=[['perm','🔎 Tra cứu quyền'],['groups','Nhóm'],['accounts','Tài khoản'],['codes','Cài đặt mã']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
+  const tabs=[['perm','🔎 Tra cứu quyền'],['groups','Nhóm'],['accounts','Tài khoản'],['codes','Cài đặt']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
   let body='';
   if(admTab==='groups'){
     const q=fzW(admGQ).join(' '),hit=s=>!!q&&fz(s,q),mk=s=>fzMark(s,q);
@@ -3836,7 +3895,7 @@ function adminHtml(){
 /* cài đặt mặc định của mã (cần supabase/016): bật/tắt khi tạo + số ngày hạn. Cảnh báo chỉ khi mã KHÁC mặc định
    (mặc định bật -> cảnh báo khi tắt / hết hạn; mặc định tắt -> cảnh báo khi đang bật) */
 window.CODE_SET=window.CODE_SET||{trip:{default_enabled:true,days:90},group:{default_enabled:false,days:90}};
-async function loadCodeSet(){if(!sb||!sbSession||isAnon())return;try{const {data,error}=await sb.rpc('get_code_settings');if(!error&&data)data.forEach(r=>{window.CODE_SET[r.kind]=r;});}catch(e){}}
+async function loadCodeSet(){if(!sb||!sbSession)return;try{const {data,error}=await sb.rpc('get_app_prefs');if(!error&&data){window.APP_PREFS=data;try{paintUndo();}catch(e){}}}catch(e){}if(isAnon())return;try{const {data,error}=await sb.rpc('get_code_settings');if(!error&&data)data.forEach(r=>{window.CODE_SET[r.kind]=r;});}catch(e){}}
 function durTxt(k){const d=+((window.CODE_SET[k]||{}).days||90);return d%30===0?(d/30)+' tháng':d+' ngày';}
 function codeWarn(k,active){return (window.CODE_SET[k]||{}).default_enabled?!active:!!active;}
 /* mã nhóm: nhãn trên từng nhóm (cần supabase/013) */
@@ -3852,6 +3911,21 @@ function gtrashHtml(dis){const L=window.ADM_GTRASH||[];if(!L.length)return '';co
   return `<div class="gsub gtrash">${logHead('🗑 Thùng rác nhóm ('+L.length+')',o,'data-q="gtrash"')}`+(o?L.map(g=>`<div class="acc-trip acc-row"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(g.name)}</b>
     <div class="hint" style="min-height:0">${g.trips} chuyến · xoá ${fdt(g.deleted_at)}${g.deleted_by?' bởi '+esc(g.deleted_by):''}</div></div>
     <button type="button" class="btn small" data-q="grest" data-id="${esc(g.id)}"${dis}>Khôi phục</button><button type="button" class="btn danger-o small" data-q="gpurge" data-id="${esc(g.id)}"${dis}>Xoá hẳn</button></div>`).join(''):'')+`</div>`;}
+/* v81: Quản trị > Cài đặt: thùng rác tự dọn sau N ngày (0 = không tự dọn) + số bước Hoàn tác / Làm lại (cần supabase/021) */
+document.addEventListener('input',ev=>{const t=ev.target;if(t&&/^qPref(TrOff|Tr|Um)$/.test(t.id||''))(window.PREF_DRAFT=window.PREF_DRAFT||{})[t.id]=t.value;});
+document.addEventListener('change',ev=>{const t=ev.target;if(t&&t.id==='qPrefTrOff'){(window.PREF_DRAFT=window.PREF_DRAFT||{})[t.id]=t.value;}});
+function prefHtml(dis){const P=window.APP_PREFS||{},D=window.PREF_DRAFT||{},td0=+(P.trash_days??30),um0=+(P.undo_max||50),off=D.qPrefTrOff!=null?D.qPrefTrOff==='0':td0===0,td=D.qPrefTr!=null?D.qPrefTr:(td0||30),um=D.qPrefUm!=null?D.qPrefUm:um0;
+  return `<div class="rcard cs-card"><div class="sub">🗑 Thùng rác chuyến tự dọn</div>
+      <div class="row" style="align-items:flex-end">
+        <div class="field" style="flex:1 1 160px"><label for="qPrefTrOff">Cách dọn</label><select id="qPrefTrOff"><option value="1"${off?'':' selected'}>Tự xoá hẳn sau số ngày</option><option value="0"${off?' selected':''}>Không tự xoá (chỉ xoá khi bấm Xoá hẳn)</option></select></div>
+        <div class="field" style="flex:1 1 110px"><label for="qPrefTr">Giữ (ngày)</label><input type="number" id="qPrefTr" min="1" max="3650" step="1" inputmode="numeric" value="${esc(String(td))}"></div>
+        <button type="button" class="btn" data-q="prefsave" data-k="trash_days"${dis}>Lưu</button></div>
+      <div class="hint" style="min-height:0">Hiện tại: <b>${td0===0?'không tự xoá':'giữ '+td0+' ngày'}</b>. Giảm số ngày thì chuyến đã nằm lâu hơn sẽ bị xoá hẳn ở lần mở thùng rác tiếp theo.</div></div>
+    <div class="rcard cs-card"><div class="sub">↶ Hoàn tác / Làm lại</div>
+      <div class="row" style="align-items:flex-end">
+        <div class="field" style="flex:1 1 160px"><label for="qPrefUm">Số bước nhớ cho mỗi chuyến (5–500)</label><input type="number" id="qPrefUm" min="5" max="500" step="1" inputmode="numeric" value="${esc(String(um))}"></div>
+        <button type="button" class="btn" data-q="prefsave" data-k="undo_max"${dis}>Lưu</button></div>
+      <div class="hint" style="min-height:0">Hiện tại: <b>${um0} bước</b>. Nút ↶ Hoàn tác / ↷ Làm lại hiện ở góc dưới bên phải khi có bước để quay lại (phím tắt Ctrl+Z / Ctrl+Y). Các bước được nhớ trên máy đang dùng, mất khi tải lại trang.</div></div>`;}
 /* tab Quản trị > Cài đặt mã */
 function codeSetHtml(dis){const D=window.CS_DRAFT||{};
   const one=(k,title,use)=>{const s=window.CODE_SET[k]||{},d=D[k]||{},en=d.en!=null?d.en:!!s.default_enabled,days=d.days!=null?d.days:(s.days||90);
@@ -3861,7 +3935,7 @@ function codeSetHtml(dis){const D=window.CS_DRAFT||{};
         <div class="field" style="flex:1 1 120px"><label for="qCsDays-${k}">Hạn dùng (ngày)</label><input type="number" id="qCsDays-${k}" min="1" max="3650" step="1" inputmode="numeric" value="${esc(String(days))}"></div>
         <button type="button" class="btn" data-q="csave" data-k="${k}"${dis}>Lưu</button></div>
       <div class="hint" style="min-height:0">Hiện tại: <b>${s.default_enabled?'bật sẵn':'tắt sẵn'}</b>, hạn <b>${esc(String(s.days||90))} ngày</b>. Cảnh báo sẽ hiện khi mã <b>${s.default_enabled?'bị tắt hoặc hết hạn':'đang bật'}</b>.${s.updated_by?` Sửa gần nhất ${fdt(s.updated_at)} bởi ${esc(s.updated_by)}.`:''}</div></div>`;};
-  return `<div class="hint" style="min-height:0">Áp dụng cho mã <b>tạo mới</b>; số ngày cũng dùng khi bấm <b>Gia hạn</b> hoặc <b>Đổi mã mới</b>. Mã đang có giữ nguyên trạng thái.</div>`+
+  return prefHtml(dis)+`<div class="hint" style="min-height:0">Áp dụng cho mã <b>tạo mới</b>; số ngày cũng dùng khi bấm <b>Gia hạn</b> hoặc <b>Đổi mã mới</b>. Mã đang có giữ nguyên trạng thái.</div>`+
     one('trip','🎫 Mã chuyến','Mã thủ quỹ gửi cho thành viên để xem 1 chuyến, không cần tài khoản.')+
     one('group','🔑 Mã nhóm','Mã quản trị viên gửi để xem mọi chuyến của 1 nhóm.');}
 document.addEventListener('input',ev=>{const t=ev.target,m=t&&t.id&&/^qCs(En|Days)-(trip|group)$/.exec(t.id);if(!m)return;
@@ -4046,6 +4120,15 @@ async function qAct(a,b){
   if(a==='pick'){const g=sbGroups.find(x=>x.id===id);if(g){connectGroup(g);goWork();}return;}
   if(a==='otrip'){openTrip(b.dataset.g,b.dataset.t);return;}
   if(a==='rpdoneT'){window.RP_DONE_OPEN=!window.RP_DONE_OPEN;if(window.RP_DONE_OPEN)await loadRpDone();else renderGroupTab();return;}
+  if(a==='prefsave'){const k=b.dataset.k,P=window.APP_PREFS||{},old=k==='trash_days'?+(P.trash_days??30):+(P.undo_max||50);let n;
+    if(k==='trash_days'){n=($('#qPrefTrOff')||{}).value==='0'?0:Math.round(+(($('#qPrefTr')||{}).value||''));if(n!==0&&!(n>=1&&n<=3650)){admMsg='Số ngày phải từ 1 tới 3650.';renderGroupTab();return;}}
+    else{n=Math.round(+(($('#qPrefUm')||{}).value||''));if(!(n>=5&&n<=500)){admMsg='Số bước phải từ 5 tới 500.';renderGroupTab();return;}}
+    if(n===old){admMsg='OK:Không có gì thay đổi.';renderGroupTab();return;}
+    const run=async()=>{admBusy=true;renderGroupTab();const {error}=await sb.rpc('set_app_pref',{k,n});admBusy=false;
+      if(error)admMsg='Chưa lưu được: '+(/set_app_pref|schema cache|not find/i.test(error.message||'')?'cần chạy supabase/021_cai_dat_thung_rac_undo.sql.':(ERR_VN[error.message]||error.message));
+      else{window.APP_PREFS=Object.assign({},P,{[k]:n});window.PREF_DRAFT={};admMsg='OK:Đã lưu.';try{paintUndo();}catch(e){}}renderGroupTab();};
+    if(k==='trash_days'&&n>0&&(old===0||n<old))ask(`Đổi thành tự xoá hẳn sau ${n} ngày? Chuyến nào đã nằm trong thùng rác lâu hơn ${n} ngày sẽ bị xoá hẳn (không khôi phục được) ở lần mở thùng rác tiếp theo.`,{title:'Rút ngắn thời gian giữ?',ok:'Lưu',danger:true},run);
+    else run();return;}
   if(a==='csave'){const k=b.dataset.k,s=window.CODE_SET[k]||{},en=($('#qCsEn-'+k)||{}).value==='1',dv=(($('#qCsDays-'+k)||{}).value||'').trim(),days=+dv;
     if(!/^\d+$/.test(dv)||days<1||days>3650){admMsg='Hạn dùng phải là số ngày từ 1 đến 3650.';renderGroupTab();return;}
     if(en===!!s.default_enabled&&days===+s.days){admMsg='Chưa có gì thay đổi.';renderGroupTab();return;}
@@ -4275,10 +4358,11 @@ function dlgBody(){
   if(dlgKind==='trash'){if(tTrash===null)return wait;
     /* v78: chọn nhiều chuyến để khôi phục / xoá hẳn cùng lúc */
     const ids=new Set(tTrash.map(x=>x.id));[...TR_SEL].forEach(i=>{if(!ids.has(i))TR_SEL.delete(i);});const ns=TR_SEL.size,all=tTrash.length&&ns===tTrash.length;
-    return `<p style="color:var(--muted);font-size:14px;margin:0">Chuyến đã xoá được giữ 30 ngày rồi tự dọn.</p>`+(tTrash.length?
+    const tdays=+((window.APP_PREFS||{}).trash_days??30);
+    return `<p style="color:var(--muted);font-size:14px;margin:0">${tdays>0?`Chuyến đã xoá được giữ ${tdays} ngày rồi tự dọn.`:'Chuyến đã xoá được giữ cho tới khi bấm Xoá hẳn (không tự dọn).'}</p>`+(tTrash.length?
       `<div class="tr-bulk"><label class="tk"><input type="checkbox" data-trs="*"${all?' checked':''}${dis}> Chọn tất cả (${tTrash.length})</label>
         <span class="tr-bulk-b"><button type="button" class="btn small" data-dl="trrestoreM"${ns&&!dlgBusy?'':' disabled'}>Khôi phục${ns?' ('+ns+')':''}</button><button type="button" class="btn danger-o small" data-dl="trpurgeM"${ns&&!dlgBusy?'':' disabled'}>Xoá hẳn${ns?' ('+ns+')':''}</button></span></div>`+
-      tTrash.map(x=>`<div class="rcard tr-row${TR_SEL.has(x.id)?' sel':''}"><label class="tr-chk"><input type="checkbox" data-trs="${esc(x.id)}"${TR_SEL.has(x.id)?' checked':''}${dis} aria-label="Chọn ${esc(x.name)}"><span style="overflow-wrap:anywhere;min-width:0"><b>${esc(x.name)}</b><span class="hint" style="display:block;min-height:0">Xoá ${fdt(x.deleted_at)}${x.deleted_by_email?' bởi '+esc(x.deleted_by_email):''} · còn ${x.days_left} ngày</span></span></label>
+      tTrash.map(x=>`<div class="rcard tr-row${TR_SEL.has(x.id)?' sel':''}"><label class="tr-chk"><input type="checkbox" data-trs="${esc(x.id)}"${TR_SEL.has(x.id)?' checked':''}${dis} aria-label="Chọn ${esc(x.name)}"><span style="overflow-wrap:anywhere;min-width:0"><b>${esc(x.name)}</b><span class="hint" style="display:block;min-height:0">Xoá ${fdt(x.deleted_at)}${x.deleted_by_email?' bởi '+esc(x.deleted_by_email):''}${x.days_left==null?' · không tự dọn':' · còn '+x.days_left+' ngày'}</span></span></label>
       <div class="row"><button type="button" class="btn small" data-dl="trrestore" data-id="${esc(x.id)}"${dis}>Khôi phục</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-dl="trpurge" data-id="${esc(x.id)}" data-n="${esc(x.name)}"${dis}>Xoá hẳn</button></div></div>`).join(''):'<div class="hint">Thùng rác trống.</div>');}
   return '';}
 function renderDlg(){if(!dlgKind)return;$('#authTitle').textContent=DLG_TITLE[dlgKind]||'';

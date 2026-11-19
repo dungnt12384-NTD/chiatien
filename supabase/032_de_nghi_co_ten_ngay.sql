@@ -1,0 +1,2 @@
+-- 032: my_claims và my_sent_claims trả thêm cột day_name (tên ngày của đề nghị) để Thủ quỹ biết duyệt cho ngày nào.
+-- Đã áp dụng trực tiếp (apply_migration 032). Quay lại: tạo lại hai hàm không có cột day_name (bản 029 / 031).

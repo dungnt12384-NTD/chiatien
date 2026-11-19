@@ -2615,18 +2615,29 @@ function renderSplit(){
   $('#expHint').textContent=unit?(isNaN(a)?(n?`Nhập đơn giá, hệ thống nhân với ${n} người đang chọn bên dưới ra tổng tiền.`:''):`${fmt(a)} × ${n} người = tổng ${fmt(a*n)}`):(isNaN(a)?(n?`Chia cho ${n} người.`:''):`${fmt(a)}${n?` chia ${n} người, mỗi người ${fmt(a/n)}`:''}`);
 }
 const openDays=new Set();let expQ='';let amtMode='total';
+/* v98: khoản chi do người khác nhập mà tôi chưa xem -> báo + nhãn "Mới"; mỗi khoản ghi "nhập bởi" */
+const expSeenKey=()=>'chiatien-seen-'+R.current;
+function expLive(){return !!(window.supabase&&sbGroup&&!PV_TOKEN&&sbSession&&syncedSet.has(R.current));}
+function markExpSeen(){try{lsSet(expSeenKey(),JSON.stringify(S.expenses.map(e=>e.id)));}catch(e){}}
+function newExps(){if(!expLive())return [];const raw=lsGet(expSeenKey());
+  if(raw===null){markExpSeen();return [];}
+  let s;try{s=new Set(JSON.parse(raw)||[]);}catch(e){return [];}
+  const me=myMail();return S.expenses.filter(e=>!s.has(e.id)&&e.by&&e.by!==me);}
+function byTxt(e){return e.by&&e.by!==myMail()?' · nhập bởi '+esc(String(e.by).split('@')[0]):'';}
 function renderList(c){
   const el=$('#expList');
   if(!S.expenses.length){el.innerHTML='<div class="empty">Chưa có khoản chi nào.</div>';return;}
-  el.innerHTML=S.days.map(d=>{
+  const NE=newExps(),NEid=new Set(NE.map(e=>e.id)),nm=e=>esc(String(e.by).split('@')[0]);
+  const neBanner=NE.length?`<div class="note" role="status">🆕 Có ${NE.length} khoản chi mới do ${[...new Set(NE.map(nm))].join(', ')} nhập (đánh dấu “Mới” bên dưới). <button type="button" class="btn small" data-act="seenExp">Đã xem</button></div>`:'';
+  el.innerHTML=neBanner+S.days.map(d=>{
     const q=norm(expQ.trim()),all=S.expenses.filter(e=>e.dayId===d.id),es=q?all.filter(e=>fz(e.desc+" "+nameOf(e.payer),q)):all;if(!es.length)return '';
     const rn=es.filter(e=>e.rooms&&e.rooms.length).length;
     const dupNote=rn>1?`<div class="note">${esc(d.name)} đang có ${rn} khoản tiền phòng, mỗi ngày chỉ nên có 1. <button class="btn small" type="button" style="--c:#c62828;background:#c62828;color:#fff;margin-left:6px" data-act="dedupeRooms" data-id="${d.id}">Giữ khoản mới nhất, xoá khoản cũ</button></div>`:'';
     const cl=!q&&!openDays.has(d.id);
     return `<div style="display:flex;flex-direction:column;gap:8px"><button type="button" class="daytitle tg" data-act="togDay" data-id="${d.id}" aria-expanded="${!cl}"><h3>${esc(d.name)}</h3><span class="num">${q?`${es.length}/${all.length} khớp`:`${es.length} khoản`} · ${fmt(q?es.reduce((t,e)=>t+e.amount,0):(c.dayTotals[d.id]||0))}${q?'':` · ${dpeople(d).length} người`}${d.place?` · ${esc(d.place)}`:''}</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.3 8.3a1 1 0 0 1 1.4 0L12 13.6l5.3-5.3a1 1 0 1 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4Z"/></svg></button>
     ${cl?'':dupNote+`<div class="items" data-day="${d.id}">`+es.map(e=>{const n=parts(e).length;
-      return `<div class="item" data-eid="${e.id}"><button type="button" class="grip" data-grip="${e.id}" aria-label="Kéo để đổi thứ tự, hoặc dùng phím mũi tên lên xuống">${GRIP}</button>${avatar(e.payer)}<div class="mid"><div class="t">${esc(e.desc)}</div>
-      ${e.rooms&&e.rooms.length?`<div class="s">${nameNo(e.payer)} chi · ${e.rooms.length} phòng, tổng tiền phòng ${fmt(e.amount)}</div><div class="rlines">${roomLinesHtml(e)}</div>`:`<div class="s">${nameNo(e.payer)} chi · ${splitText(e)}${e.excluded.length?` · bỏ ${e.excluded.map(i=>nameNo(i)).join(', ')}`:''}</div>`}</div>
+      return `<div class="item" data-eid="${e.id}"><button type="button" class="grip" data-grip="${e.id}" aria-label="Kéo để đổi thứ tự, hoặc dùng phím mũi tên lên xuống">${GRIP}</button>${avatar(e.payer)}<div class="mid"><div class="t">${esc(e.desc)}${NEid.has(e.id)?' <span class="badge on">Mới</span>':''}</div>
+      ${e.rooms&&e.rooms.length?`<div class="s">${nameNo(e.payer)} chi · ${e.rooms.length} phòng, tổng tiền phòng ${fmt(e.amount)}${byTxt(e)}</div><div class="rlines">${roomLinesHtml(e)}</div>`:`<div class="s">${nameNo(e.payer)} chi · ${splitText(e)}${e.excluded.length?` · bỏ ${e.excluded.map(i=>nameNo(i)).join(', ')}`:''}${byTxt(e)}</div>`}</div>
       <div class="amt num" style="color:var(--c-expense)">${fmt(e.amount)}</div>
       ${expMine(e)?`<button class="btn ghost small" data-act="editExp" data-id="${e.id}" type="button">Sửa</button>
       <button class="xbtn" data-act="delExp" data-id="${e.id}" aria-label="Xoá khoản chi">${X}</button>`:`<span class="exp-lock" title="Khoản do ${esc(e.by||'người khác')} nhập. Chỉ người nhập hoặc Thủ quỹ sửa / xoá được.">🔒 ${esc(e.by?e.by.split('@')[0]:'người khác')}</span>`}${window.supabase&&sbGroup&&!PV_TOKEN?`<button type="button" class="rpbtn" data-rp="${e.id}">Báo sai</button>`:''}</div>`;}).join('')+'</div>'}</div>`;
@@ -3039,6 +3050,7 @@ document.addEventListener('click',ev=>{
   if(act==='bkAll'){advUnits().forEach(u=>bulkSel.add(u.main.id));renderBulk();return;}
   if(act==='bkNone'){bulkSel.clear();renderBulk();return;}
   if(act==='bkUnpaid'){bulkSel.clear();advUnits().forEach(u=>{if(!u.members.some(x=>advSumOf(x.id)>0))bulkSel.add(u.main.id);});renderBulk();return;}
+  if(act==='seenExp'){markExpSeen();renderList(compute());return;}
   if(act==='goTab'){showTab(id,true);return;}
   if(act==='repTab'){repTab=id;render();return;}
   if(act==='dedupeRooms'){const rs=S.expenses.filter(e=>e.dayId===id&&e.rooms&&e.rooms.length);if(rs.length<2)return;const keep=rs[rs.length-1];
@@ -3418,7 +3430,12 @@ function syncLabel(){
 function paintSync(){
   const p=document.getElementById('syncPill');if(p){p.textContent=syncLabel();p.dataset.s=syncState;}
   const e=document.getElementById('syncStatus');if(e){e.textContent=syncLabel()+(syncNote?'. '+syncNote:'');e.dataset.s=syncState;}}
-function setSync(st,note){syncState=st;syncNote=note||'';if(st==='ok')syncAt=Date.now();paintSync();try{paintAccount();}catch(e){}}
+/* v98: lưu chuyến lên máy chủ thất bại -> thanh cảnh báo đỏ, tự tắt khi đồng bộ lại được */
+function saveWarn(msg){let w=document.getElementById('saveWarn');
+  if(msg){if(!w){w=document.createElement('div');w.id='saveWarn';w.setAttribute('role','alert');w.style.cssText='position:fixed;left:8px;right:8px;bottom:12px;z-index:200;background:var(--neg,#c0392b);color:#fff;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.4;box-shadow:0 2px 12px rgba(0,0,0,.35)';document.body.appendChild(w);}
+    w.textContent='⚠️ '+msg;w.hidden=false;}
+  else if(w)w.hidden=true;}
+function setSync(st,note){syncState=st;syncNote=note||'';if(st==='ok'){syncAt=Date.now();saveWarn('');}paintSync();try{paintAccount();}catch(e){}}
 const pushQ=new Map();
 function schedulePush(t,delay){
   if(!dbRef||!dbCanWrite||t.sample||t.ph)return;
@@ -3447,7 +3464,9 @@ async function doPush(id){
         toast('Chuyến "'+t.name+'" đã chốt sổ, phần vừa sửa không được lưu.');}
       else{R.trips=R.trips.filter(x=>x.id!==id);syncedSet.delete(id);lastJson.delete(id);if(!R.trips.length)R.trips.push(placeholder());if(R.current===id)R.current=R.trips[0].id;S=trip().data;toast('Chuyến "'+t.name+'" đã bị thủ quỹ xoá.');}
       saveLocal();applyLocks();render();setSync('ok');return;}
-    setSync('error',e&&e.code==='invalid_argument'?'Bạn không có quyền sửa chuyến này. Thủ quỹ cần thêm bạn làm người hỗ trợ':(e&&e.code==='quota_exceeded'?'Kho dữ liệu đã đầy':'Chưa gửi được, sẽ thử lại khi có thay đổi tiếp theo'));
+    const why=e&&e.code==='invalid_argument'?'Bạn không có quyền sửa chuyến này. Thủ quỹ cần thêm bạn làm người hỗ trợ':(e&&e.code==='quota_exceeded'?'Kho dữ liệu đã đầy':'Chưa gửi được, sẽ thử lại khi có thay đổi tiếp theo');
+    setSync('error',why);
+    saveWarn('Chuyến "'+t.name+'" CHƯA được lưu lên máy chủ: '+why+(e&&e.message?' ('+String(e.message).slice(0,80)+')':'')+'. Số vừa nhập mới chỉ có trên máy này, đừng xoá dữ liệu trình duyệt.');
     return;
   }
   q.busy=false;
@@ -3945,7 +3964,7 @@ function mySentCard(){const L=window.CL_SENT||[];if(!L.length)return '';
   return `<div class="gcard${rj?' rp-card has':''}"><div class="gh"><b>📤 Đề nghị tôi đã gửi</b></div>
     <div class="hint" style="min-height:0">Đã gửi ${L.length} · Chờ duyệt ${pe} · Đã duyệt ${ap} · Từ chối ${rj}${rj?' — bấm “Sửa và gửi lại” ở đề nghị bị từ chối, không cần tạo mới.':''}</div>
     <div class="rp-done">${logHead('Chi tiết',op,'data-q="clsentT"')}`+(!op?'':`<div class="hist-scroll" data-rows="10">`+L.map(c=>`<div class="rmrow"><div class="row" style="gap:8px;align-items:center;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-size:14px"><b>${esc(c.trip_name)}</b>: ${esc(c.descr)} · ${fmt(c.amount)}</div>${st(c)}</div>
-      <div class="hint" style="min-height:0">${esc(c.member_name||'?')} đã trả · ${fdt(c.at)}${c.status!=='pending'&&c.decided_at?' · xử lý '+fdt(c.decided_at):''}</div>${c.status!=='pending'&&c.reply?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Thủ quỹ trả lời: ${esc(c.reply)}</div>`:''}
+      <div class="hint" style="min-height:0">${esc(c.member_name||'?')} đã trả${c.day_name?' · '+esc(c.day_name):''} · ${fdt(c.at)}${c.status!=='pending'&&c.decided_at?' · xử lý '+fdt(c.decided_at):''}</div>${c.status!=='pending'&&c.reply?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Thủ quỹ trả lời: ${esc(c.reply)}</div>`:''}
       ${c.status==='rejected'&&!c.closed?`<div class="row"><button type="button" class="btn small" data-q="clredo2" data-id="${c.id}">Sửa và gửi lại</button></div>`:''}</div>`).join('')+`</div>`)+`</div></div>`;}
 function canLeadAny(){return sbAdmin||(myTrips||[]).some(t=>t.role==='leader');}
 function claimsCard(){const L=window.CL_OPEN||[];if(!L.length&&!canLeadAny())return '';
@@ -3954,7 +3973,7 @@ function claimsCard(){const L=window.CL_OPEN||[];if(!L.length&&!canLeadAny())ret
     (L.length?`<div class="hint" style="min-height:0">Người đi báo đã trả thay ở mọi chuyến bạn là Thủ quỹ. <b>Duyệt</b> mở sẵn form khoản chi (đã điền) để bạn chọn người chia rồi lưu; <b>Từ chối</b> kèm lời trả lời nếu cần.</div>`+
       L.map(c=>`<div class="rcard rp-item"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(c.trip_name)}</b></div>${c.closed?'<span class="badge warn">Đã chốt sổ</span>':''}</div>
         <div style="overflow-wrap:anywhere;font-size:14.5px;font-weight:600">${esc(c.descr)} · ${fmt(c.amount)}</div>
-        <div class="hint" style="min-height:0">${mine(c)} đã trả${c.day_id?' · ngày đã chọn':''} · ${ago(c.at)} (${fdt(c.at)})</div>${c.note?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Ghi chú: ${esc(c.note)}</div>`:''}
+        <div class="hint" style="min-height:0">${mine(c)} đã trả${c.day_id?' · '+esc(c.day_name||'ngày đã chọn'):' · không rõ ngày'} · ${ago(c.at)} (${fdt(c.at)})</div>${c.note?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Ghi chú: ${esc(c.note)}</div>`:''}
         <div class="row"><div class="field" style="flex:1 1 200px"><input type="text" id="clR-${c.id}" maxlength="500" placeholder="Trả lời (không bắt buộc)" aria-label="Trả lời"></div><button type="button" class="btn small" data-q="clgo" data-id="${c.id}">Duyệt</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-q="clrej" data-id="${c.id}">Từ chối</button></div></div>`).join('')
     :'<div class="hint" style="min-height:0">Không có đề nghị nào đang chờ.</div>')+clDoneHtml()+`</div>`;}
 function clDoneHtml(){const L=window.CL_DONE,op=window.CL_DONE_OPEN;

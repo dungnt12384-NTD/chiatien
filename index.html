@@ -3995,14 +3995,14 @@ function adminHtml(){
         const tDef=!!window.CODE_SET.trip.default_enabled,tOn=(all||[]).filter(t=>{const x=admTCodes[t.id];return x&&(tDef?!x.active:x.active);}).length;
         return `<div class="rcard grp-row${op?' cur':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap">
           <button type="button" class="lv-tog" data-q="agx" data-id="${esc(g.id)}" aria-expanded="${ex}"><span class="chev">▸</span><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${mk(g.name)}</b>
-          <small class="hint" style="display:block;min-height:0">${g.trips} chuyến${ol?' · '+ol.length+' người được tạo chuyến':''}${op?' · đang quản lý':''}</small><span class="gbadges">Mã: ${codeBadgeS(gc)}${tOn?`<span class="badge gc-on">${tDef?`⚠️ ${tOn} chuyến tắt`:`🔑 ${tOn} chuyến bật`}</span>`:''}</span></span></button>
+          <small class="hint" style="display:block;min-height:0">${g.trips} chuyến${ol?' · '+ol.length+' người':''}${op?' · đang quản lý':''}</small><span class="gbadges">Mã: ${codeBadgeS(gc)}${tOn?`<span class="badge gc-on">${tDef?`⚠️ ${tOn} chuyến tắt`:`🔑 ${tOn} chuyến bật`}</span>`:''}</span></span></button>
           <button type="button" class="btn small${op?' is-open':''}" data-q="gopen" data-id="${esc(g.id)}" aria-expanded="${op}" title="Quản lý nhóm" aria-label="${op?'Đóng quản lý':'Quản lý nhóm'}">${op?'✕':'⚙️'}</button></div>`+
           (op?`<div class="lv2 mng-panel"><div class="hint" style="min-height:0">Tạo ${fd(g.created_at)}${g.creator_email?' bởi '+esc(g.creator_email):''}${g.last_activity?' · sửa gần nhất '+fdt(g.last_activity):''}</div>`+groupDetailHtml(g,d,dis)+`</div>`:'')+
           (ex?`<div class="lv2">`:'')+
           (ex&&tl?`<div class="acc-trips">${tq?`<div class="sub">Chuyến khớp (${tl.length}/${all.length})</div>`:''}`+(tl.length?tl.map(t=>{const tc=admTCodes[t.id];return `<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${mk(t.name)}</b>${t.closed?' <small>· đã chốt sổ</small>':''}${t.hidden?' <small>· ẩn với mã nhóm</small>':''}
             <div class="hint" style="min-height:0">Thủ quỹ: ${t.leaders&&t.leaders.length?t.leaders.map(esc).join(', '):'chưa có'}${t.helpers?` · ${t.helpers} người hỗ trợ`:''}</div>
             ${tc&&tc.active?`<span class="badge ${codeWarn('trip',true)?'gc-on':'gc-off'}">🔑 ${tc.viewers} người xem bằng mã · hết hạn ${fd(tc.expires_at)}</span>`:`<span class="badge ${tc&&codeWarn('trip',false)?'gc-on':'gc-off'}">${tc?(codeWarn('trip',false)?'⚠️ ':'')+'Mã '+(tc.enabled?'hết hạn':'tắt'):'Chưa có mã'}</span>`}</div><button type="button" class="btn small" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}" title="Mở chuyến này ở tab Chuyến">Mở</button></div>`;}).join(''):'<div class="hint" style="min-height:0">Chưa có chuyến nào.</div>')+`</div>`:'')+
-          (ex&&ol&&!op?`<div class="acc-trips"><div class="sub">Được tạo chuyến (${ol.length})</div>`+(ol.length?ol.map(o=>orgRowHtml(o,'')).join(''):'<div class="hint" style="min-height:0">Chưa có ai. Bấm Quản lý để thêm.</div>')+`</div>`:'')+
+          (ex&&ol&&!op?`<div class="acc-trips"><div class="sub">Người trong nhóm (${ol.length})</div>`+(ol.length?ol.map(o=>orgRowHtml(o,'')).join(''):'<div class="hint" style="min-height:0">Chưa có ai trong nhóm. Bấm Quản lý để thêm.</div>')+`</div>`:'')+
           (ex?`</div>`:'')+`</div>`;}).join(''):`<div class="hint">${q?'Không có nhóm hoặc chuyến nào khớp.':'Chưa có nhóm nào.'}</div>`)+gtrashHtml(dis);}
   else if(admTab==='perm')body=permHtml();
   else if(admTab==='accounts')body=accountsHtml(dis);
@@ -4213,7 +4213,7 @@ async function admSave(gid){const x=admDraft[gid]||{},dt=admDirty(gid);let ok=tr
 function admSwitch(next){const cur=admOpen;
   const go=async()=>{if(cur)delete admDraft[cur];Object.values(admDet).forEach(d=>{d.histOpen=false;});admOpen=next;admMsg='';if(next){admExp={};admExp[next]=true;}renderGroupTab();if(next)await admLoadGroup(next);};
   const dt=cur?admDirty(cur):[];if(!dt.length){go();return;}
-  const g=admGroups.find(y=>y.id===cur),L={ren:'tên nhóm mới',org:'email người được tạo chuyến chưa thêm',del:'chữ đã gõ ở ô xoá nhóm (sẽ không xoá)'};
+  const g=admGroups.find(y=>y.id===cur),L={ren:'tên nhóm mới',org:'email người trong nhóm chưa thêm',del:'chữ đã gõ ở ô xoá nhóm (sẽ không xoá)'};
   ask(`Nhóm “${g?g.name:''}” còn thay đổi chưa lưu: ${dt.map(k=>L[k]).join(', ')}. Lưu trước khi ${next?'chuyển sang nhóm khác':'đóng'}?`,
     {title:'Lưu thay đổi?',ok:dt.some(k=>k!=='del')?'Lưu':'Tiếp tục',alt:{label:'Không lưu',fn:go},noLabel:'Quay lại'},
     async()=>{if(await admSave(cur))await go();});}
@@ -4226,10 +4226,10 @@ function orgRowHtml(o,btn){
     (o.sessions>0?`Đang đăng nhập trên ${o.sessions} thiết bị${o.devices&&o.devices.length?' ('+o.devices.map(esc).join(', ')+')':''}`:'Đã đăng xuất')+
     (o.last_active?' · hoạt động '+ago(o.last_active):'')+(o.last_sign_in_at?' · đăng nhập lần cuối '+fdt(o.last_sign_in_at):'');
   return `<div class="acc-trip"><div class="org-mail" style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${esc(o.email)} ${act?'<span class="badge on">Đang dùng</span>':''}
-    <div class="hint" style="min-height:0">${st}${o.added_at?' · được tạo chuyến từ '+fd(o.added_at):''}</div></div>${btn}</div>`;}
+    <div class="hint" style="min-height:0">${st}${o.added_at?' · trong nhóm từ '+fd(o.added_at):''}</div></div>${btn}</div>`;}
 function groupDetailHtml(g,d,dis){
   const ovo=(admOv[g.id]&&admOv[g.id].organizers)||null,src=ovo||d.orgs;
-  const orgs=src?(src.length?src.map(o=>ovo?orgRowHtml(o,`<button type="button" class="btn danger-o small" data-q="orgrm" data-id="${esc(g.id)}" data-e="${esc(o.email)}"${dis}>Gỡ quyền tạo chuyến</button>`):
+  const orgs=src?(src.length?src.map(o=>ovo?orgRowHtml(o,`<button type="button" class="btn danger-o small" data-q="orgrm" data-id="${esc(g.id)}" data-e="${esc(o.email)}"${dis}>Bỏ khỏi nhóm</button>`):
     `<div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${esc(o.email)}<div class="hint" style="min-height:0">${o.signed_in?'đã đăng nhập':'chưa đăng nhập lần nào'} · thêm ${fd(o.added_at)}</div></div><button type="button" class="btn ghost small" data-q="orgrm" data-id="${esc(g.id)}" data-e="${esc(o.email)}"${dis}>Gỡ</button></div>`).join(''):'<div class="hint" style="min-height:0">Chưa có ai.</div>'):'<div class="hint">Đang tải…</div>';
   const c=d.code;
   const code=c?`<div class="row" style="align-items:center;gap:8px"><code class="bigcode">${esc(c.code)}</code><span class="badge${c.enabled?' on':''}">${c.enabled?'Đang bật':'Đang tắt'}</span></div>
@@ -4237,8 +4237,8 @@ function groupDetailHtml(g,d,dis){
     <div class="row">${c.enabled?`<button type="button" class="btn ghost small" data-q="gc" data-a="lock" data-id="${esc(g.id)}"${dis}>Tắt mã nhóm</button><button type="button" class="btn ghost small" data-q="gc" data-a="renew" data-id="${esc(g.id)}"${dis}>Gia hạn ${durTxt('group')}</button><button type="button" class="btn ghost small" data-q="cp" data-v="${esc(c.code)}">Sao chép</button>`:`<button type="button" class="btn ghost small" data-q="gc" data-a="unlock" data-id="${esc(g.id)}"${dis}>Bật mã nhóm</button>`}<button type="button" class="btn ghost small" data-q="gc" data-a="rotate" data-id="${esc(g.id)}"${dis}>Đổi mã mới</button></div>`:'<div class="hint">Đang tải…</div>';
   const dr=admDraft[g.id]||{};
   return `<div class="gsub lv3 h-ren"><div class="sub">✏️ Đổi tên</div><div class="row"><div class="field"><input type="text" id="qRen-${esc(g.id)}" maxlength="60" value="${esc(dr.ren!=null?dr.ren:g.name)}" aria-label="Tên nhóm"></div><button type="button" class="btn ghost small" data-q="gren" data-id="${esc(g.id)}"${dis}>Lưu tên</button></div></div>
-    <div class="gsub lv3 h-org"><div class="sub">👥 Được tạo chuyến (chỉ tạo chuyến mới trong nhóm, tự làm Thủ quỹ chuyến đó)</div>${orgs}
-      <div class="row"><div class="field"><input type="email" id="qOrg-${esc(g.id)}" value="${esc(dr.org||'')}" placeholder="email@gmail.com" autocapitalize="off" aria-label="Email người được tạo chuyến"></div><button type="button" class="btn small" data-q="orgadd" data-id="${esc(g.id)}"${dis}>Thêm</button></div></div>
+    <div class="gsub lv3 h-org"><div class="sub">👥 Người trong nhóm (chỉ tạo được chuyến mới, tự làm Thủ quỹ chuyến đó)</div>${orgs}
+      <div class="row"><div class="field"><input type="email" id="qOrg-${esc(g.id)}" value="${esc(dr.org||'')}" placeholder="email@gmail.com" autocapitalize="off" aria-label="Email người thêm vào nhóm"></div><button type="button" class="btn small" data-q="orgadd" data-id="${esc(g.id)}"${dis}>Thêm</button></div></div>
     <div class="gsub lv3 h-code"><div class="sub">🔑 Mã nhóm (tuỳ chọn)</div>${code}</div>
     <div class="gsub lv3 h-hist">${logHead('🕘 Lịch sử nhóm'+(d.histOpen&&d.audit?` (${d.audit.length})`:''),!!d.histOpen,`data-q="gaudit" data-id="${esc(g.id)}"`)}
       ${d.histOpen?(d.audit?`<div class="hist-scroll">${auditHtml(d.audit,false)}</div>`:'<div class="hint">Đang tải…</div>'):''}</div>
@@ -4330,7 +4330,7 @@ async function qAct(a,b){
   if(a==='gopen'){admSwitch(admOpen===id?null:id);return;}
   if(a==='agx'){if(admOpen===id){admSwitch(null);return;}const o=!admExp[id];admExp={};if(o)admExp[id]=true;renderGroupTab();return;}
   if(a==='gcreate'){const n=($('#qNewG').value||'').trim().replace(/\s+/g,' ');if(!n){admMsg='Nhập tên nhóm.';renderGroupTab();return;}
-    const r=await rpcDo('admin_create_group',{p_name:n},'Đã tạo nhóm “'+n+'”. Thêm người được tạo chuyến trong bảng Quản lý.');if(r){admNewG=false;await admLoad();await loadGroups();admSwitch(r);}else renderGroupTab();return;}
+    const r=await rpcDo('admin_create_group',{p_name:n},'Đã tạo nhóm “'+n+'”. Thêm người dùng vào nhóm trong bảng Quản lý.');if(r){admNewG=false;await admLoad();await loadGroups();admSwitch(r);}else renderGroupTab();return;}
   if(a==='gren'){const n=($('#qRen-'+id).value||'').trim().replace(/\s+/g,' ');if(!n)return;const g=admGroups.find(x=>x.id===id);
     if(g&&n===g.name){admMsg='Tên nhóm chưa thay đổi.';renderGroupTab();return;}
     ask(`Đổi tên nhóm "${g?g.name:''}" thành "${n}"?`,{title:'Đổi tên nhóm?',ok:'Đổi tên'},async()=>{
@@ -4347,7 +4347,7 @@ async function qAct(a,b){
       if(await rpcDo('delete_group',{gid:id},'Đã chuyển nhóm vào thùng rác.')){admOpen=null;delete admDraft[id];if(sbGroup&&sbGroup.id===id){disconnectGroup();sbGroup=null;lsDel(LS_GROUP);dropSyncedLocal();}await admLoad();await afterAuth(true);showTab('group',true);}else renderGroupTab();});return;}
   if(a==='orgadd'){const v=($('#qOrg-'+id).value||'').trim().toLowerCase();if(!okEmail(v)){admMsg='Email chưa đúng.';renderGroupTab();return;}
     if(await rpcDo('add_organizer',{gid:id,p_email:v},'Đã thêm '+v+'. Người này đăng nhập bằng đúng email là tạo được chuyến.')){if(admDraft[id])delete admDraft[id].org;await admLoadGroup(id);await admLoad();}else renderGroupTab();return;}
-  if(a==='orgrm'){ask(`Gỡ quyền tạo chuyến của ${e}? Người này không tạo được chuyến mới trong nhóm nữa. Các chuyến họ đang là thủ quỹ vẫn giữ nguyên (gỡ ở từng chuyến nếu cần).`,{title:'Gỡ quyền tạo chuyến?',ok:'Gỡ quyền tạo chuyến',danger:true},async()=>{if(await rpcDo('remove_organizer',{gid:id,p_email:e},'Đã gỡ quyền tạo chuyến của '+e+'.')){await admLoadGroup(id);await admLoad();}else renderGroupTab();});return;}
+  if(a==='orgrm'){ask(`Bỏ ${e} khỏi nhóm? Người này không tạo được chuyến mới trong nhóm nữa. Các chuyến họ đang là thủ quỹ vẫn giữ nguyên (gỡ ở từng chuyến nếu cần).`,{title:'Bỏ khỏi nhóm?',ok:'Bỏ khỏi nhóm',danger:true},async()=>{if(await rpcDo('remove_organizer',{gid:id,p_email:e},'Đã bỏ khỏi nhóm: '+e+'.')){await admLoadGroup(id);await admLoad();}else renderGroupTab();});return;}
   if(a==='gc'){const act=b.dataset.a;const go=async()=>{const r=await rpcDo('group_code_act',{gid:id,p_act:act},{lock:'Đã tắt mã nhóm.',unlock:'Đã bật mã nhóm.',renew:'Đã gia hạn '+durTxt('group')+'.',rotate:'Đã đổi mã nhóm. Mã cũ hết tác dụng.'}[act]);if(r){admDet[id].code=r;admLoad();}renderGroupTab();};
     const Q={rotate:['Đổi mã nhóm mới? Ai đang xem bằng mã cũ sẽ mất quyền xem.','Đổi mã nhóm?','Đổi mã',true],
       lock:['Tắt mã nhóm? Người đang xem bằng mã nhóm sẽ mất quyền xem ngay.','Tắt mã nhóm?','Tắt mã',true],

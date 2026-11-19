@@ -3642,7 +3642,7 @@ const ADM_ENT=['admin','group','organizer','quota'];   /* nhật ký quản tr�
 const paidMap=new Map();let paidFor='',rpCount=new Map(),rpFor='',codeCache=new Map();
 let clRows=null,clCount=new Map(),clFor='',clDraft={};window.CLAIM_PENDING=null;   /* v90: "Tôi đã trả" */
 function isAnon(){return !!(sbSession&&sbSession.user&&(sbSession.user.is_anonymous||!sbSession.user.email));}
-const ROLE_NAME={admin:'Quản trị viên',leader:'Thủ quỹ',helper:'Người hỗ trợ',viewer:'Thành viên (chỉ xem)'};
+const ROLE_NAME={admin:'Quản trị viên',leader:'Thủ quỹ',helper:'Người hỗ trợ',viewer:'Người xem'};
 const TAB_NAME={member:'Người đi',advance:'Đã đóng',room:'Phòng',expense:'Khoản chi'};
 const okEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 const fdt=v=>{try{return new Date(v).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return v||'';}};
@@ -4113,7 +4113,7 @@ window.PERM=null;window.PERM_ERR='';window.PERM_Q='';window.PERM_OPEN=null;
 async function admLoadPerm(){try{const {data,error}=await sb.rpc('admin_permissions');window.PERM=error?[]:(data||[]);
     window.PERM_ERR=error?(/admin_permissions|schema cache|does not exist|not find/i.test(error.message||'')?'Chưa bật chức năng này: cần chạy supabase/020_tra_cuu_quyen.sql.':'Không tải được quyền: '+(ERR_VN[error.message]||error.message)):'';}catch(e){window.PERM=[];}
   if(admAcc===null){try{await admLoadAcc();}catch(e){}}if(curTab==='group')renderGroupTab();}
-const P_ROLE={admin:'Quản trị viên – toàn quyền',organizer:'Được tạo chuyến mới trong nhóm',leader:'Thủ quỹ',helper:'Người hỗ trợ',code_group:'Xem bằng mã nhóm',code_trip:'Xem bằng mã chuyến'};
+const P_ROLE={admin:'Quản trị viên – toàn quyền',organizer:'Được tạo chuyến mới trong nhóm',leader:'Thủ quỹ',helper:'Người hỗ trợ',viewer:'Người xem',code_group:'Xem bằng mã nhóm',code_trip:'Xem bằng mã chuyến'};
 function pBadge(r,where){let t=P_ROLE[r.role]||r.role;if(r.role==='helper')t+=': '+((r.tabs||[]).map(k=>TAB_NAME[k]||k).join(', ')||'—');
   const code=r.role==='code_group'||r.role==='code_trip';if(code&&!r.active)t+=' (mã tắt / hết hạn)';
   const on=r.role==='admin'||r.role==='organizer'||r.role==='leader';
@@ -4184,7 +4184,7 @@ function accountsHtml(dis){
   const tripsHtml=e=>{const rows=tr(e);if(!rows.length)return '<div class="acc-trips"><div class="hint" style="min-height:0">Chưa có quyền theo chuyến nào.</div></div>';
     return `<div class="acc-trips"><div class="sub">Quyền theo chuyến (${rows.length})</div><div class="hist-scroll acc-scroll" data-rows="5">`+rows.map(t=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(t.trip_name)}</b>${t.group_name?` <small>· ${esc(t.group_name)}</small>`:''}${t.deleted?' <small style="color:var(--neg)">· trong thùng rác</small>':t.closed?' <small>· đã chốt sổ</small>':''}
       ${t.role==='helper'?`<div class="hint" style="min-height:0">Nhập liệu: ${(t.tabs||[]).map(k=>TAB_NAME[k]||k).join(', ')||'—'}</div>`:''}</div>
-      <span class="badge${t.role==='leader'?' on':''}">${t.role==='leader'?'Thủ quỹ':'Người hỗ trợ'}</span></div>`).join('')+`</div></div>`;};
+      <span class="badge${t.role==='leader'?' on':''}">${t.role==='leader'?'Thủ quỹ':t.role==='viewer'?'Người xem':'Người hỗ trợ'}</span></div>`).join('')+`</div></div>`;};
   return add+`<div class="row"><div class="field"><input type="search" id="qAccQ" value="${esc(admAccQ)}" placeholder="Tìm theo email, tên chuyến, tên nhóm" autocapitalize="off" autocomplete="off" aria-label="Tìm tài khoản"></div></div>
     <div class="hint" style="min-height:0">${admAcc.length} tài khoản · ${admAcc.filter(a=>a.is_admin).length} quản trị viên${q?` · đang lọc ${list.length}`:''}</div>`+
     (list.length?list.map(a=>{const org=a.organizer_of||[],op=window.ACC_OPEN===a.email,n=tr(a.email).length;
@@ -4573,12 +4573,12 @@ function dlgBody(){
   if(dlgKind==='people'){if(tPeople===null)return wait;
     const ck=(p,k)=>`<label class="tk"><input type="checkbox" data-pt="${esc(p.email)}" value="${k}"${p.tabs.includes(k)?' checked':''}${ld&&p.role==='helper'?'':' disabled'}>${TAB_NAME[k]}</label>`;
     const rows=tPeople.map(p=>`<div class="rcard"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(p.email)}</b>${p.signed_in?'':' <small style="color:var(--muted)">(chưa đăng nhập)</small>'}</div>
-        ${ld?`<select data-pr="${esc(p.email)}" aria-label="Vai trò"><option value="leader"${p.role==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${p.role==='helper'?' selected':''}>Hỗ trợ</option></select>`:`<span class="badge on">${p.role==='leader'?'Thủ quỹ':'Hỗ trợ'}</span>`}</div>
+        ${ld?`<select data-pr="${esc(p.email)}" aria-label="Vai trò"><option value="leader"${p.role==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${p.role==='helper'?' selected':''}>Hỗ trợ</option><option value="viewer"${p.role==='viewer'?' selected':''}>Người xem</option></select>`:`<span class="badge on">${p.role==='leader'?'Thủ quỹ':p.role==='viewer'?'Người xem':'Hỗ trợ'}</span>`}</div>
       ${p.role==='helper'?`<div class="tks">${LOCK_TABS.map(k=>ck(p,k)).join('')}</div>`:''}
       ${ld?`<div class="row"><button type="button" class="btn ghost small" data-dl="psave" data-e="${esc(p.email)}"${dis}>Lưu</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-dl="prm" data-e="${esc(p.email)}"${dis}>Gỡ</button></div>`:''}</div>`).join('');
-    return `<p style="color:var(--muted);font-size:14px;margin:0"><b>Thủ quỹ</b> làm được mọi việc của chuyến. <b>Người hỗ trợ</b> chỉ nhập ở các mục được tick. Mỗi người đăng nhập bằng đúng email này.</p>${rows||'<div class="hint">Chưa có ai.</div>'}
+    return `<p style="color:var(--muted);font-size:14px;margin:0"><b>Thủ quỹ</b> làm được mọi việc của chuyến. <b>Người hỗ trợ</b> chỉ nhập ở các mục được tick. <b>Người xem</b> chỉ xem, không sửa được. Mỗi người đăng nhập bằng đúng email này.</p>${rows||'<div class="hint">Chưa có ai.</div>'}
       ${ld?`<div class="gcard"><div class="sub">Thêm người</div><div class="field"><label for="dlgEmail">Email</label><input type="email" id="dlgEmail" autocapitalize="off" placeholder="email@gmail.com"></div>
-        <div class="row" style="align-items:center"><select id="dlgRole" aria-label="Vai trò"><option value="helper">Người hỗ trợ</option><option value="leader">Thủ quỹ</option></select></div>
+        <div class="row" style="align-items:center"><select id="dlgRole" aria-label="Vai trò"><option value="helper">Người hỗ trợ</option><option value="viewer">Người xem (chỉ xem)</option><option value="leader">Thủ quỹ</option></select></div>
         <div class="tks" id="dlgTabs">${LOCK_TABS.map(k=>`<label class="tk"><input type="checkbox" value="${k}"${k==='expense'?' checked':''}>${TAB_NAME[k]}</label>`).join('')}</div>
         <div class="row"><button type="button" class="btn" data-dl="padd"${dis}>Thêm</button></div></div>`:''}`;}
   if(dlgKind==='tall')return taBody();

@@ -1,0 +1,2 @@
+-- 028: vai Người xem theo tài khoản (trip_roles.role = viewer): chỉ xem, không sửa; vẫn Báo sai / Tôi đã trả.
+-- Đã áp dụng trực tiếp lên Supabase: check trip_roles_role_check, can_edit_trip, can_view_trip, set_trip_person, my_trips, my_trip_roles.

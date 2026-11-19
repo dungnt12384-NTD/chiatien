@@ -3544,7 +3544,6 @@ function adminHtml(){
   let body='';
   if(admTab==='groups'){
     body=`<div class="rcard"><div class="sub">Tạo nhóm mới</div><div class="row"><div class="field"><input type="text" id="qNewG" maxlength="60" placeholder="Ví dụ: Cào Cào Dưỡng Sinh" aria-label="Tên nhóm mới"></div><button type="button" class="btn" data-q="gcreate"${dis}>Tạo nhóm</button></div></div>`+
-      (admReady?codeWarnHtml():'')+
       (!admReady?'<div class="hint">Đang tải danh sách nhóm…</div>':admGroups.length?admGroups.map(g=>{const op=admOpen===g.id,ex=op||!!admExp[g.id],d=admDet[g.id]||{},ov=admOv[g.id],gc=admCodes[g.id];
         const tl=ov?ov.trips||[]:null,ol=ov?ov.organizers||[]:null;
         return `<div class="rcard${op?' cur':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap">
@@ -3568,10 +3567,6 @@ function adminHtml(){
 function codeBadge(c){if(!c)return '<span class="badge gc-none">Chưa có mã nhóm</span>';
   if(c.active)return `<span class="badge gc-on">🔑 Mã nhóm đang bật · ${c.viewers} người xem bằng mã · hết hạn ${fd(c.expires_at)}</span>`;
   return `<span class="badge gc-off">Mã nhóm ${c.enabled?'đã hết hạn':'đang tắt'}</span>`;}
-function codeWarnHtml(){const on=admGroups.filter(g=>admCodes[g.id]&&admCodes[g.id].active);
-  if(!on.length)return '<div class="hint" style="min-height:0">Không nhóm nào đang bật mã nhóm.</div>';
-  return `<div class="note gc-warn" role="status">⚠️ <b>${on.length} nhóm đang bật mã nhóm</b> (ai có mã đều xem được các chuyến trong nhóm): `+
-    on.map(g=>`<b>${esc(g.name)}</b> (${admCodes[g.id].viewers} người xem, hết hạn ${fd(admCodes[g.id].expires_at)})`).join(', ')+'</div>';}
 /* Quản lý tài khoản: danh sách tài khoản email, thêm / gỡ quản trị viên (cần supabase/008_quan_ly_tai_khoan.sql) */
 function accountsHtml(dis){
   const add=`<div class="rcard"><div class="sub">Thêm quản trị viên</div><div class="hint" style="min-height:0">Người này đăng nhập bằng đúng email là có toàn quyền quản trị (kể cả khi chưa đăng nhập lần nào).</div>

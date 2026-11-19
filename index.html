@@ -1246,6 +1246,16 @@ html #grpMain .gcard .rcard.cur{border-color:var(--brand,var(--accent))!importan
 html #grpMain .gcard .lv2{box-shadow:none!important}
 .trip-code{margin-top:10px;padding:10px 12px;border:1.5px dashed var(--line);border-radius:18px}
 .trip-code .field{margin:0}
+/* trạng thái đồng bộ: nằm trên tiêu đề tab Quản trị, canh phải */
+.sync-head{margin-left:auto;align-self:center!important;flex:0 1 auto;max-width:48%;font-size:12px!important;line-height:1.3;color:var(--muted);text-align:right;padding:3px 10px;border-radius:99px;background:var(--surface2,rgba(0,0,0,.05));overflow-wrap:anywhere}
+.sync-head:empty{display:none}
+.sync-head[data-s="error"],.sync-head[data-s="slow"],.sync-head[data-s="noaccess"]{background:#c62828;color:#fff}
+.sync-head[data-s="ok"]{color:var(--pos,#1b7a3a)}
+/* nhật ký quản trị: thẻ riêng, mỗi hàng = giờ bên trái + nội dung */
+.log-card .log-grid .rmrow{flex-direction:row!important;align-items:baseline;gap:8px!important}
+.log-card .log-grid .rmrow>.hint{order:-1;flex:0 0 auto;font-size:11.5px!important;font-variant-numeric:tabular-nums;white-space:nowrap}
+.log-card .log-grid .rmrow>div:first-child{font-size:13.5px!important;flex:1 1 auto;min-width:0}
+.rp-done{border-top:1px solid var(--line);padding-top:8px;margin-top:4px}
 /* hàng nhật ký gọn: ít khoảng cách */
 html .hist-scroll .rmrow{gap:1px!important;padding:4px 0!important;line-height:1.3}
 html .hist-scroll .rmrow .hint{font-size:12px}
@@ -1281,6 +1291,40 @@ html.phone .tab[aria-selected="true"]::after{content:"";position:absolute;left:1
 html.phone .tab b{top:4px!important}
 html.phone body{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))!important}
 html.phone #toast{bottom:calc(82px + env(safe-area-inset-bottom,0px))!important}
+/* ===== v66 ĐIỆN THOẠI GỌN (đặt CUỐI): chữ, nút, khoảng cách nhỏ lại để thấy được nhiều hơn ===== */
+html.phone body{font-size:15px}
+html.phone .tripbar>b{font-size:24px!important}
+html.phone .tripbar,html.phone .tripbar>.num{font-size:13.5px!important}
+html.phone .sec-h{padding:10px 12px 4px!important;gap:10px!important}
+html.phone .sec-h .ico{width:34px!important;height:34px!important;border-radius:10px!important}
+html.phone .sec-h .ico svg{width:20px!important;height:20px!important}
+html.phone .sec-h h2{font-size:19px!important}
+html.phone .sec-h p{display:none!important}
+html.phone .sec-b{padding:10px 12px!important;gap:10px!important}
+html.phone .sec .sub{font-size:15.5px!important}
+html.phone .gcard{padding:10px 12px!important;gap:8px!important}
+html.phone .gcard .gh b{font-size:15.5px!important}
+html.phone .rcard{padding:8px 10px!important}
+html.phone .hint,html.phone span.hint,html.phone .hint b{font-size:13px!important;line-height:1.38}
+html.phone label,html.phone .field>label{font-size:13.5px!important}
+html.phone .note{font-size:14px!important;line-height:1.4;padding:8px 10px!important}
+html.phone small{font-size:12.5px!important}
+html.phone .badge,html.phone .pill{font-size:11.5px!important}
+html.phone .kpi{padding:9px 12px!important}
+html.phone .kpi>span{font-size:13px!important}
+html.phone .kpi b{font-size:20px!important}
+html.phone input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),html.phone select,html.phone textarea{font-size:16px!important;min-height:42px}
+html.phone .btn{min-height:42px;font-size:15px!important;padding:6px 12px!important}
+html.phone .btn.small{min-height:34px;font-size:13.5px!important;padding:4px 10px!important}
+html.phone .day,html.phone .subtab{min-height:34px;font-size:13.5px!important;padding:6px 10px!important}
+html.phone .seg button{font-size:13.5px!important;padding:6px 8px!important}
+html.phone .trip b{font-size:15px}
+html.phone .trip small{font-size:12.5px!important}
+html.phone table{font-size:13.5px}
+html.phone .tab{height:58px!important}
+html.phone .tab svg{width:23px!important;height:23px!important}
+html.phone .tab .tls{font-size:10.5px!important}
+html.phone .sync-head{font-size:11px!important;max-width:55%}
 </style>
 
 
@@ -1508,11 +1552,10 @@ html.phone #toast{bottom:calc(82px + env(safe-area-inset-bottom,0px))!important}
 
   <!-- BÁO CÁO -->
   <section class="sec" data-tab="group" hidden>
-    <div class="sec-h"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></div><div class="grow"><h2>Quản trị</h2><p>Tài khoản, nhóm, thành viên, sao lưu</p></div></div>
+    <div class="sec-h"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></div><div class="grow"><h2>Quản trị</h2><p>Tài khoản, nhóm, thành viên, sao lưu</p></div><div id="syncStatus" class="sync-head" aria-live="polite"></div></div>
     <div class="sec-b">
       <div class="gcard" id="grpAcct">
         <div class="gh"><b>👤 Tài khoản và đồng bộ</b></div>
-        <div class="note info" id="syncStatus" style="--c:var(--c-trip)"></div>
         <div id="acctBox" class="rb"></div>
         <div class="hint" id="syncMsg"></div>
       </div>
@@ -3085,7 +3128,7 @@ function syncLabel(){
   return ({off:(window.supabase?'Chưa đăng nhập':'Chỉ lưu trên máy này'),connecting:'Đang kết nối đồng bộ…',slow:'Chưa kết nối được, đang thử lại',ok:'Đã đồng bộ'+tm,saving:'Đang đồng bộ…',error:'Lỗi đồng bộ',noaccess:'Chưa có quyền đồng bộ'})[syncState]||'';}
 function paintSync(){
   const p=document.getElementById('syncPill');if(p){p.textContent=syncLabel();p.dataset.s=syncState;}
-  const e=document.getElementById('syncStatus');if(e)e.textContent=syncLabel()+(syncNote?'. '+syncNote:'');}
+  const e=document.getElementById('syncStatus');if(e){e.textContent=syncLabel()+(syncNote?'. '+syncNote:'');e.dataset.s=syncState;}}
 function setSync(st,note){syncState=st;syncNote=note||'';if(st==='ok')syncAt=Date.now();paintSync();try{paintAccount();}catch(e){}}
 const pushQ=new Map();
 function schedulePush(t,delay){
@@ -3531,13 +3574,14 @@ function groupsCard(){
     const trips=a?a.trips||[]:[],ex=!!myGrpExp[g.id];
     return `<div class="rcard${cur?' cur':''}"><div class="row" style="align-items:center;gap:8px;flex-wrap:nowrap">
       <button type="button" class="lv-tog" data-q="mgx" data-id="${esc(g.id)}" aria-expanded="${ex}"><span class="chev">▸</span><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere"><b>${esc(g.name)}</b>
-      <small class="hint" style="display:block;min-height:0">${a?trips.length:g.trips} chuyến bạn xem được · ${ex?'bấm để thu gọn':'bấm để xem chuyến'}</small></span></button>
+      <small class="hint" style="display:block;min-height:0">${a?trips.length:g.trips} chuyến</small></span></button>
       <button type="button" class="btn small${cur?' is-open':''}" data-q="${cur?'gowork':'pick'}" data-id="${esc(g.id)}">${cur?'Đang mở':'Mở nhóm'}</button></div>`+
       (a&&ex?`<div class="lv2"><div class="acc-src">${accessSrc(a)}</div>`+(trips.length?`<div class="acc-trips">`+trips.map(t=>{const on=cur&&R.current===t.id;
         return `<div class="acc-trip acc-row${on?' on':''}"><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;text-align:left"><b>${esc(t.name)}</b>${t.closed?' <small>· đã chốt sổ</small>':''}
-          <small class="hint" style="display:block;min-height:0">${TRIP_ROLE[t.role]||t.role}${VIA_NAME[t.via]?' · '+VIA_NAME[t.via]:''}</small></span><button type="button" class="btn small${on?' is-open':''}" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}" title="Mở chuyến này ở tab Chuyến">${on?'Đang mở':'Mở'}</button></div>`;}).join('')+`</div>`:
+          <small class="hint" style="display:block;min-height:0">Vai trò: ${TRIP_ROLE[t.role]||t.role}${VIA_SHORT[t.via]?' · '+VIA_SHORT[t.via]:''}</small></span><button type="button" class="btn small${on?' is-open':''}" data-q="otrip" data-g="${esc(g.id)}" data-t="${esc(t.id)}" title="Mở chuyến này ở tab Chuyến">${on?'Đang mở':'Mở'}</button></div>`;}).join('')+`</div>`:
         `<div class="hint" style="min-height:0">${a.is_organizer?'Chưa có chuyến nào bạn có vai trò. Bạn tạo chuyến mới ở tab Chuyến.':'Chưa có chuyến nào.'}</div>`)+`</div>`:'')+`</div>`;}).join('')+`</div>`;}
 const TRIP_ROLE={leader:'Leader',helper:'Người phụ trách',admin:'Quản trị',viewer:'Chỉ xem'};
+const VIA_SHORT={role:'',admin:'quản trị viên',organizer:'BTC nhóm',trip_code:'nhờ mã chuyến',group_code:'nhờ mã nhóm'};
 const VIA_NAME={role:'Được gán vai trò trong chuyến',admin:'Quyền quản trị viên',organizer:'Thuộc BTC nhóm: chỉ xem',trip_code:'Nhờ mã chuyến đã nhập',group_code:'Nhờ mã nhóm đã nhập'};
 function accessSrc(a){const s=[];
   if(a.is_admin)s.push('<b>Quản trị viên</b>: xem và sửa mọi chuyến');
@@ -3563,7 +3607,15 @@ function reportsCard(){const L=window.RP_OPEN||[];if(!L.length&&!canHandleAnyRp(
         <div style="overflow-wrap:anywhere">${r.item_label?`<b>${esc(r.item_label)}</b>: `:''}${esc(r.message)}</div>
         <div class="hint" style="min-height:0">${r.reporter?esc(r.reporter)+' · ':''}${ago(r.at)} (${fdt(r.at)})</div>
         <div class="row"><div class="field" style="flex:1 1 200px"><input type="text" id="rpR-${r.id}" maxlength="500" placeholder="Trả lời người báo (không bắt buộc)" aria-label="Trả lời"></div><button type="button" class="btn small" data-q="rpdone" data-id="${r.id}">Đã xử lý</button></div></div>`).join('')
-    :'<div class="hint" style="min-height:0">Không có báo sai nào đang chờ xử lý.</div>')+`</div>`;}
+    :'<div class="hint" style="min-height:0">Không có báo sai nào đang chờ xử lý.</div>')+rpDoneHtml()+`</div>`;}
+/* báo sai ĐÃ xử lý (cần supabase/017): ai xử lý, lúc nào, trả lời gì -> BTC / leader khác cũng biết */
+window.RP_DONE=null;window.RP_DONE_OPEN=false;
+function rpDoneHtml(){const L=window.RP_DONE,op=window.RP_DONE_OPEN;
+  return `<div class="rp-done">${logHead('✅ Đã xử lý'+(op&&L?` (${L.length}${L.length>=50?'+':''})`:''),op,'data-q="rpdoneT"')}`+
+    (!op?'':(L===null?'<div class="hint" style="min-height:0">Đang tải…</div>':!L.length?'<div class="hint" style="min-height:0">Chưa có báo sai nào được xử lý.</div>':
+    `<div class="hist-scroll" data-rows="6">`+L.map(r=>`<div class="rmrow"><div style="font-size:14px;overflow-wrap:anywhere"><b>${esc(r.trip_name)}</b>${r.group_name?` <small>· ${esc(r.group_name)}</small>`:''}: ${r.item_label?esc(r.item_label)+' – ':''}${esc(r.message)}</div>
+      <div class="hint" style="min-height:0">✅ ${esc(r.resolved_by||'?')} · ${fdt(r.resolved_at)}${r.reply?` · trả lời: “${esc(r.reply)}”`:''}${r.reporter?` · người báo: ${esc(r.reporter)}`:''}</div></div>`).join('')+`</div>`))+`</div>`;}
+async function loadRpDone(){window.RP_DONE=null;renderGroupTab();try{const {data,error}=await sb.rpc('my_resolved_reports',{p_limit:50});window.RP_DONE=error?[]:(data||[]);}catch(e){window.RP_DONE=[];}renderGroupTab();}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&sbSession)loadReports();});
 async function loadAccess(){try{const {data,error}=await sb.rpc('my_group_access');if(error)return;myAccess={};(data||[]).forEach(r=>{myAccess[r.id]=r;});}catch(e){}}
 let pendTrip=null;
@@ -3592,7 +3644,7 @@ function renderGroupTab(){
   if(!sbSession){el.innerHTML='';return;}
   const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
   let h=reportsCard()+groupsCard()+(sbAdmin?'':codeCard());
-  if(sbAdmin){h+=adminHtml();if(!admLoaded){admLoaded=true;admLoad();}}
+  if(sbAdmin){h+=adminHtml()+adminLogCard();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
   /* đang Quản lý 1 nhóm: mọi phần xung quanh xám đi (vẫn bấm được để chuyển) */
   /* lịch sử nhóm: khung cuộn cao đúng 10 dòng */
@@ -3601,10 +3653,14 @@ function renderGroupTab(){
   if(keep&&val!=null){const n=document.getElementById(keep);if(n&&(n.tagName==='INPUT'||n.tagName==='TEXTAREA')){n.value=val;n.focus();try{n.setSelectionRange(val.length,val.length);}catch(e){}}}}
 
 /* ---------- quản trị hệ thống (chỉ quản trị viên) ---------- */
+/* Nhật ký quản trị: thẻ riêng (như Sao lưu), hiện sẵn 6 dòng; "Xem nhiều hơn" = khung 20 dòng + tải thêm */
+function adminLogCard(){const rows=admAudit.filter(x=>ADM_ENT.includes(x.entity));
+  return `<div class="gcard log-card"><div class="row log-head" style="align-items:center;gap:8px;flex-wrap:nowrap"><b style="flex:1 1 auto">🕘 Nhật ký quản trị${rows.length?` (${rows.length}${admAuditMore?'+':''})`:''}</b>${rows.length>6?`<button type="button" class="btn ghost small" data-q="alog" aria-expanded="${admLogOpen}">${admLogOpen?'Thu gọn':'Xem nhiều hơn'}</button>`:''}</div>
+    <div class="hist-scroll log-grid" data-rows="${admLogOpen?20:6}">${auditHtml(rows,true)}</div>${admLogOpen&&admAuditMore?'<button type="button" class="btn ghost small" data-q="amore">Tải thêm nhật ký cũ hơn</button>':''}</div>`;}
 function adminHtml(){
   const dis=admBusy?' disabled':'';
-  if(admTab==='reqs')admTab='groups';
-  const tabs=[['groups','Nhóm'],['accounts','Tài khoản'],['codes','Cài đặt mã'],['audit','Nhật ký']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
+  if(admTab==='reqs'||admTab==='audit')admTab='groups';
+  const tabs=[['groups','Nhóm'],['accounts','Tài khoản'],['codes','Cài đặt mã']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
   let body='';
   if(admTab==='groups'){
     const q=admGQ.trim().toLowerCase(),hit=s=>!!q&&(s||'').toLowerCase().includes(q),mk=s=>{const v=esc(s);if(!q)return v;const i=(s||'').toLowerCase().indexOf(q);return i<0?v:esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));};
@@ -3630,9 +3686,6 @@ function adminHtml(){
           (ex?`</div>`:'')+`</div>`;}).join(''):`<div class="hint">${q?'Không có nhóm hoặc chuyến nào khớp.':'Chưa có nhóm nào.'}</div>`);}
   else if(admTab==='accounts')body=accountsHtml(dis);
   else if(admTab==='codes')body=codeSetHtml(dis);
-  else{const rows=admAudit.filter(x=>ADM_ENT.includes(x.entity));
-    body=`<div class="rcard">${logHead('🕘 Nhật ký quản trị'+(admLogOpen?` (${rows.length})`:''),admLogOpen,'data-q="alog"')}<div class="hint" style="min-height:0">Chỉ ghi các thao tác quản trị: tạo / đổi tên / xoá nhóm, thêm / gỡ BTC, thêm / gỡ quản trị viên, đổi cài đặt mã.</div>
-      ${admLogOpen?`<div class="hist-scroll">${auditHtml(rows,true)}</div>${admAuditMore?'<button type="button" class="btn ghost small" data-q="amore">Tải thêm nhật ký cũ hơn</button>':''}`:''}</div>`;}
   return `<div class="gcard admin-card"><div class="gh"><b>🛡 Quản trị hệ thống</b></div>${msgHtml(admMsg)}<div class="seg">${tabs}</div>${body}</div>`;}
 /* cài đặt mặc định của mã (cần supabase/016): bật/tắt khi tạo + số ngày hạn. Cảnh báo chỉ khi mã KHÁC mặc định
    (mặc định bật -> cảnh báo khi tắt / hết hạn; mặc định tắt -> cảnh báo khi đang bật) */
@@ -3752,11 +3805,11 @@ function groupDetailHtml(g,d,dis){
       <div class="row"><div class="field"><input type="text" id="qDel-${esc(g.id)}" value="${esc(dr.del||'')}" placeholder="${esc(g.name)}" aria-label="Gõ tên nhóm để xoá"></div><button type="button" class="btn danger-o small" data-q="gdel" data-id="${esc(g.id)}"${dis}>Xoá nhóm</button></div></div>`;}
 async function admLoad(){
   if(!sbAdmin)return;
-  const [a,b,c,ov,cd,tc]=await Promise.all([sb.rpc('admin_groups'),Promise.resolve({data:[]}),admTab==='audit'?sb.rpc('admin_audit',{p_limit:200}):Promise.resolve({data:admAudit}),sb.rpc('admin_groups_overview'),sb.rpc('admin_group_codes'),sb.rpc('admin_trip_codes')]);
+  const [a,b,c,ov,cd,tc]=await Promise.all([sb.rpc('admin_groups'),Promise.resolve({data:[]}),sb.rpc('admin_audit',{p_limit:200}),sb.rpc('admin_groups_overview'),sb.rpc('admin_group_codes'),sb.rpc('admin_trip_codes')]);
   admTCodes={};(tc&&tc.data||[]).forEach(x=>{admTCodes[x.trip_id]=x;});
   admOv={};(ov&&ov.data||[]).forEach(x=>{admOv[x.id]=x;});
   admCodes={};(cd&&cd.data||[]).forEach(x=>{admCodes[x.group_id]=x;});
-  admGroups=a.data||[];admReqs=b.data||[];admReady=true;if(admTab==='audit'){admAudit=c.data||[];admAuditMore=(c.data||[]).length>=200;}
+  admGroups=a.data||[];admReqs=b.data||[];admReady=true;if(c&&!c.error){admAudit=c.data||[];admAuditMore=(c.data||[]).length>=200;}
   if(curTab==='group')renderGroupTab();}
 async function admLoadGroup(gid){
   const [o,c]=await Promise.all([sb.rpc('group_organizers_list',{gid}),sb.rpc('group_code_get',{gid})]);
@@ -3771,6 +3824,7 @@ async function qAct(a,b){
   if(a==='logout'){signOutAsk();return;}
   if(a==='pick'){const g=sbGroups.find(x=>x.id===id);if(g){connectGroup(g);goWork();}return;}
   if(a==='otrip'){openTrip(b.dataset.g,b.dataset.t);return;}
+  if(a==='rpdoneT'){window.RP_DONE_OPEN=!window.RP_DONE_OPEN;if(window.RP_DONE_OPEN)await loadRpDone();else renderGroupTab();return;}
   if(a==='csave'){const k=b.dataset.k,s=window.CODE_SET[k]||{},en=($('#qCsEn-'+k)||{}).value==='1',dv=(($('#qCsDays-'+k)||{}).value||'').trim(),days=+dv;
     if(!/^\d+$/.test(dv)||days<1||days>3650){admMsg='Hạn dùng phải là số ngày từ 1 đến 3650.';renderGroupTab();return;}
     if(en===!!s.default_enabled&&days===+s.days){admMsg='Chưa có gì thay đổi.';renderGroupTab();return;}
@@ -3783,7 +3837,7 @@ async function qAct(a,b){
   if(a==='rpdone'){const rid=+id,rep=(($('#rpR-'+rid)||{}).value||'').trim();b.disabled=true;
     const {error}=await sb.rpc('resolve_report',{p_id:rid,p_reply:rep});
     if(error){b.disabled=false;toast('Chưa xử lý được: '+(ERR_VN[error.message]||error.message));return;}
-    toast('Đã đánh dấu xử lý.');rpCount.clear();rpFor='';await loadReports();try{renderTripExtra();}catch(e){}return;}
+    toast('Đã đánh dấu xử lý.');rpCount.clear();rpFor='';await loadReports();if(window.RP_DONE_OPEN)loadRpDone();try{renderTripExtra();}catch(e){}return;}
   if(a==='mgx'){const o=!myGrpExp[id];myGrpExp={};if(o)myGrpExp[id]=true;renderGroupTab();return;}   /* mở nhóm này thì nhóm trước tự đóng */
   if(a==='gowork'){goWork();return;}
   if(a==='code'){const i=$('#qCode');if(await enterCode(i&&i.value,'#qCodeMsg')&&i)i.value='';return;}
@@ -3854,7 +3908,7 @@ function fmtAudit(a,showGroup){
   return `<div class="rmrow"><div style="font-size:14px;overflow-wrap:anywhere"><b>${who}</b> ${m[K]||esc(K)}${g}</div><div class="hint" style="min-height:0">${fdt(a.at)}</div></div>`;}
 /* KIỂU CHUNG CHO MỌI NHẬT KÝ: tiêu đề + nút Hiện nhật ký / Đóng lại (mặc định đóng), mở ra là khung cuộn cao 10 dòng */
 function logHead(title,open,attr){return `<div class="row log-head" style="align-items:center;gap:8px;flex-wrap:nowrap"><div class="sub" style="flex:1 1 auto">${title}</div><button type="button" class="btn ghost small" ${attr} aria-expanded="${!!open}">${open?'Đóng lại':'Hiện nhật ký'}</button></div>`;}
-function fitLogs(root){if(!root)return;root.querySelectorAll('.hist-scroll').forEach(h=>{const r=h.children;h.style.maxHeight=r.length>10?r[10].offsetTop+'px':'';});}
+function fitLogs(root){if(!root)return;root.querySelectorAll('.hist-scroll').forEach(h=>{const n=+h.dataset.rows||10,r=h.children;h.style.maxHeight=r.length>n?r[n].offsetTop+'px':'';});}
 const auditHtml=(rows,showGroup)=>rows.length?rows.map(a=>fmtAudit(a,showGroup)).join(''):'<div class="hint">Chưa có ghi nhận nào.</div>';
 
 /* ---------- tab Chuyến: khối "Chuyến này" ---------- */

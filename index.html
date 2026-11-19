@@ -3796,9 +3796,9 @@ async function loadMyTrips(){try{const {data,error}=await sb.rpc('my_trips');myT
 function myTripsCard(){
   if(isAnon()&&!(myTrips||[]).length)return groupsCard();
   if(myTrips===null)return `<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi</b></div><div class="hint">Đang tải…</div></div>`;
-  if(!myTrips.length)return groupsCard();
+  if(!myTrips.length)return sbAdmin||isAnon()?groupsCard():`<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi</b></div><div class="hint" style="min-height:0">Bạn chưa có chuyến nào. Tạo chuyến mới ở tab Chuyến, hoặc nhập mã chuyến ở bên dưới.</div></div>`;
   const folders=[];myTrips.forEach(t=>{let f=folders.find(x=>x.id===t.group_id);if(!f){f={id:t.group_id,name:t.group_id===SYS_GROUP?'Chưa xếp nhóm':t.group_name,trips:[]};folders.push(f);}f.trips.push(t);});
-  const flat=folders.length===1&&folders[0].id===SYS_GROUP;
+  const flat=!sbAdmin||(folders.length===1&&folders[0].id===SYS_GROUP);   /* chỉ quản trị viên thấy thư mục nhóm */
   return `<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi (${myTrips.length})</b></div>`+folders.map(f=>`${flat?'':`<div class="sub">📁 ${esc(f.name)} (${f.trips.length})</div>`}`+f.trips.map(t=>{const on=sbGroup&&sbGroup.id===t.group_id&&R.current===t.id;
     return `<div class="acc-trip acc-row${on?' on':''}"><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;text-align:left"><b>${esc(t.name)}</b>${t.closed?' <small>· đã chốt sổ</small>':''}
       <small class="hint" style="display:block;min-height:0">${TRIP_ROLE[t.role]||t.role}</small></span><button type="button" class="btn small${on?' is-open':''}" data-q="otrip" data-g="${esc(t.group_id)}" data-t="${esc(t.id)}">${on?'Đang mở':'Mở'}</button></div>`;}).join('')).join('')+`</div>`;}
@@ -3971,13 +3971,13 @@ function tripMngCard(){
   const ed=canEditAny(),ld=canLead(),org=sbAdmin||(myAccess[sbGroup.id]&&myAccess[sbGroup.id].is_organizer);
   /* v73: nhóm chưa / không còn chuyến nào: vẫn có thẻ để chọn chuyến nhóm khác và mở Thùng rác chuyến (khôi phục chuyến đã xoá) */
   if(!t||t.ph||!syncedSet.has(t.id)){if(!(org||sbGroup.can_create))return '';
-    return `<div class="gcard"><div class="gh"><button type="button" class="mng-pick" data-tx="pickmng" title="Bấm để chọn chuyến"><b>🧰 Quản lý chuyến:</b> <span>nhóm “${esc(sbGroup.name)}” chưa có chuyến ▾</span></button></div>
+    return `<div class="gcard"><div class="gh"><button type="button" class="mng-pick" data-tx="pickmng" title="Bấm để chọn chuyến"><b>🧰 Quản lý chuyến:</b> <span>${sbAdmin?`nhóm “${esc(sbGroup.name)}” `:''}chưa có chuyến ▾</span></button></div>
       <div class="row tx-row"><button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button></div></div>`;}
   return `<div class="gcard"><div class="gh"><button type="button" class="mng-pick" data-tx="pickmng" title="Bấm để chọn chuyến khác"><b>🧰 Quản lý chuyến:</b> <span>${esc(t.name)} ▾</span></button></div><div class="row tx-row">
     ${org?'<button type="button" class="btn ghost small" data-tx="viewers">Thông tin hiện tại</button>':''}
     <button type="button" class="btn ghost small" data-tx="hist">Lịch sử thay đổi</button>
     ${ed?'<button type="button" class="btn ghost small" data-tx="people">Thủ quỹ và người hỗ trợ</button>':''}
-    ${ld?'<button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button><button type="button" class="btn ghost small" data-tx="movetrip">Chuyển sang nhóm khác</button>':''}
+    ${ld?'<button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button>':''}${sbAdmin?'<button type="button" class="btn ghost small" data-tx="movetrip">Chuyển sang nhóm khác</button>':''}
     ${sbGroups.some(g=>g.can_create)?'<button type="button" class="btn ghost small" data-tx="copyto">Sao chép chuyến</button>':''}
   </div></div>`;}
 function renderGroupTab(){
@@ -4415,11 +4415,11 @@ const auditHtml=(rows,showGroup)=>rows.length?rows.map(a=>fmtAudit(a,showGroup))
 /* ---------- tab Chuyến: khối "Chuyến này" ---------- */
 function renderTripExtra(){
   const el=document.getElementById('tripExtra');if(!el)return;
-  const gn=document.getElementById('tripGrpName');if(gn)gn.textContent=!PV_TOKEN&&sbSession&&sbGroup?sbGroup.name+' ▾':'';
+  const gn=document.getElementById('tripGrpName');if(gn)gn.textContent=!PV_TOKEN&&sbSession&&sbGroup&&sbAdmin?sbGroup.name+' ▾':'';   /* v93: nhóm chỉ quản trị viên thấy */
   if(PV_TOKEN||!window.supabase||!sbSession||!sbGroup){el.innerHTML='';return;}
   const t=trip(),r=roleOf(),cl=isClosed(),ed=canEditAny(),ld=canLead(),synced=syncedSet.has(t.id)&&!t.ph;
-  if(t.ph&&(syncState==='connecting'||syncState==='slow')){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">⏳ Đang tải các chuyến của nhóm “${esc(sbGroup.name)}”…${syncState==='slow'?' Mạng đang chậm, chờ thêm chút.':''}</div></div>`;return;}
-  if(t.ph){el.innerHTML=sbGroup.can_create?`<div class="gcard"><div class="row" style="align-items:center;gap:8px"><div class="hint" style="min-height:0;flex:1 1 auto">Nhóm chưa có chuyến nào. Chuyến đã xoá xem ở Thùng rác.</div><button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button></div></div>`:`<div class="gcard"><div class="hint" style="min-height:0">Nhóm này chưa có chuyến nào bạn xem được.</div></div>`;return;}
+  if(t.ph&&(syncState==='connecting'||syncState==='slow')){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">⏳ Đang tải các chuyến${sbAdmin?` của nhóm “${esc(sbGroup.name)}”`:''}…${syncState==='slow'?' Mạng đang chậm, chờ thêm chút.':''}</div></div>`;return;}
+  if(t.ph){el.innerHTML=sbGroup.can_create?`<div class="gcard"><div class="row" style="align-items:center;gap:8px"><div class="hint" style="min-height:0;flex:1 1 auto">Chưa có chuyến nào. Chuyến đã xoá xem ở Thùng rác.</div><button type="button" class="btn ghost small" data-tx="trash">🗑 Thùng rác</button></div></div>`:`<div class="gcard"><div class="hint" style="min-height:0">Bạn chưa có chuyến nào xem được.</div></div>`;return;}
   if(!synced){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">Chuyến này đang được gửi lên nhóm…</div></div>`;return;}
   if(paidFor!==t.id)loadPaid(t.id);
   const hr=canHandleRp();if(hr&&rpFor!==t.id)loadRpCount(t.id);
@@ -4445,6 +4445,9 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
   if(a==='trash'||a==='trashall'){openTrashAll();return;}   /* v83: mọi nút thùng rác mở Thùng rác tổng */
   if(a==='trashexp'){openTrashAll('exp');return;}
   if(a==='up'){showTab('group',true);return;}
+  if((a==='pickgrp'||a==='pickmng')&&!sbAdmin&&myTrips&&myTrips.length){   /* v93: người dùng thường không thấy nhóm: chọn thẳng chuyến */
+    ask('Chọn chuyến.',{title:'Chuyến của tôi',noLabel:'Huỷ',choices:myTrips.map(x=>{const on=sbGroup&&sbGroup.id===x.group_id&&R.current===x.id;
+      return {label:(on?'✓ ':'')+x.name,fn:()=>{if(on)return;tripFormOpen=false;tripEditorOpen=false;openTrip(x.group_id,x.id,a==='pickmng');}};})});return;}
   if(a==='pickgrp'){if(!sbGroups.length)return;   /* chọn nhóm ngay tại tab Chuyến */
     ask(sbGroups.length>1?'Chọn nhóm để xem các chuyến của nhóm đó.':'Bạn mới có 1 nhóm. Có mã chuyến của nhóm khác thì nhập ở ô bên dưới danh sách chuyến.',{title:'Chọn nhóm',noLabel:'Huỷ',
       choices:sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,ac=myAccess[g.id],n=ac?(ac.trips||[]).length:g.trips;
@@ -4459,6 +4462,10 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
         await Promise.all([loadGroups(),loadAccess(),loadMyTrips()]);toast('Đã chuyển chuyến sang “'+g.name.replace(/ \(.*$/,'')+'”.');
         const ng=sbGroups.find(x=>x.id===g.id);if(ng)openTrip(g.id,t.id,true);else{afterAuth(true);}}}))});return;}
   if(a==='copyto'){const L=sbGroups.filter(g=>g.can_create);if(!L.length||!t||t.ph)return;const src={name:t.name,color:t.color,data:JSON.parse(JSON.stringify(t.data))};
+    if(!sbAdmin){const g=L.find(x=>sbGroup&&x.id===sbGroup.id)||L[0];   /* v93: người dùng thường không chọn nhóm */
+      ask('Chép những gì sang chuyến mới? Bạn sẽ là thủ quỹ của chuyến mới.',{title:'Sao chép chuyến',noLabel:'Huỷ',choices:[
+        {label:'Nhân bản toàn bộ (người đi, ngày, phòng, khoản chi, tiền đã đóng)',fn:()=>copyTripTo(g,src,true)},
+        {label:'Chỉ người đi',fn:()=>copyTripTo(g,src,false)}]});return;}
     ask(`Sao chép chuyến “${src.name}” sang nhóm nào? Bạn sẽ là thủ quỹ của chuyến mới.`,{title:'Sao chép chuyến',noLabel:'Huỷ',
       choices:L.map(g=>({label:g.name+(sbGroup&&g.id===sbGroup.id?' (nhóm này)':''),fn:()=>{
         setTimeout(()=>ask('Chép những gì sang chuyến mới?',{title:'Sao chép sang “'+g.name+'”',noLabel:'Huỷ',choices:[

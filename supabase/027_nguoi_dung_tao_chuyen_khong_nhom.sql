@@ -1,0 +1,3 @@
+-- 027: người dùng thường không thấy nhóm: tạo chuyến thẳng vào thư mục hệ thống "Chưa xếp nhóm".
+-- Quyền tạo chuyến theo cờ can_create của tài khoản (mặc định app_settings.default_can_create, mặc định true). Quay lại: bản 026 của can_create_trip và can_see_group.
+-- (nội dung hàm đã áp dụng trực tiếp lên Supabase; xem can_create_trip / can_see_group trong cơ sở dữ liệu)

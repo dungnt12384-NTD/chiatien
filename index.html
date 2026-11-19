@@ -1349,6 +1349,7 @@ html.phone .sync-head{font-size:11px!important;max-width:55%}
 html body .acc-trips>.sub{font-size:16px!important;font-weight:700;margin:4px 0 2px}
 html body .org-mail{font-size:14px!important}
 .org-mail .badge{font-size:11px}
+html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;border:1px solid #f0b85a!important}
 </style>
 
 
@@ -3689,8 +3690,8 @@ async function loadRpDone(){window.RP_DONE=null;renderGroupTab();try{const {data
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&sbSession)loadReports();});
 async function loadAccess(){try{const {data,error}=await sb.rpc('my_group_access');if(error)return;myAccess={};(data||[]).forEach(r=>{myAccess[r.id]=r;});}catch(e){}}
 let pendTrip=null;
-function openTrip(gid,tid){
-  const go=()=>{useTrip(tid);showTab('trip',true);};
+function openTrip(gid,tid,stay){
+  const go=()=>{useTrip(tid);if(stay)renderGroupTab();else showTab('trip',true);};
   if(sbGroup&&sbGroup.id===gid&&R.trips.some(t=>t.id===tid)){go();return;}
   const g=sbGroups.find(x=>x.id===gid);if(!g)return;
   if(!sbGroup||sbGroup.id!==gid)connectGroup(g);
@@ -4025,13 +4026,15 @@ function renderTripExtra(){
   const ci=codeCache.get(t.id)||{},dl=ci.expires_at?daysLeft(ci.expires_at):99;
   const warn=ld&&ci.code&&ci.enabled&&dl<=7?`<div class="note" role="alert">${dl<=0?'Mã chuyến đã hết hạn, thành viên không vào xem được nữa.':'Mã chuyến còn '+dl+' ngày là hết hạn.'} <button type="button" class="btn ghost small" data-tx="code">Gia hạn</button></div>`:'';
   const rc=rpCount.get(t.id)||0;
+  /* v73: nút Mã chuyến cảnh báo khi mã khác mặc định (mặc định bật -> cảnh báo khi tắt / hết hạn) */
+  const cAct=ci.code?(!!ci.enabled&&dl>0):null,cWarn=cAct!==null&&codeWarn('trip',cAct),cTxt=cAct?'đang bật':(!ci.enabled?'tắt':'hết hạn');
   el.innerHTML=`<div class="gcard"><div class="gh" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="overflow-wrap:anywhere">${esc(t.name)}</b><span class="badge on">${ROLE_NAME[r.role]}</span>${cl?`<span class="badge warn">Đã chốt sổ ${fd(tripRoles.get(t.id).closed_at)}</span>`:''}</div>
     ${r.role==='helper'?`<div class="hint" style="min-height:0">Bạn nhập được: ${r.tabs.map(k=>TAB_NAME[k]).join(', ')||'chưa được cấp mục nào'}.</div>`:''}
     ${r.role==='viewer'?'<div class="hint" style="min-height:0">Bạn xem được đủ các mục, không sửa được. Thấy sai thì bấm "Báo sai".</div>':''}
     ${cl?'<div class="hint" style="min-height:0">Sổ đã chốt: không ai sửa được cho tới khi leader mở lại.</div>':''}${warn}
     <div class="row tx-row">
       <button type="button" class="btn ghost small" data-tx="reports">${hr?'Báo sai'+(rc?` <span class="cnt">${rc}</span>`:''):'Báo sai'}</button>
-      ${ed?`<button type="button" class="btn ghost small" data-tx="code">Mã chuyến</button><button type="button" class="btn ghost small" data-tx="share">Link công khai</button>`:''}
+      ${ed?`<button type="button" class="btn ghost small${cWarn?' code-warn':''}" data-tx="code"${cWarn?` title="Mã chuyến đang ${cTxt}: người có mã không vào xem được"`:''}>${cWarn?'⚠️ ':''}Mã chuyến${cWarn?' ('+cTxt+')':''}</button><button type="button" class="btn ghost small" data-tx="share">Link công khai</button>`:''}
       ${ld?`<button type="button" class="btn ghost small" data-tx="${cl?'reopen':'close'}">${cl?'Mở lại sổ':'Chốt sổ'}</button>`:''}
     </div></div>`;}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-tx]');if(!b)return;ev.preventDefault();
@@ -4047,9 +4050,15 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
         setTimeout(()=>ask('Chép những gì sang chuyến mới?',{title:'Sao chép sang “'+g.name+'”',noLabel:'Huỷ',choices:[
           {label:'Nhân bản toàn bộ (người đi, ngày, phòng, khoản chi, tiền đã đóng)',fn:()=>copyTripTo(g,src,true)},
           {label:'Chỉ người đi',fn:()=>copyTripTo(g,src,false)}]}),0);}}))});return;}
-  if(a==='pickmng'){const L=R.trips.filter(x=>!x.ph);if(!L.length)return;   /* chọn chuyến ngay tại thẻ Quản lý chuyến */
-    ask(L.length>1?'Chọn chuyến để quản lý.':'Nhóm này mới có 1 chuyến.',{title:'Chọn chuyến',noLabel:'Huỷ',
-      choices:L.map(x=>{const cur=x.id===R.current;return {label:(cur?'✓ ':'')+x.name,fn:()=>{if(!cur){tripFormOpen=false;tripEditorOpen=false;useTrip(x.id);}renderGroupTab();}};})});return;}
+  if(a==='pickmng'){if(!sbGroups.length)return;   /* v73: chọn nhóm -> chọn chuyến, ngay tại thẻ Quản lý chuyến (ở lại tab Quản trị) */
+    const pickTrip=g=>{const cur=!!(sbGroup&&sbGroup.id===g.id);
+      const L=cur?R.trips.filter(x=>!x.ph).map(x=>({id:x.id,name:x.name})):((myAccess[g.id]&&myAccess[g.id].trips)||[]);
+      if(!L.length){toast('Nhóm “'+g.name+'” chưa có chuyến nào bạn xem được.');return;}
+      setTimeout(()=>ask('Chọn chuyến để quản lý.',{title:'Nhóm “'+g.name+'”',noLabel:'Huỷ',
+        choices:L.map(x=>{const on=cur&&x.id===R.current;return {label:(on?'✓ ':'')+x.name,fn:()=>{if(on)return;tripFormOpen=false;tripEditorOpen=false;openTrip(g.id,x.id,true);}};})}),0);};
+    if(sbGroups.length===1){pickTrip(sbGroups[0]);return;}
+    ask('Chọn nhóm, sau đó chọn chuyến.',{title:'Chọn chuyến để quản lý',noLabel:'Huỷ',
+      choices:sbGroups.map(g=>{const ac=myAccess[g.id],n=ac?(ac.trips||[]).length:g.trips;return {label:(sbGroup&&g.id===sbGroup.id?'✓ ':'')+g.name+(n!=null?' · '+n+' chuyến':''),fn:()=>pickTrip(g)};})});return;}
   if(a==='me'){showTab('result',true);setTimeout(()=>{const m=$('#myPart');if(m)m.scrollIntoView({behavior:'smooth',block:'start'});},50);return;}
   if(a==='close'||a==='reopen'){const cl=a==='close';
     ask(cl?`Chốt sổ chuyến "${t.name}"? Sau khi chốt, không ai sửa được nữa cho tới khi leader mở lại. Mọi người vẫn xem được.`:`Mở lại sổ chuyến "${t.name}" để sửa tiếp? Việc mở lại được ghi vào lịch sử để mọi người thấy.`,

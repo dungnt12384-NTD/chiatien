@@ -4454,7 +4454,7 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
       {title:cl?'Chốt sổ?':'Mở lại sổ?',ok:cl?'Chốt sổ':'Mở lại',success:cl},async()=>{
         const {error}=await sb.rpc('close_trip',{tid:t.id,p_close:cl});
         if(error){toast('Chưa làm được: '+(ERR_VN[error.message]||error.message));return;}
-        const r=tripRoles.get(t.id);if(r)r.closed_at=cl?new Date().toISOString():null;applyLocks();renderTripExtra();toast(cl?'Đã chốt sổ.':'Đã mở lại sổ.');});return;}
+        const r=tripRoles.get(t.id);if(r)r.closed_at=cl?new Date().toISOString():null;applyLocks();renderTripExtra();try{render();}catch(e){}toast(cl?'Đã chốt sổ. Mã QR chuyển khoản đã hiện, tài khoản nhận đã khoá.':'Đã mở lại sổ.');});return;}
   openDlg(a);});
 
 /* ---------- hộp thoại ---------- */
@@ -4665,7 +4665,9 @@ function qrCard(id,amount){const b=S.bank,msg=qrMsg(id);
     <div>${esc(bankName(b.bin))} · <b>${esc(b.acc)}</b></div>${b.name?`<div>${esc(b.name)}</div>`:''}<div class="hint" style="min-height:0">Nội dung: ${esc(msg)}</div>
     ${bankMetaHtml()}<div class="hint" style="min-height:0">Trước khi bấm chuyển, kiểm tra tên người nhận trong app ngân hàng${b.name?` phải là <b>${esc(b.name)}</b>`:' đúng là Thủ quỹ'}.</div></div></div>`;}
 const QR_ICO='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm1-9h2v2H6V6Zm10 0h2v2h-2V6ZM6 16h2v2H6v-2Zm7-3h2v2h-2v-2Zm4 0h4v2h-2v2h-2v-4Zm-4 4h2v4h-2v-4Zm4 2h2v2h-2v-2Zm2-2h2v2h-2v-2Z"/></svg>';
-function qrBtn(id,n){return n<0&&bankOk()?`<button type="button" class="qr-btn" data-qr="${esc(id)}" data-n="${-n}" title="Mã QR chuyển khoản ${fmt(-n)}" aria-label="Mở mã QR chuyển khoản ${fmt(-n)}">${QR_ICO}<span>Quét QR</span></button>`:'';}
+/* v91: ở chuyến trên máy chủ, mã QR chỉ hiện SAU KHI chốt sổ (lúc đó tài khoản nhận đã bị khoá, số tiền đã cố định) */
+function qrReady(){if(!window.supabase||!sbGroup||PV_TOKEN)return true;return isClosed();}
+function qrBtn(id,n){return n<0&&bankOk()&&qrReady()?`<button type="button" class="qr-btn" data-qr="${esc(id)}" data-n="${-n}" title="Mã QR chuyển khoản ${fmt(-n)}" aria-label="Mở mã QR chuyển khoản ${fmt(-n)}">${QR_ICO}<span>Quét QR</span></button>`:'';}
 function showQr(id,amount){const m=mem(id);$('#qrTitle').textContent='QR nộp tiền: '+(m?m.name:'');$('#qrBody').innerHTML=qrCard(id,amount);$('#qrModal').hidden=false;$('#qrClose').focus();}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-qr]');if(!b)return;ev.preventDefault();ev.stopPropagation();showQr(b.dataset.qr,+b.dataset.n);},true);
 $('#qrClose').addEventListener('click',()=>{$('#qrModal').hidden=true;});
@@ -4676,8 +4678,8 @@ function paintBank(){const sel=$('#bankBin');if(!sel||!BANKS)return;const b=S.ba
   const act=document.activeElement;
   if(act!==sel)sel.value=b.bin||'';if(act!==$('#bankAcc'))$('#bankAcc').value=b.acc||'';if(act!==$('#bankName'))$('#bankName').value=b.name||'';
   $('#bankSum').textContent=bankOk()?'· '+bankName(b.bin)+' '+b.acc:'· chưa có';
-  const can=bankCanEdit();['bankBin','bankAcc','bankName'].forEach(k=>{const e=$('#'+k);if(!e)return;if(!can){e.disabled=true;e.dataset.bk='1';}else if(e.dataset.bk){e.disabled=false;delete e.dataset.bk;}});
-  const m=$('#bankMeta');if(m)m.innerHTML=bankMetaHtml()+(can?'':'<div class="hint" style="min-height:0">🔒 Chỉ Thủ quỹ đổi được tài khoản nhận tiền.</div>');
+  const locked=!!(window.supabase&&sbGroup&&!PV_TOKEN&&isClosed()),can=bankCanEdit()&&!locked;['bankBin','bankAcc','bankName'].forEach(k=>{const e=$('#'+k);if(!e)return;if(!can){e.disabled=true;e.dataset.bk='1';}else if(e.dataset.bk){e.disabled=false;delete e.dataset.bk;}});
+  const m=$('#bankMeta');if(m)m.innerHTML=bankMetaHtml()+(can?'':`<div class="hint" style="min-height:0">🔒 ${locked?'Sổ đã chốt nên tài khoản nhận tiền bị khoá. Muốn đổi, Thủ quỹ mở lại sổ.':'Chỉ Thủ quỹ đổi được tài khoản nhận tiền.'}</div>`)+(bankOk()&&!qrReady()?'<div class="hint" style="min-height:0">Mã QR chuyển khoản sẽ hiện cho mọi người sau khi Thủ quỹ chốt sổ.</div>':'');
   try{paintBankWarn();}catch(e){}}
 ['bankBin','bankAcc','bankName'].forEach(k=>$('#'+k).addEventListener('change',()=>{
   if(!bankCanEdit()){toast(DENY_MSG.bank);paintBank();return;}

@@ -1352,7 +1352,7 @@ html.phone .sync-head{font-size:11px!important;max-width:55%}
   <section class="sec tripsec" data-tab="trip">
     <div class="sec-h">
       <div class="ico"><svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>
-      <div class="grow"><h2>Chuyến đi<button type="button" id="tripGrpName" class="grp-tag" data-tx="pickgrp" title="Bấm để chọn nhóm khác"></button></h2><p>Chọn chuyến để xem hoặc nhập. Mỗi chuyến tách riêng hoàn toàn</p></div>
+      <div class="grow"><h2>Chuyến đi<button type="button" id="tripGrpName" class="grp-tag" data-tx="pickgrp" title="Bấm để chọn nhóm khác"></button></h2></div>
     </div>
     <div class="sec-b">
       <div class="trips" id="tripTabs" role="tablist"></div>
@@ -3637,13 +3637,23 @@ function requestCard(){
   return `<div class="gcard"><div class="gh"><b>✋ Muốn tổ chức chuyến đi?</b></div><div class="hint" style="min-height:0">Người tổ chức được tạo chuyến trong nhóm, thêm leader và người phụ trách. Quản trị viên sẽ duyệt yêu cầu.</div>
     <div class="field"><label for="qReq">Lời nhắn cho quản trị viên</label><textarea id="qReq" rows="2" maxlength="300" placeholder="Bạn là ai, muốn tổ chức chuyến cho nhóm nào?"></textarea></div>
     <div class="row"><button type="button" class="btn" data-q="req">Gửi yêu cầu</button></div></div>`;}
+/* v67: các nút quản lý của chuyến đang mở (dời từ tab Chuyến sang) */
+function tripMngCard(){
+  if(PV_TOKEN||!sbGroup)return '';const t=trip();if(!t||t.ph||!syncedSet.has(t.id))return '';
+  const ed=canEditAny(),ld=canLead(),org=sbAdmin||(myAccess[sbGroup.id]&&myAccess[sbGroup.id].is_organizer);
+  return `<div class="gcard"><div class="gh"><b style="overflow-wrap:anywhere">🧰 Quản lý chuyến: ${esc(t.name)}</b></div><div class="row tx-row">
+    ${org?'<button type="button" class="btn ghost small" data-tx="viewers">Thông tin hiện tại</button>':''}
+    <button type="button" class="btn ghost small" data-tx="hist">Lịch sử thay đổi</button>
+    ${ed?'<button type="button" class="btn ghost small" data-tx="people">Leader và phụ trách</button>':''}
+    ${ld?'<button type="button" class="btn ghost small" data-tx="trash">Thùng rác chuyến</button>':''}
+  </div></div>`;}
 function renderGroupTab(){
   const el=document.getElementById('grpMain');if(!el)return;
   if(!window.supabase){el.innerHTML='<div class="note info">Không tải được thư viện đồng bộ nên chưa dùng được nhóm.</div>';return;}
   if(!authReady){el.innerHTML='<div class="hint">Đang kiểm tra đăng nhập…</div>';return;}
   if(!sbSession){el.innerHTML='';return;}
   const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
-  let h=reportsCard()+groupsCard()+(sbAdmin?'':codeCard());
+  let h=reportsCard()+tripMngCard()+groupsCard()+(sbAdmin?'':codeCard());
   if(sbAdmin){h+=adminHtml()+adminLogCard();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
   /* đang Quản lý 1 nhóm: mọi phần xung quanh xám đi (vẫn bấm được để chuyển) */
@@ -3931,11 +3941,9 @@ function renderTripExtra(){
     ${r.role==='viewer'?'<div class="hint" style="min-height:0">Bạn xem được đủ các mục, không sửa được. Thấy sai thì bấm "Báo sai".</div>':''}
     ${cl?'<div class="hint" style="min-height:0">Sổ đã chốt: không ai sửa được cho tới khi leader mở lại.</div>':''}${warn}
     <div class="row tx-row">
-      ${sbAdmin||(myAccess[sbGroup.id]&&myAccess[sbGroup.id].is_organizer)?'<button type="button" class="btn ghost small" data-tx="viewers">Thông tin hiện tại</button>':''}
-      <button type="button" class="btn ghost small" data-tx="hist">Lịch sử thay đổi</button>
       <button type="button" class="btn ghost small" data-tx="reports">${hr?'Báo sai'+(rc?` <span class="cnt">${rc}</span>`:''):'Báo sai'}</button>
-      ${ed?`<button type="button" class="btn ghost small" data-tx="code">Mã chuyến</button><button type="button" class="btn ghost small" data-tx="share">Link xem công khai</button><button type="button" class="btn ghost small" data-tx="people">Leader và phụ trách</button>`:''}
-      ${ld?`<button type="button" class="btn ghost small" data-tx="${cl?'reopen':'close'}">${cl?'Mở lại sổ':'Chốt sổ'}</button><button type="button" class="btn ghost small" data-tx="trash">Thùng rác chuyến</button>`:''}
+      ${ed?`<button type="button" class="btn ghost small" data-tx="code">Mã chuyến</button><button type="button" class="btn ghost small" data-tx="share">Link công khai</button>`:''}
+      ${ld?`<button type="button" class="btn ghost small" data-tx="${cl?'reopen':'close'}">${cl?'Mở lại sổ':'Chốt sổ'}</button>`:''}
     </div></div>`;}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-tx]');if(!b)return;ev.preventDefault();
   const a=b.dataset.tx,t=trip();

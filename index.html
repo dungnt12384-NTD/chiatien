@@ -1346,6 +1346,9 @@ html.phone .sync-head{font-size:11px!important;max-width:55%}
 .qr-info>b{font-size:20px}
 .qr-btn{border:1px solid var(--line,#d6dbe3);background:transparent;color:inherit;border-radius:8px;font:inherit;font-size:12px;padding:2px 8px;margin-left:6px;cursor:pointer}
 #qrModal .qr-card{justify-content:center}
+html body .acc-trips>.sub{font-size:16px!important;font-weight:700;margin:4px 0 2px}
+html body .org-mail{font-size:14px!important}
+.org-mail .badge{font-size:11px}
 </style>
 
 
@@ -3848,7 +3851,7 @@ function orgRowHtml(o,btn){
   const st=!o.signed_up?'Chưa đăng nhập lần nào':
     (o.sessions>0?`Đang đăng nhập trên ${o.sessions} thiết bị${o.devices&&o.devices.length?' ('+o.devices.map(esc).join(', ')+')':''}`:'Đã đăng xuất')+
     (o.last_active?' · hoạt động '+ago(o.last_active):'')+(o.last_sign_in_at?' · đăng nhập lần cuối '+fdt(o.last_sign_in_at):'');
-  return `<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${esc(o.email)} ${act?'<span class="badge on">Đang dùng</span>':''}
+  return `<div class="acc-trip"><div class="org-mail" style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${esc(o.email)} ${act?'<span class="badge on">Đang dùng</span>':''}
     <div class="hint" style="min-height:0">${st}${o.added_at?' · vào BTC '+fd(o.added_at):''}</div></div>${btn}</div>`;}
 function groupDetailHtml(g,d,dis){
   const ovo=(admOv[g.id]&&admOv[g.id].organizers)||null,src=ovo||d.orgs;

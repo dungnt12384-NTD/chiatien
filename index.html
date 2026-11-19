@@ -4091,6 +4091,7 @@ const ROLE_TIP=[
   [/Được tạo chuyến/,'Được tạo chuyến: quản trị viên cho phép tạo chuyến mới trong nhóm; người tạo tự làm Thủ quỹ chuyến đó. Không xem hay sửa được chuyến của người khác.'],
   [/Thủ quỹ/,'Thủ quỹ: toàn quyền 1 chuyến – sửa mọi mục, thêm / gỡ thủ quỹ và người hỗ trợ, mã chuyến, link công khai, chốt sổ, xoá / khôi phục chuyến, xử lý báo sai.'],
   [/(Người )?[Hh]ỗ trợ/,'Người hỗ trợ: chỉ nhập / sửa ở các mục được tick (Người đi, Đã đóng, Phòng, Khoản chi); tạo link công khai, xử lý báo sai. Không thêm / gỡ người, không đổi mã, không chốt sổ, không xoá chuyến.'],
+  [/Người xem/,'Người xem: được thủ quỹ / quản trị viên gán theo email; xem toàn bộ chuyến, không sửa được; vẫn gửi được "Báo sai" và "Tôi đã trả".'],
   [/[Cc]hỉ xem|[Xx]em bằng mã/,'Chỉ xem: xem toàn bộ chuyến, không sửa được; thấy sai thì bấm "Báo sai" để thủ quỹ sửa.']];
 function roleTipOf(txt){txt=String(txt||'').trim();if(!txt||txt.length>90)return '';const r=ROLE_TIP.find(x=>x[0].test(txt));return r?r[1]:'';}
 function roleTipEl(t){if(!t||!t.closest)return null;const el=t.closest('.badge,.pill,option,.tk,.role-tip');return el&&roleTipOf(el.textContent)?el:null;}
@@ -4130,17 +4131,17 @@ function permHtml(){
   const link=(k,txt)=>`<button type="button" class="plink" data-q="pgo" data-k="${esc(k)}">${esc(txt)}</button>`;
   /* danh sách người theo email (khách chưa đăng nhập gộp thành 1 dòng) */
   /* v82: gán / gỡ Thủ quỹ, Người hỗ trợ ngay tại đây (dùng set_trip_person / remove_trip_person như hộp "Thủ quỹ và người hỗ trợ") */
-  const rmBtn=r=>`<button type="button" class="btn ghost small p-rm" data-q="prm2" data-t="${esc(r.trip_id)}" data-e="${esc(r.email)}" data-n="${esc(r.trip_name||'')}" title="Gỡ quyền ${r.role==='leader'?'thủ quỹ':'người hỗ trợ'}" aria-label="Gỡ quyền">✕</button>`;
+  const rmBtn=r=>`<button type="button" class="btn ghost small p-rm" data-q="prm2" data-t="${esc(r.trip_id)}" data-e="${esc(r.email)}" data-n="${esc(r.trip_name||'')}" title="Gỡ quyền ${r.role==='leader'?'thủ quỹ':r.role==='viewer'?'người xem':'người hỗ trợ'}" aria-label="Gỡ quyền">✕</button>`;
   const D=window.PADD||{},pr=D.r||'leader';
   const addForm=(tid,email)=>{const tripSel=tid?'':`<div class="field" style="flex:1 1 200px"><label for="qPAddT">Chuyến</label><select id="qPAddT"><option value="">— Chọn chuyến —</option>${admGroups.map(g=>{const ts=((admOv[g.id]||{}).trips||[]);return ts.length?`<optgroup label="${esc(g.name)}">${ts.map(t=>`<option value="${esc(t.id)}"${D.t===t.id?' selected':''}>${esc(t.name)}${t.closed?' (đã chốt)':''}</option>`).join('')}</optgroup>`:'';}).join('')}</select></div>`;
     const emailIn=email?'':`<div class="field" style="flex:1 1 200px"><label for="qPAddE">Email</label><input type="email" id="qPAddE" list="pAccList" value="${esc(D.e||'')}" placeholder="email@gmail.com" autocapitalize="off" autocomplete="off"></div><datalist id="pAccList">${accs.map(a=>`<option value="${esc(a.email)}">`).join('')}</datalist>`;
     return `<div class="perm-add"><div class="sub">＋ ${tid?'Gán người cho chuyến này':'Gán tài khoản này vào chuyến'}</div><div class="row" style="align-items:flex-end;gap:8px">${emailIn}${tripSel}
-      <div class="field" style="flex:1 1 150px"><label for="qPAddR">Vai trò</label><select id="qPAddR"><option value="leader"${pr==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${pr==='helper'?' selected':''}>Người hỗ trợ</option></select></div>
+      <div class="field" style="flex:1 1 150px"><label for="qPAddR">Vai trò</label><select id="qPAddR"><option value="leader"${pr==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${pr==='helper'?' selected':''}>Người hỗ trợ</option><option value="viewer"${pr==='viewer'?' selected':''}>Người xem (chỉ xem)</option></select></div>
       <button type="button" class="btn small" data-q="padd2"${tid?` data-t="${esc(tid)}"`:''}${email?` data-e="${esc(email)}"`:''}>Gán</button></div>
       ${pr==='helper'?`<div class="tks" id="qPAddTabs">${LOCK_TABS.map(k=>`<label class="tk"><input type="checkbox" value="${k}"${(D.tabs||['expense']).includes(k)?' checked':''}>${TAB_NAME[k]}</label>`).join('')}</div>`:''}
-      <div class="hint" style="min-height:0">${pr==='leader'?'Thủ quỹ: làm được mọi việc của chuyến (sửa mọi mục, thêm / gỡ người, mã, link, chốt sổ, xoá chuyến).':'Người hỗ trợ: chỉ nhập / sửa ở các mục được tick.'} Người được gán đăng nhập bằng đúng email này là có quyền, kể cả khi chưa đăng nhập lần nào.</div></div>`;};
+      <div class="hint" style="min-height:0">${pr==='leader'?'Thủ quỹ: làm được mọi việc của chuyến (sửa mọi mục, thêm / gỡ người, mã, link, chốt sổ, xoá chuyến).':pr==='viewer'?'Người xem: chỉ xem toàn bộ chuyến, không sửa được; vẫn gửi được Báo sai và Tôi đã trả.':'Người hỗ trợ: chỉ nhập / sửa ở các mục được tick.'} Người được gán đăng nhập bằng đúng email này là có quyền, kể cả khi chưa đăng nhập lần nào.</div></div>`;};
   const people=(rows,where)=>{const m=new Map();let an=0,anOff=0;rows.forEach(r=>{if(!r.email){if(r.active)an++;else anOff++;return;}if(!m.has(r.email))m.set(r.email,[]);m.get(r.email).push(r);});
-    const out=[...m].map(([e,rs])=>{const tr=rs.find(r=>r.trip_id&&(r.role==='leader'||r.role==='helper'));
+    const out=[...m].map(([e,rs])=>{const tr=rs.find(r=>r.trip_id&&(r.role==='leader'||r.role==='helper'||r.role==='viewer'));
       return `<div class="acc-trip"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">${link('a:'+e,e)}<div class="pbadges">${rs.map(r=>pBadge(r,where?where(r):'')).join('')}</div></div>${tr&&!where?rmBtn(tr):''}</div>`;});
     if(an||anOff)out.push(`<div class="acc-trip"><div class="hint" style="min-height:0">👤 Khách chưa đăng nhập xem bằng mã: ${an} đang xem${anOff?` · ${anOff} mã cũ đã tắt / hết hạn`:''}</div></div>`);
     return out.length?out.join(''):'<div class="hint" style="min-height:0">Chưa có ai.</div>';};
@@ -4155,7 +4156,7 @@ function permHtml(){
       const gs=rs.filter(r=>r.scope==='group'),ts=rs.filter(r=>r.scope==='trip'),ad=rs.find(r=>r.role==='admin');
       body=(a?`<div class="hint" style="min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}</div>`:'')+(ad?`<div class="pbadges">${pBadge(ad)}</div>`:'')+
         `<div class="sub">Nhóm (${gs.length})</div>`+(gs.length?gs.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('g:'+r.group_id,r.group_name||'?')}<div class="pbadges">${pBadge(r)}</div></div></div>`).join(''):'<div class="hint" style="min-height:0">Không có.</div>')+
-        `<div class="sub">Chuyến (${ts.length})</div>`+(ts.length?`<div class="hist-scroll" data-rows="5">`+ts.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('t:'+r.trip_id,r.trip_name)} <small>· ${esc(r.group_name||'')}</small>${r.closed?' <small>· đã chốt sổ</small>':''}<div class="pbadges">${pBadge(r)}</div></div>${r.role==='leader'||r.role==='helper'?rmBtn(r):''}</div>`).join('')+`</div>`:'<div class="hint" style="min-height:0">Không có.</div>')+addForm(null,id);}
+        `<div class="sub">Chuyến (${ts.length})</div>`+(ts.length?`<div class="hist-scroll" data-rows="5">`+ts.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('t:'+r.trip_id,r.trip_name)} <small>· ${esc(r.group_name||'')}</small>${r.closed?' <small>· đã chốt sổ</small>':''}<div class="pbadges">${pBadge(r)}</div></div>${r.role==='leader'||r.role==='helper'||r.role==='viewer'?rmBtn(r):''}</div>`).join('')+`</div>`:'<div class="hint" style="min-height:0">Không có.</div>')+addForm(null,id);}
     return `<div class="perm-det"><div class="row" style="align-items:center;flex-wrap:nowrap"><b style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">🔐 ${esc(title)}</b><button type="button" class="btn ghost small" data-q="pgo" data-k="${esc(k)}" aria-label="Đóng">✕</button></div>${body}</div>`;};
   const sec=(ic,name,L,row,ty)=>`<div class="gsub perm-sec"><div class="sub">${ic} ${name} (${L.length}${q?' khớp':''})</div>`+(L.length?`<div class="hist-scroll" data-rows="5">${L.map(x=>`<button type="button" class="perm-item${op===x.k?' cur':''}" data-q="pgo" data-k="${esc(x.k)}">${row(x)}</button>`).join('')}</div>`:'<div class="hint" style="min-height:0">Không có.</div>')+(op[0]===ty?det(op):'')+`</div>`;
   return (window.PERM_ERR?`<div class="note" role="alert">${esc(window.PERM_ERR)}</div>`:'')+
@@ -4330,11 +4331,12 @@ async function qAct(a,b){
     if(!okEmail(em)){admMsg='Email chưa đúng.';renderGroupTab();return;}if(!tid){admMsg='Chọn chuyến trước.';renderGroupTab();return;}
     if(role==='helper'&&!tabs.length){admMsg='Người hỗ trợ cần tick ít nhất 1 mục được nhập.';renderGroupTab();return;}
     let tn='';admGroups.some(g=>((admOv[g.id]||{}).trips||[]).some(t=>t.id===tid&&(tn=t.name+' ('+g.name+')')));
-    const cur=(window.PERM||[]).find(r=>r.trip_id===tid&&r.email===em&&(r.role==='leader'||r.role==='helper')),rl=role==='leader'?'Thủ quỹ':'Người hỗ trợ';
+    const RN={leader:'Thủ quỹ',helper:'Người hỗ trợ',viewer:'Người xem'};
+    const cur=(window.PERM||[]).find(r=>r.trip_id===tid&&r.email===em&&(r.role==='leader'||r.role==='helper'||r.role==='viewer')),rl=RN[role]||role;
     const go=async()=>{admBusy=true;renderGroupTab();const {error}=await sb.rpc('set_trip_person',{tid,p_email:em,p_role:role,p_tabs:tabs});admBusy=false;
       admMsg=error?'Chưa gán được: '+(ERR_VN[error.message]||error.message):`OK:Đã gán ${em} làm ${rl} của chuyến ${tn}.`;if(!error)window.PADD={r:role};
       toast(admMsg.replace(/^OK:/,''));renderGroupTab();if(!error){await admLoadPerm();try{admLoadAcc();}catch(e){}}};
-    if(cur)ask(`${em} đang là ${cur.role==='leader'?'Thủ quỹ':'Người hỗ trợ'} của chuyến ${tn}. Đổi thành ${rl}${role==='helper'?' ('+tabs.map(k=>TAB_NAME[k]).join(', ')+')':''}?`,{title:'Đổi vai trò?',ok:'Đổi'},go);else go();return;}
+    if(cur)ask(`${em} đang là ${RN[cur.role]||cur.role} của chuyến ${tn}. Đổi thành ${rl}${role==='helper'?' ('+tabs.map(k=>TAB_NAME[k]).join(', ')+')':''}?`,{title:'Đổi vai trò?',ok:'Đổi'},go);else go();return;}
   if(a==='prm2'){const em=b.dataset.e,tid=b.dataset.t,tn=b.dataset.n;
     ask(`Gỡ quyền của ${em} khỏi chuyến "${tn}"? Người này sẽ không sửa được chuyến nữa.`,{title:'Gỡ quyền?',ok:'Gỡ',danger:true},async()=>{admBusy=true;renderGroupTab();
       const {error}=await sb.rpc('remove_trip_person',{tid,p_email:em});admBusy=false;admMsg=error?'Chưa gỡ được: '+(ERR_VN[error.message]||error.message):`OK:Đã gỡ ${em} khỏi chuyến "${tn}".`;

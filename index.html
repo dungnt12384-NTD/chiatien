@@ -3473,10 +3473,10 @@ function groupsCard(){
           <small class="hint" style="display:block;min-height:0">${VIA_NAME[t.via]||''}</small></span><span class="badge${t.role==='viewer'?'':' on'}">${TRIP_ROLE[t.role]||t.role}</span></button>`;}).join('')+`</div>`:
         `<div class="hint" style="min-height:0">${a.is_organizer?'Chưa có chuyến nào bạn có vai trò. Bạn tạo chuyến mới ở tab Chuyến.':'Chưa có chuyến nào.'}</div>`):'')+`</div>`;}).join('')+`</div>`;}
 const TRIP_ROLE={leader:'Leader',helper:'Người phụ trách',admin:'Quản trị',viewer:'Chỉ xem'};
-const VIA_NAME={role:'Được gán vai trò trong chuyến',admin:'Quyền quản trị viên',trip_code:'Nhờ mã chuyến đã nhập',group_code:'Nhờ mã nhóm đã nhập'};
+const VIA_NAME={role:'Được gán vai trò trong chuyến',admin:'Quyền quản trị viên',organizer:'Thuộc BTC nhóm: chỉ xem',trip_code:'Nhờ mã chuyến đã nhập',group_code:'Nhờ mã nhóm đã nhập'};
 function accessSrc(a){const s=[];
   if(a.is_admin)s.push('<b>Quản trị viên</b>: xem và sửa mọi chuyến');
-  if(a.is_organizer)s.push('<b>BTC nhóm</b> (quản trị viên gán): được tạo chuyến mới');
+  if(a.is_organizer)s.push('<b>BTC nhóm</b> (quản trị viên gán): xem mọi chuyến của nhóm, tạo chuyến mới; sửa chuyến mình là leader / người phụ trách');
   if(a.group_code==='valid')s.push('<b>Mã nhóm</b>: chỉ xem các chuyến của nhóm'+(a.group_code_expires?', hết hạn '+fd(a.group_code_expires):''));
   else if(a.group_code)s.push('<span style="color:var(--neg)">Mã nhóm đã bị tắt, đổi hoặc hết hạn</span>');
   if(!s.length){const v=[...new Set((a.trips||[]).map(t=>t.via))];

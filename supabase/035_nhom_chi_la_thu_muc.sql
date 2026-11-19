@@ -1,0 +1,3 @@
+-- 035: nhóm chỉ là thư mục. Quyền tạo chuyến theo TÀI KHOẢN đã có sẵn (user_quotas.can_create / app_settings.default_can_create, tab Phân quyền).
+-- Đã chuyển dòng group_organizers còn lại sang thư mục hệ thống và gỡ UI "Người trong nhóm". admin_accounts() thêm cột can_create (organizer_of nay rỗng).
+-- Quay lại: tạo lại admin_accounts() bản 008 (organizer_of theo nhóm).

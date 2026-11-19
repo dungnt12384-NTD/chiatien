@@ -1190,6 +1190,10 @@ html #gate .gcard{background:var(--card)!important;border:1px solid var(--card-b
 .si{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.2em;fill:currentColor!important;stroke:none!important;flex:none}
 .btn .si,button .si,.gh .si{margin-right:.32em}
 .sx{fill:currentColor!important;stroke:none!important}
+/* v86: icon ✕ (.sx) nằm trong nút .xbtn phải ở yên trong nút, không dùng position:absolute của nút xoá chữ ô tìm (trước đây bay ra mép khung, chồng lên nhau) */
+html .xbtn{position:relative}
+html .xbtn>svg.sx{position:static;transform:none;right:auto;top:auto}
+html .inst.view{align-items:center}
 html .chev{fill:currentColor!important;stroke:none!important;color:var(--muted)}
 html .g-logo svg{fill:#fff!important;stroke:none!important;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
 html .fi svg{fill:var(--fc)!important;stroke:none!important}

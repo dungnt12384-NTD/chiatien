@@ -1371,6 +1371,17 @@ html.phone .sync-head{font-size:11px!important;max-width:55%}
 html.phone .undo-fab .ud-t{display:none}
 html.phone .undo-fab button{padding:0 10px}
 @media print{.undo-fab{display:none!important}}
+/* v85: tô sáng nhấp nháy sau Hoàn tác / Làm lại, giữ đến khi bấm "Đã xem" */
+.ud-hl{outline:2px solid #f59e0b!important;outline-offset:2px;border-radius:10px;animation:udBlink 1.1s ease-in-out infinite}
+@keyframes udBlink{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 0 5px rgba(245,158,11,.5)}}
+.ud-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(60px + env(safe-area-inset-bottom));z-index:61;display:flex;align-items:center;gap:8px;max-width:min(560px,calc(100vw - 24px));padding:6px 6px 6px 12px;border-radius:12px;background:var(--surface,#fff);border:1.5px solid #f59e0b;box-shadow:0 6px 18px rgba(16,24,40,.18);font-size:13px;line-height:1.35}
+.ud-bar[hidden]{display:none}
+.ud-bar .ud-m{flex:1 1 auto;min-width:0}
+.ud-bar .btn{flex:0 0 auto;height:30px}
+.ud-dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#f59e0b;animation:udDot 1.1s ease-in-out infinite}
+@keyframes udDot{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.ud-hl,.ud-dot{animation:none}}
+@media print{.ud-bar{display:none!important}}
 /* v80: Tra cứu quyền cân cỡ chữ theo các mục khác (tiêu đề mục 14px, tên 14.5px, chữ phụ 12px, nhãn 11px) */
 html body .admin-card .perm-sec>.sub{font-size:14px!important;font-weight:700!important;margin:0}
 html body .admin-card .perm-det .sub{font-size:12.5px!important;font-weight:700!important;color:var(--muted)!important;margin:8px 0 0}
@@ -1853,14 +1864,49 @@ function undoTime(at){const d=new Date(at);return String(d.getHours()).padStart(
 function undoDo(dir){const t=trip();if(!t)return;const s=undoSt(t.id),src=dir<0?s.u:s.r,dst=dir<0?s.r:s.u,e=src[src.length-1];
   if(!e){toast(dir<0?'Không còn bước nào để hoàn tác.':'Không còn bước nào để làm lại.');return;}
   const target=dir<0?e.before:e.after,expect=dir<0?e.ka:e.kb,lbl=dir<0?'Hoàn tác':'Làm lại';
-  const go=()=>{src.pop();const o=JSON.parse(target),cur=t.data&&t.data.activeDay;
+  const go=()=>{src.pop();const o=JSON.parse(target),cur=t.data&&t.data.activeDay,curJ=snapJson(t);
     if(o.data&&cur&&(o.data.days||[]).some(d=>d.id===cur))o.data.activeDay=cur;
     undoApplying=true;try{t.name=o.name;t.color=o.color;t.data=o.data;try{normTrip(t);}catch(x){}if(t.id===R.current)S=t.data;lastUser=Date.now();save();}finally{undoApplying=false;}
-    dst.push(e);try{render();}catch(x){}try{if(typeof renderTripExtra==='function')renderTripExtra();}catch(x){}paintUndo();
-    toast((dir<0?'↶ Đã hoàn tác: ':'↷ Đã làm lại: ')+undoDesc(e)+' (lúc '+undoTime(e.at)+')');};
+    dst.push(e);
+    try{const H=undoDiff(curJ,target);H.tid=t.id;H.msg=(dir<0?'↶ Đã hoàn tác: ':'↷ Đã làm lại: ')+undoDesc(e)+' (lúc '+undoTime(e.at)+')';H.scroll=true;UD_HL=H;
+      (H.days||[]).forEach(id=>openDays.add(id));(H.adv||[]).forEach(id=>openAdv.add(id));
+      if(H.tab&&H.tab!==curTab)showTab(H.tab);}catch(x){UD_HL=null;}
+    try{render();}catch(x){}try{if(typeof renderTripExtra==='function')renderTripExtra();}catch(x){}paintUndo();};
   if(undoKey(snapJson(t))!==expect){ask(`Sau bước này chuyến đã có thay đổi khác (có thể do người khác sửa hoặc vừa đồng bộ). ${lbl} sẽ đưa chuyến về đúng lúc ${undoTime(e.at)} và bỏ các thay đổi sau đó. Tiếp tục?`,{title:lbl+'?',ok:lbl,danger:true},go);return;}
   go();}
-function paintUndo(){let el=document.getElementById('undoFab');
+/* v85: sau Hoàn tác / Làm lại, chỗ vừa đổi nhấp nháy (lớp .ud-hl) và hiện thanh báo #udHlBar, giữ đến khi bấm "Đã xem".
+   UD_HL = {tid, tab, exp:[id khoản chi], mem:[id người], adv:[id người có tiền đóng đổi], day:[id ngày], days:[ngày cần mở], gone, name, msg} */
+var UD_HL=null;
+function undoDiff(curJ,tgtJ){const a=JSON.parse(curJ),b=JSON.parse(tgtJ),A=a.data||{},B=b.data||{},H={exp:[],mem:[],adv:[],day:[],days:[],gone:0,name:a.name!==b.name};
+  const mp=x=>new Map((x||[]).map(i=>[i.id,JSON.stringify(i)]));
+  const cmp=(k,out)=>{const ma=mp(A[k]),mb=mp(B[k]);mb.forEach((j,id)=>{if(ma.get(id)!==j)out.push(id);});ma.forEach((j,id)=>{if(!mb.has(id))H.gone++;});};
+  cmp('expenses',H.exp);cmp('members',H.mem);cmp('days',H.day);
+  const aa=mp(A.advances),ab=mp(B.advances),am=new Set();
+  (B.advances||[]).forEach(x=>{if(aa.get(x.id)!==ab.get(x.id))am.add(x.member);});
+  (A.advances||[]).forEach(x=>{if(!ab.has(x.id)){am.add(x.member);H.gone++;}});
+  const mains=new Map();try{memberGroups().forEach(g=>g.members.forEach(m=>mains.set(m.id,g.main.id)));}catch(x){}
+  am.forEach(id=>{H.adv.push(id);if(mains.has(id)&&mains.get(id)!==id)H.adv.push(mains.get(id));});
+  H.exp.forEach(id=>{const x=(B.expenses||[]).find(i=>i.id===id);if(x&&x.dayId&&!H.days.includes(x.dayId))H.days.push(x.dayId);});
+  H.tab=H.exp.length||H.day.length?'expense':H.adv.length?'advance':H.mem.length?'member':H.name?'trip':null;
+  if(JSON.stringify(A.holder)!==JSON.stringify(B.holder)&&!H.tab)H.tab='advance';
+  return H;}
+function udHlEls(){const H=UD_HL,r=[];if(!H)return r;const q=s=>document.querySelectorAll(s).forEach(e=>r.push(e)),cs=v=>String(v).replace(/"/g,'');
+  H.exp.forEach(id=>q(`.item[data-eid="${cs(id)}"]`));
+  H.day.forEach(id=>q(`.daytitle[data-id="${cs(id)}"]`));
+  H.mem.forEach(id=>q(`.mchip[data-id="${cs(id)}"]`));
+  H.adv.forEach(id=>document.querySelectorAll(`.am[data-id="${cs(id)}"]`).forEach(e=>r.push(e.closest('.am-wrap')||e)));
+  if(H.name)q('#tripName,.trip-title,.tripname');
+  return r.filter(e=>e&&e.offsetParent!==null);}
+function udHlPaint(){document.querySelectorAll('.ud-hl').forEach(e=>e.classList.remove('ud-hl'));
+  let bar=document.getElementById('udHlBar');let t=null;try{t=trip();}catch(e){}
+  if(!UD_HL||!t||t.id!==UD_HL.tid){if(bar)bar.hidden=true;return;}
+  const els=udHlEls();els.forEach(e=>e.classList.add('ud-hl'));
+  if(!bar){bar=document.createElement('div');bar.id='udHlBar';bar.className='ud-bar';bar.setAttribute('role','status');document.body.appendChild(bar);}
+  const left=UD_HL.gone&&!els.length?' Mục bị bỏ đi không còn để tô.':els.length?' Chỗ thay đổi đang nhấp nháy.':' Không thấy chỗ thay đổi trên tab này.';
+  bar.innerHTML=`<span class="ud-dot" aria-hidden="true"></span><span class="ud-m">${esc(UD_HL.msg)}.${left}</span><button type="button" class="btn small" data-udok="1">Đã xem</button>`;bar.hidden=false;
+  if(UD_HL.scroll&&els.length){UD_HL.scroll=false;try{els[0].scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}}}
+document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('[data-udok]'))return;ev.preventDefault();UD_HL=null;udHlPaint();});
+function paintUndo(){try{udHlPaint();}catch(e){}let el=document.getElementById('undoFab');
   if(!el){el=document.createElement('div');el.id='undoFab';el.className='undo-fab';el.setAttribute('role','group');el.setAttribute('aria-label','Hoàn tác / Làm lại');
     el.innerHTML='<button type="button" data-ud="-1"><span class="ud-i">↶</span><span class="ud-t">Hoàn tác</span><b class="ud-n"></b></button><button type="button" data-ud="1"><span class="ud-i">↷</span><span class="ud-t">Làm lại</span><b class="ud-n"></b></button>';
     document.body.appendChild(el);}

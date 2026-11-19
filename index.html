@@ -1226,7 +1226,8 @@ html .gcard .gsub.lv3{background:color-mix(in srgb,var(--h) 7%,var(--surface))!i
 .gsub.lv3>.sub{color:var(--h)!important;font-weight:700}
 /* khi đang Quản lý 1 nhóm: xám phần xung quanh */
 .sec.mng-focus .gcard:not(.admin-card),.sec.mng-focus .admin-card>.gh,.sec.mng-focus .admin-card>.seg,.sec.mng-focus .admin-card .adm-tools,.sec.mng-focus .admin-card .rcard.grp-row:not(.cur){opacity:.35;filter:grayscale(1);transition:opacity .15s,filter .15s}
-.sec.mng-focus .gcard:not(.admin-card):hover,.sec.mng-focus .admin-card .rcard.grp-row:not(.cur):hover,.sec.mng-focus .admin-card .adm-tools:hover{opacity:.75;filter:none}
+/* vô hiệu luôn phần xung quanh: chỉ thao tác được trong khung quản lý; bấm ra ngoài = thoát quản lý */
+.sec.mng-focus .gcard:not(.admin-card),.sec.mng-focus .admin-card>.gh,.sec.mng-focus .admin-card>.seg,.sec.mng-focus .admin-card .adm-tools,.sec.mng-focus .admin-card .rcard.grp-row:not(.cur){pointer-events:none;user-select:none}
 /* khung nhóm: viền bao quanh như thẻ chuyến ở tab Chuyến, không đổ bóng, không viền trái dày */
 html #grpMain .gcard .rcard{box-shadow:none!important;border:1.5px solid var(--line)!important;border-radius:18px!important}
 html #grpMain .gcard .rcard.cur{border-color:var(--brand,var(--accent))!important;background:var(--brand-bg,color-mix(in srgb,var(--accent) 10%,var(--surface)))!important}
@@ -3624,6 +3625,17 @@ async function admLoadAcc(){
   if(curTab==='group')renderGroupTab();}
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qAccQ'){admAccQ=ev.target.value;renderGroupTab();}});
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qAdmQ'){admGQ=ev.target.value;renderGroupTab();}});
+/* đang Quản lý 1 nhóm: bấm bất kỳ chỗ nào ngoài khung nhóm đó = thoát quản lý (vẫn hỏi lưu nếu đang sửa dở); cú bấm đó không làm gì khác */
+document.addEventListener('click',ev=>{
+  const s=admOpen&&document.querySelector('.sec.mng-focus');if(!s||!s.offsetParent)return;   /* chỉ khi đang ở tab có khung quản lý */
+  const t=ev.target;if(!t||!t.closest)return;
+  if(t.closest('.admin-card .rcard.grp-row.cur')||t.closest('#modal')||t.closest('#authModal')||t.closest('.toast'))return;
+  ev.preventDefault();ev.stopPropagation();admSwitch(null);},true);
+/* bàn phím: Tab không đi ra ngoài khung quản lý */
+document.addEventListener('focusin',ev=>{
+  const s=admOpen&&document.querySelector('.sec.mng-focus');if(!s||!s.offsetParent)return;
+  const box=document.querySelector('.admin-card .rcard.grp-row.cur'),t=ev.target;
+  if(box&&t&&!box.contains(t)&&!t.closest('#modal')&&!t.closest('#authModal')){const f=box.querySelector('button,input');if(f)f.focus();}});
 /* ô nhập mã chuyến (tab Chuyến): Enter = thêm */
 document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target&&ev.target.id==='qCodeT'){ev.preventDefault();qAct('codeT',ev.target);}});
 /* ô tên nhóm mới: Enter = xác nhận, Esc = huỷ */

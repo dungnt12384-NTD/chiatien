@@ -3640,7 +3640,7 @@ let dlgKind='',dlgBusy=false,dlgNote='',tInfo=null,tAudit=[],tAuditMore=false,tT
 let admReady=false,admLoaded=false,admTab='perm',admGroups=[],admReqs=[],admAudit=[],admAuditMore=false,admOpen=null,admDet={},admMsg='',admBusy=false,admAcc=null,admAccErr='',admAccQ='',admAccTrips={},admOv={},myAccess={},myGrpExp={},admExp={},admDraft={},admCodes={},admTCodes={},admGQ='',admNewG=false,admLogOpen=false;
 const ADM_ENT=['admin','group','organizer','quota'];   /* nhật ký quản trị: chỉ thao tác trong tab quản trị */
 const paidMap=new Map();let paidFor='',rpCount=new Map(),rpFor='',codeCache=new Map();
-let clRows=null,clCount=new Map(),clFor='',clDraft={};window.CLAIM_PENDING=null;   /* v90: "Tôi đã trả" */
+let clRows=null,clCount=new Map(),clFor='',clDraft={},clResend=0;window.CLAIM_PENDING=null;   /* v90: "Tôi đã trả" */
 function isAnon(){return !!(sbSession&&sbSession.user&&(sbSession.user.is_anonymous||!sbSession.user.email));}
 const ROLE_NAME={admin:'Quản trị viên',leader:'Thủ quỹ',helper:'Người hỗ trợ',viewer:'Người xem'};
 const TAB_NAME={member:'Người đi',advance:'Đã đóng',room:'Phòng',expense:'Khoản chi'};
@@ -3852,7 +3852,7 @@ async function afterAuth(force){
   if(codePending)return;
   closeDlg();setSync('connecting');applyRole();
   if(isAnon())sbAdmin=false;else{try{const r=await sb.rpc('is_admin');sbAdmin=r.data===true;}catch(e){sbAdmin=false;}}
-  await Promise.all([loadGroups(),loadMyTrips(),loadMyCodes(),loadAccess(),isAnon()?null:loadMyReq(),loadReports(true),loadClaimsAll(true),loadCodeSet()]);
+  await Promise.all([loadGroups(),loadMyTrips(),loadMyCodes(),loadAccess(),isAnon()?null:loadMyReq(),loadReports(true),loadClaimsAll(true),loadSentClaims(true),loadCodeSet()]);
   applyRole();paintAccount();
   if(!sbGroups.length){disconnectGroup();if(sbGroup){sbGroup=null;dropSyncedLocal();}applyRole();render();
     setSync('off',isAnon()?'Chưa có chuyến nào còn hiệu lực':'Chưa có chuyến nào');showTab('group',true);return;}
@@ -3934,6 +3934,19 @@ async function loadClaimsAll(quiet){if(!sb||!sbSession||isAnon()){window.CL_OPEN
   try{const {data,error}=await sb.rpc('my_claims',{p_pending:true,p_limit:100});window.CL_OPEN=error?[]:(data||[]);}catch(e){window.CL_OPEN=[];}
   try{renderTabs();}catch(e){}if(!quiet&&curTab==='group')renderGroupTab();}
 async function loadClDone(){try{const {data}=await sb.rpc('my_claims',{p_pending:false,p_limit:50});window.CL_DONE=data||[];}catch(e){window.CL_DONE=[];}renderGroupTab();}
+/* v97: người gửi thấy mọi đề nghị mình đã gửi (mọi chuyến) + sửa và gửi lại đề nghị bị từ chối (cần supabase/031) */
+window.CL_SENT=[];window.CL_SENT_OPEN=false;
+async function loadSentClaims(quiet){if(!sb||!sbSession||isAnon()){window.CL_SENT=[];return;}
+  try{const {data,error}=await sb.rpc('my_sent_claims',{p_limit:100});window.CL_SENT=error?[]:(data||[]);}catch(e){window.CL_SENT=[];}
+  if(!quiet&&curTab==='group')renderGroupTab();}
+function mySentCard(){const L=window.CL_SENT||[];if(!L.length)return '';
+  const n=s=>L.filter(c=>c.status===s).length,pe=n('pending'),ap=n('approved'),rj=n('rejected'),op=window.CL_SENT_OPEN;
+  const st=c=>c.status==='approved'?'<span class="badge on">Đã duyệt</span>':c.status==='rejected'?'<span class="badge warn">Từ chối</span>':'<span class="badge">Chờ duyệt</span>';
+  return `<div class="gcard${rj?' rp-card has':''}"><div class="gh"><b>📤 Đề nghị tôi đã gửi</b></div>
+    <div class="hint" style="min-height:0">Đã gửi ${L.length} · Chờ duyệt ${pe} · Đã duyệt ${ap} · Từ chối ${rj}${rj?' — bấm “Sửa và gửi lại” ở đề nghị bị từ chối, không cần tạo mới.':''}</div>
+    <div class="rp-done">${logHead('Chi tiết',op,'data-q="clsentT"')}`+(!op?'':`<div class="hist-scroll" data-rows="10">`+L.map(c=>`<div class="rmrow"><div class="row" style="gap:8px;align-items:center;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-size:14px"><b>${esc(c.trip_name)}</b>: ${esc(c.descr)} · ${fmt(c.amount)}</div>${st(c)}</div>
+      <div class="hint" style="min-height:0">${esc(c.member_name||'?')} đã trả · ${fdt(c.at)}${c.status!=='pending'&&c.decided_at?' · xử lý '+fdt(c.decided_at):''}</div>${c.status!=='pending'&&c.reply?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Thủ quỹ trả lời: ${esc(c.reply)}</div>`:''}
+      ${c.status==='rejected'&&!c.closed?`<div class="row"><button type="button" class="btn small" data-q="clredo2" data-id="${c.id}">Sửa và gửi lại</button></div>`:''}</div>`).join('')+`</div>`)+`</div></div>`;}
 function canLeadAny(){return sbAdmin||(myTrips||[]).some(t=>t.role==='leader');}
 function claimsCard(){const L=window.CL_OPEN||[];if(!L.length&&!canLeadAny())return '';
   const mine=x=>esc(x.member_name||'?');
@@ -3976,7 +3989,7 @@ function rpDoneHtml(){const L=window.RP_DONE,op=window.RP_DONE_OPEN;
     `<div class="hist-scroll" data-rows="6">`+L.map(r=>`<div class="rmrow"><div style="font-size:14px;overflow-wrap:anywhere"><b>${esc(r.trip_name)}</b>${r.group_name?` <small>· ${esc(r.group_name)}</small>`:''}: ${r.item_label?esc(r.item_label)+' – ':''}${esc(r.message)}</div>
       <div class="hint" style="min-height:0">✅ ${esc(r.resolved_by||'?')} · ${fdt(r.resolved_at)}${r.reply?` · trả lời: “${esc(r.reply)}”`:''}${r.reporter?` · người báo: ${esc(r.reporter)}`:''}</div></div>`).join('')+`</div>`))+`</div>`;}
 async function loadRpDone(){window.RP_DONE=null;renderGroupTab();try{const {data,error}=await sb.rpc('my_resolved_reports',{p_limit:50});window.RP_DONE=error?[]:(data||[]);}catch(e){window.RP_DONE=[];}renderGroupTab();}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&sbSession){loadReports();loadClaimsAll();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&sbSession){loadReports();loadClaimsAll();loadSentClaims();}});
 async function loadAccess(){try{const {data,error}=await sb.rpc('my_group_access');if(error)return;myAccess={};(data||[]).forEach(r=>{myAccess[r.id]=r;});}catch(e){}}
 let pendTrip=null;
 function openTrip(gid,tid,stay){
@@ -4023,7 +4036,7 @@ function renderGroupTab(){
   if(!authReady){el.innerHTML='<div class="hint">Đang kiểm tra đăng nhập…</div>';return;}
   if(!sbSession){el.innerHTML='';return;}
   const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
-  let h=reportsCard()+claimsCard()+myTripsCard()+tripMngCard()+trashEntry()+(sbAdmin?'':codeCard());
+  let h=reportsCard()+claimsCard()+mySentCard()+myTripsCard()+tripMngCard()+trashEntry()+(sbAdmin?'':codeCard());
   if(sbAdmin){h+=adminHtml()+adminLogCard();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
   /* đang Quản lý 1 nhóm: mọi phần xung quanh xám đi (vẫn bấm được để chuyển) */
@@ -4322,7 +4335,7 @@ async function admLoadGroup(gid){
 async function rpcDo(name,args,okMsg){admBusy=true;admMsg='';renderGroupTab();
   const {data,error}=await sb.rpc(name,args);admBusy=false;
   admMsg=error?'Chưa làm được: '+(ERR_VN[error.message]||error.message):(okMsg?'OK:'+okMsg:'');return error?null:(data===null?true:data);}
-const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.',not_found:'Không tìm thấy.',system_group:'Thư mục "Chưa xếp nhóm" là của hệ thống, không xoá được.',is_admin:'Đây là quản trị viên: gỡ quyền quản trị trước rồi mới xoá tài khoản.'};
+const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.',claim_not_rejected:'Chỉ đề nghị bị từ chối mới gửi lại được.',not_found:'Không tìm thấy.',system_group:'Thư mục "Chưa xếp nhóm" là của hệ thống, không xoá được.',is_admin:'Đây là quản trị viên: gỡ quyền quản trị trước rồi mới xoá tài khoản.'};
 async function qAct(a,b){
   if(!sb)return;const id=b&&b.dataset.id,e=b&&b.dataset.e;
   if(a==='sync'){if(!dbRef){toast('Chưa kết nối nhóm.');return;}R.trips.forEach(t=>{if(!t.sample&&!t.ph&&canEditAny(t.id))schedulePush(t,0);});if(sbUnsub){const g=sbGroup;connectGroup(g);}toast('Đang đồng bộ lại.');return;}
@@ -4346,6 +4359,13 @@ async function qAct(a,b){
     ask(`Đổi cài đặt ${nm}: ${s.default_enabled?'bật sẵn':'tắt sẵn'} ${s.days} ngày → ${en?'bật sẵn':'tắt sẵn'} ${days} ngày?\nChỉ áp dụng cho mã tạo mới và lần gia hạn / đổi mã sau này.`,{title:'Đổi cài đặt mã?',ok:'Lưu cài đặt'},async()=>{
       const r=await rpcDo('set_code_settings',{k,p_enabled:en,p_days:days},'Đã lưu cài đặt '+nm+'.');
       if(r!==false&&r!==null){if(window.CS_DRAFT)delete window.CS_DRAFT[k];await loadCodeSet();}renderGroupTab();});return;}
+  if(a==='clsentT'){window.CL_SENT_OPEN=!window.CL_SENT_OPEN;renderGroupTab();return;}
+  if(a==='clredo2'){const c=(window.CL_SENT||[]).find(x=>x.id===+id);if(!c)return;
+    if(c.closed){toast('Sổ chuyến đã chốt, không gửi lại được.');return;}
+    const go=()=>{clDraft={mem:c.member_id,day:c.day_id||'',desc:c.descr,amt:Number(c.amount).toLocaleString('vi-VN'),note:c.note||''};openDlg('claims',{resend:c.id});};
+    if(R.current===c.trip_id&&syncedSet.has(c.trip_id)){go();return;}
+    openTrip(c.group_id,c.trip_id);const until=Date.now()+13000;
+    const w=()=>{if(R.current===c.trip_id&&syncedSet.has(c.trip_id)){go();return;}if(Date.now()<until)setTimeout(w,300);};setTimeout(w,300);return;}
   if(a==='cldoneT'){window.CL_DONE_OPEN=!window.CL_DONE_OPEN;if(window.CL_DONE_OPEN)await loadClDone();else renderGroupTab();return;}
   if(a==='clgo'){const c=(window.CL_OPEN||[]).find(x=>x.id===+id);if(!c)return;
     if(c.closed){toast('Sổ chuyến đã chốt. Mở lại sổ trước khi duyệt.');return;}
@@ -4555,7 +4575,7 @@ async function openDlg(k,opt){dlgKind=k;dlgNote='';dlgBusy=false;$('#authModal')
     if(a.error||b.error)dlgNote='Chưa tải được: '+((a.error||b.error).message);else{tInfo=a.data||{};tAudit=b.data||[];tAuditMore=tAudit.length>=50;}}
   else if(k==='report'){rpItem=opt||null;}
   else if(k==='reports'){rpRows=null;renderDlg();const {data,error}=await sb.rpc('trip_reports_list',{tid:t.id});rpRows=error?[]:(data||[]);if(error)dlgNote=error.message;rpCount.set(t.id,(rpRows||[]).filter(r=>!r.resolved_at).length);renderTripExtra();}
-  else if(k==='claims'){clRows=null;renderDlg();await loadClaims(t.id);}
+  else if(k==='claims'){clResend=(opt&&opt.resend)||0;if(!clResend)clDraft={};clRows=null;renderDlg();await loadClaims(t.id);}
   else if(k==='code'){codeInfo=null;renderDlg();const {data,error}=await sb.rpc('trip_code_get',{tid:t.id});codeInfo=data||null;if(error)dlgNote=error.message;else codeCache.set(t.id,data);}
   else if(k==='share'){shareInfo=null;renderDlg();const {data}=await sb.rpc('share_info',{p_trip:t.id});shareInfo=data||{};}
   else if(k==='viewers'){tViewers=null;renderDlg();const {data,error}=await sb.rpc('trip_viewers',{tid:t.id});tViewers=data||[];if(error)dlgNote=ERR_VN[error.message]||error.message;}
@@ -4585,19 +4605,20 @@ function dlgBody(){
     const stB=c=>c.status==='approved'?'<span class="badge on">Đã duyệt</span>':c.status==='rejected'?'<span class="badge warn">Từ chối</span>':'<span class="badge">Chờ duyệt</span>';
     const top=c=>`<div class="row" style="gap:8px;align-items:center;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-size:14.5px;font-weight:600">${esc(c.descr)} · ${fmt(c.amount)}</div>${stB(c)}</div>
       <div class="hint" style="min-height:0">${esc(c.member_name||nameOf(c.member_id))} đã trả${c.day_id&&day(c.day_id)?' · '+esc(dayName(c.day_id)):''} · ${fdt(c.at)}</div>${c.note?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Ghi chú: ${esc(c.note)}</div>`:''}${c.status!=='pending'&&c.reply?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Thủ quỹ trả lời: ${esc(c.reply)}</div>`:''}`;
+    const redo=c=>c.mine&&c.status==='rejected'&&!isClosed()?`<div class="row"><button type="button" class="btn small" data-dl="clredo" data-id="${c.id}"${dis}>Sửa và gửi lại</button></div>`:'';
     if(ld){
-      const rows=clRows.length?clRows.map(c=>`<div class="rcard">${top(c)}${c.status==='pending'?`<div class="row"><div class="field"><input type="text" id="dlgCl-${c.id}" maxlength="500" placeholder="Trả lời (không bắt buộc)" aria-label="Trả lời"></div><button type="button" class="btn small" data-dl="clok" data-id="${c.id}"${dis}>Duyệt</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-dl="clno" data-id="${c.id}"${dis}>Từ chối</button></div>`:''}</div>`).join(''):'<div class="hint">Chưa có đề nghị nào.</div>';
+      const rows=clRows.length?clRows.map(c=>`<div class="rcard">${top(c)}${redo(c)}${c.status==='pending'?`<div class="row"><div class="field"><input type="text" id="dlgCl-${c.id}" maxlength="500" placeholder="Trả lời (không bắt buộc)" aria-label="Trả lời"></div><button type="button" class="btn small" data-dl="clok" data-id="${c.id}"${dis}>Duyệt</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-dl="clno" data-id="${c.id}"${dis}>Từ chối</button></div>`:''}</div>`).join(''):'<div class="hint">Chưa có đề nghị nào.</div>';
       return `<p style="color:var(--muted);font-size:14px;margin:0">Người đi báo đã trả hộ. <b>Duyệt</b> sẽ mở sẵn form khoản chi (đã điền), bạn chọn người chia rồi lưu. Chưa lưu thì đề nghị vẫn chờ.</p>${rows}`;}
     const dr=clDraft||{},me=dr.mem||lsGet('chiatien-me-'+R.current)||'',dsel=dr.day||S.activeDay||'';
     const form=isClosed()?'<div class="hint">Sổ đã chốt, không gửi thêm được.</div>'
-      :`<div class="gcard"><div class="sub">Gửi đề nghị</div><p style="color:var(--muted);font-size:12px;margin:0">Bạn đã trả giúp một khoản? Gửi ở đây, thủ quỹ kiểm tra rồi mới ghi vào chuyến.</p>
+      :`<div class="gcard"><div class="sub">${clResend?'Sửa và gửi lại đề nghị bị từ chối':'Gửi đề nghị'}</div><p style="color:var(--muted);font-size:12px;margin:0">${clResend?'Nội dung cũ đã được điền sẵn. Sửa nếu cần rồi gửi lại, vẫn là đề nghị cũ, không tạo thêm.':'Bạn đã trả giúp một khoản? Gửi ở đây, thủ quỹ kiểm tra rồi mới ghi vào chuyến.'}</p>
         <div class="field"><label for="clMem">Người đã trả</label><select id="clMem"><option value="">— chọn —</option>${S.members.map(m=>`<option value="${esc(m.id)}"${m.id===me?' selected':''}>${esc(m.name)}</option>`).join('')}</select></div>
         <div class="field"><label for="clDay">Ngày</label><select id="clDay"><option value="">(không rõ)</option>${S.days.map(d=>`<option value="${esc(d.id)}"${d.id===dsel?' selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
         <div class="field"><label for="clDesc">Nội dung</label><input type="text" id="clDesc" maxlength="80" placeholder="Ví dụ: cà phê sáng, tiền phà" value="${esc(dr.desc||'')}"></div>
         <div class="field"><label for="clAmt">Số tiền</label><input type="text" id="clAmt" inputmode="decimal" placeholder="Ví dụ: 150.000 hoặc 150k" value="${esc(dr.amt||'')}"></div>
         <div class="field"><label for="clNote">Ghi chú (không bắt buộc)</label><input type="text" id="clNote" maxlength="200" value="${esc(dr.note||'')}"></div>
-        <div class="row"><button type="button" class="btn" data-dl="clsend"${dis}>Gửi đề nghị</button></div></div>`;
-    return form+(clRows.length?`<div class="sub">Đề nghị bạn đã gửi</div>`+clRows.map(c=>`<div class="rcard">${top(c)}</div>`).join(''):'');}
+        <div class="row"><button type="button" class="btn" data-dl="clsend"${dis}>${clResend?'Gửi lại':'Gửi đề nghị'}</button>${clResend?`<button type="button" class="btn ghost" data-dl="clcancel"${dis}>Huỷ sửa</button>`:''}</div></div>`;
+    return form+(clRows.length?`<div class="sub">Đề nghị bạn đã gửi</div>`+clRows.map(c=>`<div class="rcard">${top(c)}${redo(c)}</div>`).join(''):'');}
   if(dlgKind==='code'){if(!codeInfo)return wait;const c=codeInfo,dl=daysLeft(c.expires_at),url=codeUrl(c.code);
     return `<p style="color:var(--muted);font-size:14px;margin:0">Gửi mã hoặc link này cho người đi cùng. Họ <b>chỉ xem</b> được chuyến này, không cần tài khoản.</p>
       <div class="codebig"><code>${esc(c.code)}</code></div>
@@ -4658,9 +4679,13 @@ async function dlgAct(a,b){
     if(!m){dlgNote='Chọn người đã trả.';renderDlg();return;}
     if(!clDraft.desc){dlgNote='Nhập nội dung khoản đã trả.';renderDlg();return;}
     if(!(am>0)){dlgNote='Nhập số tiền hợp lệ, ví dụ 150.000 hoặc 150k.';renderDlg();return;}
-    if(await dlgRpc('submit_claim',{tid:t.id,p_day:clDraft.day||null,p_member:clDraft.mem,p_name:m.name,p_desc:clDraft.desc,p_amount:Math.round(am),p_note:clDraft.note||null},'Đã gửi. Thủ quỹ sẽ xem và duyệt.')){
-      lsSet('chiatien-me-'+R.current,clDraft.mem);clDraft={};await loadClaims(t.id);}
+    const ok=clResend?await dlgRpc('resend_claim',{p_id:clResend,p_day:clDraft.day||null,p_member:clDraft.mem,p_name:m.name,p_desc:clDraft.desc,p_amount:Math.round(am),p_note:clDraft.note||null},'Đã gửi lại. Thủ quỹ sẽ xem và duyệt.')
+      :await dlgRpc('submit_claim',{tid:t.id,p_day:clDraft.day||null,p_member:clDraft.mem,p_name:m.name,p_desc:clDraft.desc,p_amount:Math.round(am),p_note:clDraft.note||null},'Đã gửi. Thủ quỹ sẽ xem và duyệt.');
+    if(ok){lsSet('chiatien-me-'+R.current,clDraft.mem);clDraft={};clResend=0;await loadClaims(t.id);loadSentClaims();loadClaimsAll(true);}
     renderDlg();return;}
+  if(a==='clredo'){const c=(clRows||[]).find(x=>x.id===+b.dataset.id);if(!c)return;
+    clResend=c.id;clDraft={mem:c.member_id,day:c.day_id||'',desc:c.descr,amt:Number(c.amount).toLocaleString('vi-VN'),note:c.note||''};dlgNote='';renderDlg();return;}
+  if(a==='clcancel'){clResend=0;clDraft={};dlgNote='';renderDlg();return;}
   if(a==='clno'){const id=+b.dataset.id,rep=($('#dlgCl-'+id)||{}).value||'';
     if(await dlgRpc('decide_claim',{p_id:id,p_ok:false,p_reply:rep},'Đã từ chối.')){await loadClaims(t.id);loadClaimsAll(true);}renderDlg();return;}
   if(a==='clok'){const id=+b.dataset.id,c=(clRows||[]).find(x=>x.id===id);if(!c||c.status!=='pending')return;

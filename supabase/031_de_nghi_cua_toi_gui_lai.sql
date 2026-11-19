@@ -1,0 +1,2 @@
+-- 031: Người gửi thấy mọi đề nghị "Tôi đã trả" của mình (my_sent_claims) và sửa + gửi lại đề nghị bị từ chối (resend_claim: cập nhật đúng dòng cũ, đặt lại chờ duyệt, xoá trả lời).
+-- Đã áp dụng trực tiếp trên Supabase (apply_migration 031). Quay lại: drop function public.my_sent_claims(integer), public.resend_claim(bigint,text,text,text,text,bigint,text);

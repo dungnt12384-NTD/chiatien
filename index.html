@@ -1610,6 +1610,30 @@ html[data-skin="goc"] .tab[aria-selected="true"]::after,html[data-skin="goc"] .t
 :root[data-skin="ios"][data-theme="dark"]{--on:#000}
 html .bal.pos,html .st.pos b,html .st.pos i,html .kpi b.kpos{-webkit-text-fill-color:var(--pos)!important;color:var(--pos)!important}
 html .bal.neg,html .st.neg b,html .st.neg i,html .kpi b.kneg{-webkit-text-fill-color:var(--neg)!important;color:var(--neg)!important}
+/* ===== Thống kê: cột ngang / cột đứng / biểu đồ tròn ===== */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:10px}
+.stat-card{display:flex;flex-direction:column;gap:8px;min-width:0}
+.stat-card>h3{margin:0;font-size:16px}
+.hb{display:flex;flex-direction:column;gap:7px}
+.hb-r{display:grid;grid-template-columns:minmax(70px,34%) 1fr auto;gap:8px;align-items:center;font-size:13px}
+.hb-l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.hb-t{height:12px;border-radius:99px;background:var(--surface2,#eef0f4);overflow:hidden}
+.hb-t i{display:block;height:100%;border-radius:99px;background:var(--accent,#2f6df6)}
+.hb-t.big{height:18px}
+.hb-v{font-weight:700;white-space:nowrap;color:var(--fg);font-variant-numeric:tabular-nums}
+.dn{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.dn-c{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto}
+.dn-h{width:92px;height:92px;border-radius:50%;background:var(--surface,#fff);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.2}
+.dn-h b{font-size:18px}.dn-h small{font-size:11px;color:var(--muted)}
+.dn-lg{flex:1 1 150px;display:flex;flex-direction:column;gap:6px;font-size:13px;min-width:0}
+.dn-lg>div{display:flex;align-items:center;gap:8px}
+.dn-lg i{width:12px;height:12px;border-radius:4px;flex:0 0 auto}
+.dn-lg span{flex:1 1 auto;min-width:0}.dn-lg b{white-space:nowrap}
+.cl-w{display:flex;align-items:flex-end;gap:8px;overflow-x:auto;padding:4px 2px 2px}
+.cl-i{flex:1 0 46px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:46px}
+.cl-b{width:100%;height:130px;display:flex;align-items:flex-end;justify-content:center}
+.cl-b i{display:block;width:70%;max-width:44px;border-radius:8px 8px 0 0;background:var(--accent,#2f6df6)}
+.cl-v{font-size:11px;font-weight:700;white-space:nowrap}.cl-l{font-size:11px;color:var(--muted);text-align:center;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html .bal.pos{background:var(--pos-bg)!important}
 html .bal.neg{background:var(--neg-bg)!important}
 </style>
@@ -2955,6 +2979,54 @@ function foldDayCards(el){el.querySelectorAll('.rcard[data-day]').forEach(card=>
   t.insertAdjacentHTML('beforeend','<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.3 8.3a1 1 0 0 1 1.4 0L12 13.6l5.3-5.3a1 1 0 1 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4Z"/></svg>');
   if(!open)[...card.children].forEach(ch=>{if(ch!==t)ch.style.display='none';});});}
 const repFoldBar=`<div class="row"><button type="button" class="btn ghost small" data-act="repDaysAll">Hiện hết chi tiết</button><button type="button" class="btn ghost small" data-act="repDaysNone">Thu gọn (chỉ hiện ngày)</button></div>`;
+/* ===== Thống kê bằng biểu đồ (cột ngang, cột đứng, tròn). Chỉ dùng CSS/HTML nên theo đúng màu của bộ giao diện ===== */
+const STAT_CATS=[['room','🛏','Tiền phòng','#8b5cf6'],['move','🚗','Di chuyển','#3b82f6'],['fun','🎉','Vui chơi','#ec4899'],['food','🍜','Ăn uống','#f59e0b'],['other','📦','Khác','#64748b']];
+function statCat(e){if(e.rooms&&e.rooms.length)return 'room';const s=' '+norm(e.desc||'')+' ';
+  if(/\b(phong|khach san|hotel|homestay|resort|villa)\b/.test(s))return 'room';
+  if(/\b(xe|taxi|grab|xang|may bay|ve tau|di chuyen|gui xe|ben xe|cau duong|phi duong|thue xe|tau|thuyen|cano)\b/.test(s))return 'move';
+  if(/\b(karaoke|bida|pickle|pickleball|bong|golf|tennis|massage|spa|tham quan|ve vao|ve cong|game|giai tri|tour|bar|pub)\b/.test(s))return 'fun';
+  if(/\b(an|bua|com|pho|bun|banh|nhau|bia|ruou|cafe|ca phe|tra|nuoc|uong|buffet|lau|nuong|hai san|nha hang|toi|trua|sang|mi|che|kem|do an|trai cay)\b/.test(s))return 'food';
+  return 'other';}
+const fmtK=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?0:1).replace('.',',')+' tr':n>=1e3?Math.round(n/1e3)+' k':String(Math.round(n));
+const pctTxt=(a,b)=>b?(a/b*100).toFixed(1).replace('.',',')+'%':'0%';
+function hbars(list){const mx=Math.max(...list.map(x=>x.v),1);
+  return `<div class="hb">`+list.map(x=>`<div class="hb-r"><div class="hb-l" title="${x.t||''}">${x.l}</div><div class="hb-t"><i style="width:${Math.max(2,x.v/mx*100)}%;${x.c?'background:'+x.c:''}"></i></div><div class="hb-v">${x.vt}</div></div>`).join('')+`</div>`;}
+function donutChart(parts,top,sub){let acc=0;const tot=parts.reduce((s,p)=>s+p.v,0)||1;
+  const stops=parts.map(p=>{const a=acc/tot*100;acc+=p.v;return `${p.c} ${a}% ${acc/tot*100}%`;}).join(',');
+  return `<div class="dn"><div class="dn-c" style="background:conic-gradient(${stops})" role="img" aria-label="Biểu đồ tròn"><div class="dn-h"><b>${top}</b><small>${sub}</small></div></div><div class="dn-lg">`+parts.map(p=>`<div><i style="background:${p.c}"></i><span>${p.l}</span><b>${p.vt}</b></div>`).join('')+`</div></div>`;}
+function colChart(list){const mx=Math.max(...list.map(x=>x.v),1);
+  return `<div class="cl"><div class="cl-w">`+list.map(x=>`<div class="cl-i" title="${x.t||''}"><span class="cl-v">${x.vt}</span><div class="cl-b"><i style="height:${Math.max(2,x.v/mx*100)}%"></i></div><span class="cl-l">${x.l}</span></div>`).join('')+`</div></div>`;}
+function statsHtml(c){
+  const es=S.expenses.filter(e=>e.amount>0);if(!es.length)return '<div class="empty">Chưa có khoản chi để thống kê.</div>';
+  const total=c.total,n=es.length,rd=reportData(),np=rd.people.size||1,nd=S.days.length||1;
+  const top=[...es].sort((a,b)=>b.amount-a.amount),big=top[0];
+  const kpi=(l,v,s)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b>${s?`<small>${s}</small>`:''}</div>`;
+  const kpis=`<div class="kpis">${kpi('Tổng chi',fmt(total),n+' khoản')}${kpi('Trung bình mỗi khoản',fmt(total/n))}${kpi('Khoản lớn nhất',fmt(big.amount),esc(big.desc)+' · '+pctTxt(big.amount,total)+' tổng')}${kpi('Mỗi người mỗi ngày',fmt(total/np/nd),np+' người · '+nd+' ngày')}${kpi('Đã đóng trước',pctTxt(c.advTotal,total),fmt(c.advTotal)+' / '+fmt(total))}</div>`;
+  const topCard=`<div class="rcard stat-card"><h3>💰 Khoản nào chi nhiều nhất?</h3><div class="hint" style="min-height:0">10 khoản có số tiền lớn nhất. Khoản đứng đầu chiếm ${pctTxt(big.amount,total)} tổng chi.</div>`+
+    hbars(top.slice(0,10).map(e=>({l:esc(e.desc),t:esc(e.desc)+' · '+esc(dayName(e.dayId)),v:e.amount,vt:fmtK(e.amount)+' · '+pctTxt(e.amount,total)})))+`</div>`;
+  const cat={};es.forEach(e=>{const k=statCat(e);cat[k]=(cat[k]||0)+e.amount;});
+  const parts=STAT_CATS.filter(k=>cat[k[0]]).map(k=>({l:k[1]+' '+k[2],v:cat[k[0]],c:k[3],vt:fmtK(cat[k[0]])+' · '+pctTxt(cat[k[0]],total)}));
+  const bigCat=[...parts].sort((a,b)=>b.v-a.v)[0];
+  const catCard=`<div class="rcard stat-card"><h3>🧩 Chi vào hạng mục nào?</h3><div class="hint" style="min-height:0">Tự phân loại theo tên khoản (phòng, di chuyển, vui chơi, ăn uống). Tên chưa nhận ra được xếp vào “Khác”.</div>`+
+    donutChart(parts,bigCat?pctTxt(bigCat.v,total):'',bigCat?esc(bigCat.l.replace(/^\S+\s/,'')):'')+`</div>`;
+  const grp=new Map();es.forEach(e=>{if(e.rooms&&e.rooms.length)return;const k=norm(e.desc||'').trim()||'(không tên)',g=grp.get(k)||{name:e.desc||'(không tên)',n:0,v:0};g.n++;g.v+=e.amount;grp.set(k,g);});
+  const rep=[...grp.values()].filter(g=>g.n>1).sort((a,b)=>b.n-a.n||b.v-a.v).slice(0,6);
+  const repCard=rep.length?`<div class="rcard stat-card"><h3>🔁 Khoản xuất hiện nhiều lần nhất</h3><div class="hint" style="min-height:0">Cùng một tên khoản được ghi nhiều lần (cộng dồn số tiền).</div>`+
+    hbars(rep.map(g=>({l:esc(g.name),t:esc(g.name),v:g.n,vt:g.n+' lần · '+fmtK(g.v)})))+`</div>`:'';
+  const maxDay=[...rd.days].sort((a,b)=>b.total-a.total)[0];
+  const dayCard=`<div class="rcard stat-card"><h3>📅 Chi theo từng ngày</h3><div class="hint" style="min-height:0">Ngày chi nhiều nhất: <b>${esc(maxDay.d.name)}</b> (${fmt(maxDay.total)}, ${pctTxt(maxDay.total,total)} tổng chi).</div>`+
+    colChart(rd.days.map(x=>({l:esc(String(x.d.name).split('·')[0].trim()||x.d.name),t:esc(x.d.name)+': '+fmt(x.total),v:x.total,vt:fmtK(x.total)})))+`</div>`;
+  const pg=modeGroups().filter(g=>g.members.some(x=>rd.people.has(x.id))).map(g=>({name:esc(g.main.name),paid:g.members.reduce((t,x)=>t+c.P[x.id].paid,0),share:g.members.reduce((t,x)=>t+c.P[x.id].share,0)}));
+  const lim=8,payers=pg.filter(p=>p.paid>0).sort((a,b)=>b.paid-a.paid),shares=[...pg].sort((a,b)=>b.share-a.share);
+  const payCard=payers.length?`<div class="rcard stat-card"><h3>💳 Ai chi hộ nhiều nhất?</h3><div class="hint" style="min-height:0">Tổng tiền từng người đã trả trực tiếp cho các khoản chi${payers.length>lim?` (top ${lim}/${payers.length})`:''}.</div>`+
+    hbars(payers.slice(0,lim).map(p=>({l:p.name,t:p.name,v:p.paid,vt:fmtK(p.paid)+' · '+pctTxt(p.paid,total)})))+`</div>`:'';
+  const avg=pg.length?pg.reduce((t,p)=>t+p.share,0)/pg.length:0;
+  const shCard=shares.length?`<div class="rcard stat-card"><h3>👤 Ai phải chịu nhiều nhất?</h3><div class="hint" style="min-height:0">Phần chi phí mỗi người phải chịu${shares.length>lim?` (top ${lim}/${shares.length})`:''}. Trung bình ${fmt(avg)}/người.</div>`+
+    hbars(shares.slice(0,lim).map(p=>({l:p.name,t:p.name,v:p.share,vt:fmtK(p.share)+' · '+pctTxt(p.share,total)})))+`</div>`:'';
+  const adv=c.advTotal,ap=total?Math.min(100,adv/total*100):0;
+  const advCard=`<div class="rcard stat-card"><h3>💵 Quỹ đóng trước so với tổng chi</h3><div class="hint" style="min-height:0">${adv>=total?'Tiền đóng trước đã đủ trang trải toàn bộ chi phí.':`Còn thiếu ${fmt(total-adv)} so với tổng chi, Thủ quỹ cần thu thêm.`}</div>
+    <div class="hb-t big"><i style="width:${ap}%"></i></div><div class="hint" style="min-height:0">${fmt(adv)} / ${fmt(total)} · ${pctTxt(adv,total)}</div></div>`;
+  return `<div class="rsec"><h3>Thống kê chi tiêu</h3>${kpis}<div class="stat-grid">${topCard}${catCard}${repCard}${dayCard}${payCard}${shCard}${advCard}</div></div>`;}
 function renderReport(c){
   const el=$('#report');
   if(!S.expenses.length){el.innerHTML='<div class="empty">Chưa có khoản chi nào để lập báo cáo.</div>';return;}
@@ -2982,9 +3054,9 @@ function renderReport(c){
     dayCard=`<div class="rcard"><div class="daytitle"><h3 style="color:var(--fg)">${esc(dd.name)}</h3><span class="num">${es.length} khoản · tổng ${fmt(es.reduce((t,e)=>t+e.amount,0))} · ${dpeople(dd).length} người</span></div>`+
       (es.map(e=>`<div class="s" style="font-size:13px;color:var(--muted)">• ${esc(e.desc)}: ${fmt(e.amount)} (${nameNo(e.payer)} chi)</div>`).join('')||'<div class="hint">Ngày này chưa có khoản chi.</div>')+`</div>`;}
   const ppl=`<div class="rsec"><h3>Chi tiết từng người</h3><div class="hint" style="min-height:0">Bấm vào một người để xem các khoản họ đã tham gia và phần phải chịu.</div>${sumToggleHtml()}<div class="tablewrap"><table class="t2"><thead><tr><th>STT</th><th>Thành viên</th><th>Đã đóng trước</th><th>Đã chi hộ</th><th>Phải chịu</th><th>Chốt sổ</th></tr></thead><tbody>${modeGroups().map(g=>{const sm=k=>g.members.reduce((t,x)=>t+c.P[x.id][k],0),net=sm('net'),key=g.main.id,open=openPS.has(key);return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togPS" data-id="${key}"><td>${gNo(g.main.id)}</td><td>${memCell(g)}</td><td class="num">${fmt(sm('adv'))}</td><td class="num">${fmt(sm('paid'))}</td><td class="num">${fmt(sm('share'))}</td><td class="num" style="color:var(${net>=0?'--pos':'--neg'});font-weight:700">${signed(net)}</td></tr>`+(open?`<tr class="det"><td colspan="6">${personDetail(g,c)}</td></tr>`:'');}).join('')}</tbody></table></div></div>`;
-  const subs=[['ov','Danh sách thành viên tham gia'],['day','Theo ngày'],['item','Theo khoản chi'],['person','Từng người'],['mx','Báo cáo chi tiết'],['rm','Theo phòng']];
+  const subs=[['ov','Danh sách thành viên tham gia'],['stat','📊 Thống kê'],['day','Theo ngày'],['item','Theo khoản chi'],['person','Từng người'],['mx','Báo cáo chi tiết'],['rm','Theo phòng']];
   const nav=`<div class="subtabs" role="tablist">`+subs.map(x=>`<button type="button" class="subtab" role="tab" aria-selected="${repTab===x[0]}" data-act="repTab" data-id="${x[0]}">${x[1]}</button>`).join('')+`</div>`;
-  el.innerHTML=nav+({ov:ov,day:dys,item:items,person:ppl,mx:matrixHtml(),rm:roomsReportHtml()}[repTab]||ov);
+  el.innerHTML=nav+({ov:ov,stat:statsHtml(c),day:dys,item:items,person:ppl,mx:matrixHtml(),rm:roomsReportHtml()}[repTab]||ov);
   if(['day','rm'].includes(repTab))foldDayCards(el);
 }
 function reportText(){
@@ -5690,7 +5762,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v128',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v129',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

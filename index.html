@@ -1875,7 +1875,9 @@ const lastJson=new Map(),syncedSet=new Set(),deletedSet=new Set();
 let dbCanWrite=true,adoptOK=null,dbRef=null,syncState='off',syncNote='',syncAt=0,firstSnap=true;
 function placeholder(){const t=mkTrip('Chuyến đi 1',blank());t.ph=true;lastJson.set(t.id,snapJson(t));return t;}
 const snapJson=t=>JSON.stringify({name:t.name,color:t.color,data:t.data});
-function bumpChanged(){R.trips.forEach(t=>{const j=snapJson(t);if(lastJson.get(t.id)!==j){if(typeof guardEdit==='function'&&syncedSet.has(t.id)&&guardEdit(t,lastJson.get(t.id),j))return;try{undoRecord(t,lastJson.get(t.id),j);}catch(e){}lastJson.set(t.id,j);if(t.ph&&!t.data.members.length&&!t.data.expenses.length&&!t.data.advances.length)return;t.updatedAt=Date.now();delete t.sample;delete t.ph;schedulePush(t);}});}
+function bumpChanged(){R.trips.forEach(t=>{const j=snapJson(t);if(lastJson.get(t.id)!==j){if(typeof guardEdit==='function'&&syncedSet.has(t.id)&&guardEdit(t,lastJson.get(t.id),j))return;try{undoRecord(t,lastJson.get(t.id),j);}catch(e){}lastJson.set(t.id,j);if(t.ph&&!t.data.members.length&&!t.data.expenses.length&&!t.data.advances.length)return;
+      if(t.ph&&window.supabase&&typeof sbSession!=='undefined'&&sbSession)return;   /* v119: chuyến giữ chỗ không bao giờ tự đưa lên máy chủ; chỉ khi bấm "Tạo chuyến" có tên */
+      t.updatedAt=Date.now();delete t.sample;delete t.ph;schedulePush(t);}});}
 function saveLocal(){R.syncedIds=[...syncedSet];R.deleted=[...deletedSet];try{localStorage.setItem(KEY2,JSON.stringify(R));}catch(e){}}
 function save(){bumpChanged();saveLocal();}
 /* v81: HOÀN TÁC / LÀM LẠI (giống Excel, Word) cho dữ liệu chuyến: số tiền, khoản chi, người đi, phòng, ngày, tên chuyến…
@@ -3544,7 +3546,7 @@ function handleSnap(snap){
   R.trips.slice().forEach(t=>{
     if(remote.has(t.id))return;
     if(syncedSet.has(t.id)){R.trips=R.trips.filter(x=>x.id!==t.id);lastJson.delete(t.id);syncedSet.delete(t.id);changed=true;}   // đã bị xoá ở máy khác
-    else if(!t.sample&&!t.ph&&sbGroup&&sbGroup.can_create&&adoptOK!==false)adoptList.push(t);
+    else if(!t.sample&&!t.ph&&sbGroup&&sbGroup.can_create&&adoptOK!==false&&(t.data.members.length||t.data.expenses.length||t.data.advances.length))adoptList.push(t);   /* v119: chuyến trống trên máy không đưa lên */
   });
   adoptLocals();
   if(remote.size>0){const n=R.trips.length;R.trips=R.trips.filter(t=>!(t.ph||(firstSnap&&t.sample)));if(R.trips.length!==n)changed=true;}   // bỏ chuyến mẫu chưa đụng tới
@@ -5368,8 +5370,10 @@ $('#bkAdd').addEventListener('click',()=>{const info=bulkInfo(),unit=advMode==='
     info.rows.forEach(r=>S.advances.push({id:uid(),member:r.id,amount:r.amt,note,bulk:1}));
     bulkSel.clear();$('#bkAmt').value='';$('#bkNote').value='';render();say('#bkSum',`Đã thêm ${fmt(info.total)} cho ${info.rows.length} ${unit}.`);});});
 $('#tripForm').addEventListener('submit',ev=>{ev.preventDefault();
+  /* v119: bắt buộc đặt tên chuyến, không tự đặt "Chuyến đi N" nữa (tránh chuyến mặc định lẫn trong danh sách) */
+  const name=$('#newTripName').value.trim();
+  if(!name){toast('Nhập tên chuyến trước khi tạo.');try{$('#newTripName').focus();}catch(e){}return;}
   R.trips=R.trips.filter(t=>!t.ph);
-  const name=$('#newTripName').value.trim()||('Chuyến đi '+(R.trips.length+1));
   const cv=$('#copyFrom').value,full=$('#copyMode').value==='full';
   const srcData=cv==='ext'&&window.COPY_EXT?window.COPY_EXT.data:((R.trips.find(t=>t.id===cv)||{}).data||null);
   const data=srcData&&full?cloneFull(srcData):cloneMembers(srcData);
@@ -5505,7 +5509,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v118',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v119',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

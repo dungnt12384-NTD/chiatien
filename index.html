@@ -3508,7 +3508,7 @@ function handleSnap(snap){
     const lu=t.updatedAt||0;
     if(ru>lu&&t.unsynced&&canEditAny(id)&&!t.sample&&!t.ph){handleConflict(id,{remote:{data:r,rev:rrev.get(id)}});syncedSet.add(id);return;}   /* người khác vừa sửa trong lúc máy này có thay đổi chưa gửi: không ghi đè im lặng */
     /* v109: ngoài so giờ (updatedAt), nhận cả bản có rev máy chủ mới hơn khi máy này không có thay đổi chưa gửi (đổi giờ máy lệch, hoặc máy chủ tự sửa như duyệt đổi tài khoản) */
-    const srv=rrev.get(id),lrv=getRev(id),srvNewer=!t.unsynced&&srv!=null&&srv>lrv&&!t.sample&&!t.ph;
+    const srv=rrev.get(id),lrv=getRev(id),srvNewer=!t.unsynced&&!t.sample&&!t.ph&&((srv!=null&&srv!==lrv)||ru!==lu);   /* v111: không có thay đổi chưa gửi thì máy chủ luôn đúng; khác rev hoặc khác dấu giờ là nhận bản máy chủ (trước đây bản cũ trên máy có dấu giờ lớn hơn thì kẹt mãi, phải đăng xuất / đăng nhập) */
     if(ru>lu||srvNewer){t.name=r.name;t.color=r.color||t.color;t.data=JSON.parse(JSON.stringify(r.data));t.updatedAt=ru;delete t.sample;delete t.ph;
       normTrip(t);lastJson.set(id,snapJson(t));baseMap.set(id,JSON.parse(JSON.stringify(t.data)));setRev(id,rrev.get(id));changed=true;if(!firstSnap)adoptedNames.push(t.name);}
     else if(ru<lu&&!t.sample&&!t.ph&&t.unsynced)schedulePush(t,0);
@@ -5357,7 +5357,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v110',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v111',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

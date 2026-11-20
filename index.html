@@ -2158,7 +2158,8 @@ function renderTrips(){syncTripUi();try{renderTripExtra();}catch(e){}try{renderT
   const tn=$('#tripName');if(!editingTrip)tn.value=trip().name;
   const cur=trip();document.documentElement.style.removeProperty('--tc');
   $('#tripColors').innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${cur.color===c}" aria-label="Chọn màu ${c}" data-act="pickColor" data-color="${c}"></button>`).join('');
-  $('#tripBar').innerHTML=`${sbSession&&!PV_TOKEN?`<button type="button" class="crumb" data-tx="pickgrp" title="Bấm để chọn chuyến của tôi">🧳 ${sbAdmin&&sbGroup?esc(sbGroup.name):'Chuyến của tôi'} ▾</button><span>›</span>`:'<span>Đang xem chuyến</span>'}<b>${esc(cur.name)}</b>${isClosed(cur.id)?' <span class="closed-tag" title="Sổ đã chốt: không sửa được, mã QR chuyển khoản đã hiện ở Tổng kết">🔒 ĐÃ CHỐT SỔ</span>':''}<span class="num">${cur.data.members.length} người · ${cur.data.days.length} ngày · ${fmt(tripTotal(cur))}</span>`;
+  $('#tripBar').innerHTML=`${sbSession&&!PV_TOKEN?`<button type="button" class="crumb" data-tx="pickgrp" title="Bấm để chọn chuyến của tôi">🧳 ${sbAdmin&&sbGroup?esc(sbGroup.name):'Chuyến của tôi'} ▾</button><span>›</span>`:'<span>Đang xem chuyến</span>'}<b>${esc(cur.name)}</b>${isClosed(cur.id)?' <span class="closed-tag" title="Sổ đã chốt: không sửa được, mã QR chuyển khoản đã hiện ở Tổng kết">🔒 ĐÃ CHỐT SỔ</span>':''}<span class="num">${cur.data.members.length} người · ${cur.data.days.length} ngày · ${fmt(tripTotal(cur))}</span>`+(()=>{if(!sbSession||PV_TOKEN||sbAdmin||!myTrips)return '';const mt=myTrips.find(x=>x.id===cur.id),other=myTrips.filter(x=>!R.trips.some(r=>r.id===x.id)).length;
+    return (mt?`<span class="hint" style="flex:1 1 100%;min-height:0">${esc(tripRoleTxt(mt))} · ${esc(tripByTxt(mt))}</span>`:'')+(other?`<span class="hint" style="flex:1 1 100%;min-height:0">Còn <b>${other}</b> chuyến khác của bạn: bấm “🧳 Chuyến của tôi ▾” để xem.</span>`:'');})();
 }
 
 let swapSnap=null, swapMode=false, swapSel=null, newTripColor='', tripEditorOpen=false, tripFormOpen=false, nrDraft=null, priceWarn=null, editRooms=new Set(), editing=null, formExcl=new Set(), formKind='normal', formRooms=[], formSelf=new Set(), pickRoom=null, roomAskSkip=new Set(), roomAskForce=false;
@@ -2962,7 +2963,9 @@ function ask(msg,opt,onYes,onNo){opt=opt||{};
   if(opt.input){di.placeholder=opt.input.placeholder||'';di.setAttribute('aria-label',opt.input.placeholder||'Gõ để xác nhận');
     const chk=()=>{y.disabled=di.value.trim().toUpperCase()!==String(opt.input.match).toUpperCase();};di.oninput=chk;chk();}
   const ch=$('#dlgChoices');ch.innerHTML='';ch.hidden=!opt.choices;y.hidden=!!opt.choices;
-  if(opt.choices)opt.choices.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=c.label;
+  if(opt.choices)opt.choices.forEach(c=>{if(c.head){const h=document.createElement('div');h.className='sub';h.style.cssText='text-align:left;margin:8px 0 2px;font-weight:700';h.textContent=c.head;ch.appendChild(h);}
+    const b=document.createElement('button');b.type='button';b.className='btn';
+    if(c.sub){const s1=document.createElement('b'),s2=document.createElement('small');s1.textContent=c.label;s2.textContent=c.sub;s2.style.cssText='display:block;font-weight:400;opacity:.75;margin-top:2px';b.append(s1,s2);b.style.textAlign='left';}else b.textContent=c.label;
     b.addEventListener('click',()=>{askCb=null;$('#modal').hidden=true;c.fn();});ch.appendChild(b);});
   askCb={yes:onYes,no:onNo,alt:opt.alt?opt.alt.fn:null};$('#modal').hidden=false;
   (opt.input?di:opt.choices&&ch.firstChild?ch.firstChild:(opt.info?y:no)).focus();}
@@ -3897,15 +3900,23 @@ const SYS_GROUP='00000000-0000-0000-0000-000000000001';
 let myTrips=null;
 async function loadMyTrips(){try{const {data,error}=await sb.rpc('my_trips');myTrips=error?[]:(data||[]);}catch(e){myTrips=[];}
   if(curTab==='group'&&typeof renderGroupTab==='function')try{renderGroupTab();}catch(e){}}
+/* v123: mỗi chuyến ghi rõ vai trò của tôi + ai tạo; chia 2 phần "Tôi tạo" / "Của người khác" */
+const meMail=()=>String(sbSession&&sbSession.user&&sbSession.user.email||'').toLowerCase();
+const tripMine=t=>!!t.creator&&String(t.creator).toLowerCase()===meMail();
+const tripRoleTxt=t=>({leader:'Vai trò: Thủ quỹ',helper:'Vai trò: Người hỗ trợ',admin:'Vai trò: Quản trị',viewer:'Vai trò: Chỉ xem'}[t.role]||t.role);
+const tripByTxt=t=>tripMine(t)?'Bạn tạo chuyến này':(t.creator?'Tạo bởi '+t.creator:'Không rõ người tạo');
+function tripSplit(L){const a=L.filter(tripMine),b=L.filter(t=>!tripMine(t));return [['🙋 Chuyến tôi tạo',a],['👥 Chuyến của người khác (tôi được thêm vào)',b]].filter(x=>x[1].length);}
 function myTripsCard(){
   if(isAnon()&&!(myTrips||[]).length)return groupsCard();
   if(myTrips===null)return `<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi</b></div><div class="hint">Đang tải…</div></div>`;
   if(!myTrips.length)return sbAdmin||isAnon()?groupsCard():`<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi</b></div><div class="hint" style="min-height:0">Bạn chưa có chuyến nào. Tạo chuyến mới ở tab Chuyến, hoặc nhập mã chuyến ở bên dưới.</div></div>`;
   const folders=[];myTrips.forEach(t=>{let f=folders.find(x=>x.id===t.group_id);if(!f){f={id:t.group_id,name:t.group_id===SYS_GROUP?'Chưa xếp nhóm':t.group_name,trips:[]};folders.push(f);}f.trips.push(t);});
   const flat=!sbAdmin||(folders.length===1&&folders[0].id===SYS_GROUP);   /* chỉ quản trị viên thấy thư mục nhóm */
-  return `<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi (${myTrips.length})</b></div>`+folders.map(f=>`${flat?'':`<div class="sub">📁 ${esc(f.name)} (${f.trips.length})</div>`}`+f.trips.map(t=>{const on=sbGroup&&sbGroup.id===t.group_id&&R.current===t.id;
-    return `<div class="acc-trip acc-row${on?' on':''}${t.closed?' is-closed':''}"><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;text-align:left"><b>${t.closed?'🔒 ':''}${esc(t.name)}</b>${t.closed?' <span class="closed-tag">ĐÃ CHỐT SỔ</span>':''}
-      <small class="hint" style="display:block;min-height:0">${TRIP_ROLE[t.role]||t.role}</small></span><button type="button" class="btn small${on?' is-open':''}" data-q="otrip" data-g="${esc(t.group_id)}" data-t="${esc(t.id)}">${on?'Đang mở':'Mở'}</button></div>`;}).join('')).join('')+`</div>`;}
+  const row=t=>{const on=sbGroup&&sbGroup.id===t.group_id&&R.current===t.id;
+    return `<div class="acc-trip acc-row${on?' on':''}${t.closed?' is-closed':''}"><span style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;text-align:left"><b class="tn">${t.closed?'🔒 ':''}${esc(t.name)}</b>${t.closed?' <span class="closed-tag">ĐÃ CHỐT SỔ</span>':''}
+      <small class="hint tdet" style="display:block;min-height:0"><span class="tw">${esc(tripRoleTxt(t))}</span><span class="tw">${esc(tripByTxt(t))}</span></small></span><button type="button" class="btn small${on?' is-open':''}" data-q="otrip" data-g="${esc(t.group_id)}" data-t="${esc(t.id)}">${on?'Đang mở':'Mở'}</button></div>`;};
+  if(!sbAdmin)return `<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi (${myTrips.length})</b></div>`+tripSplit(myTrips).map(s=>`<div class="sub">${s[0]} (${s[1].length})</div>`+s[1].map(row).join('')).join('')+`</div>`;
+  return `<div class="gcard"><div class="gh"><b>🧳 Chuyến của tôi (${myTrips.length})</b></div>`+folders.map(f=>`${flat?'':`<div class="sub">📁 ${esc(f.name)} (${f.trips.length})</div>`}`+f.trips.map(row).join('')).join('')+`</div>`;}
 async function loadMyCodes(){try{const {data}=await sb.rpc('my_codes');myCodes=data||[];}catch(e){myCodes=[];}}
 async function loadMyReq(){try{const {data}=await sb.rpc('my_request');myReq=data||null;}catch(e){myReq=null;}}
 async function loadPaid(tid){if(!sb||!sbGroup||!tid||!syncedSet.has(tid))return;paidFor=tid;
@@ -4851,8 +4862,8 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
   if(a==='trashexp'){openTrashAll('exp');return;}
   if(a==='up'){showTab('group',true);return;}
   if((a==='pickgrp'||a==='pickmng')&&!sbAdmin&&myTrips&&myTrips.length){   /* v93: người dùng thường không thấy nhóm: chọn thẳng chuyến */
-    ask('Chọn chuyến.',{title:'Chuyến của tôi',noLabel:'Huỷ',choices:myTrips.map(x=>{const on=sbGroup&&sbGroup.id===x.group_id&&R.current===x.id;
-      return {label:(on?'✓ ':'')+x.name,fn:()=>{if(on)return;tripFormOpen=false;tripEditorOpen=false;openTrip(x.group_id,x.id,a==='pickmng');}};})});return;}
+    ask('Tất cả chuyến của bạn, kể cả chuyến người khác tạo rồi thêm bạn vào.',{title:'Chuyến của tôi',noLabel:'Huỷ',choices:tripSplit(myTrips).flatMap(s=>s[1].map((x,i)=>{const on=sbGroup&&sbGroup.id===x.group_id&&R.current===x.id;
+      return {head:i===0?s[0]+' ('+s[1].length+')':'',label:(on?'✓ ':'')+(x.closed?'🔒 ':'')+x.name,sub:tripRoleTxt(x)+' · '+tripByTxt(x),fn:()=>{if(on)return;tripFormOpen=false;tripEditorOpen=false;openTrip(x.group_id,x.id,a==='pickmng');}};}))});return;}
   if(a==='pickgrp'&&!sbAdmin&&!(myTrips&&myTrips.length)){   /* v115: chưa thấy chuyến nào: tải lại danh sách rồi cho chọn */
     loadMyTrips().then(()=>{if(myTrips&&myTrips.length){renderTrips();const nb=document.querySelector('#tripBar [data-tx="pickgrp"]');if(nb)nb.click();}else toast('Bạn chưa có chuyến nào. Nhập mã chuyến ở ô bên dưới, hoặc nhờ Thủ quỹ thêm bạn vào chuyến.');});return;}
   if(a==='pickgrp'){if(!sbGroups.length)return;   /* chọn nhóm ngay tại tab Chuyến */
@@ -5581,7 +5592,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v122',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v123',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

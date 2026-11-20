@@ -1,0 +1,1 @@
+-- 045: my_trips them cot creator (nguoi tao chuyen, lay tu audit_log). Quay lai: drop function my_trips(); tao lai ban 026/phien ban khong co creator.

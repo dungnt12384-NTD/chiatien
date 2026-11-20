@@ -1477,6 +1477,9 @@ html body .acc-trips>.sub{font-size:16px!important;font-weight:700;margin:4px 0 
 html body .org-mail{font-size:14px!important}
 .org-mail .badge{font-size:11px}
 .who-chip{max-width:100%;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--line,#d6dbe3);background:var(--card,transparent);color:var(--fg);font-size:12.5px;line-height:1.3;cursor:pointer;overflow:hidden}
+#whoBar{gap:6px;align-items:center}
+#whoChip{min-width:0;flex:0 1 auto}
+.who-out{flex:0 0 auto;color:var(--neg,#c62828);border-color:currentColor;font-weight:600}
 .who-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who-chip b{font-weight:700;color:var(--accent)}
 html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;border:1px solid #f0b85a!important}
@@ -1500,7 +1503,7 @@ html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;bo
     <p class="g-foot"><button type="button" class="linkbtn" data-gt="privacy">Quyền riêng tư</button></p>
   </section>
   <div class="note info" id="pvNote" style="--c:var(--accent)"></div>
-  <div id="whoBar" style="display:none;justify-content:flex-end;margin:0 0 6px"><button type="button" id="whoChip" class="who-chip" data-q="whoami" title="Tài khoản đang đăng nhập. Bấm để mở phần Tài khoản"></button></div>
+  <div id="whoBar" style="display:none;justify-content:flex-end;margin:0 0 6px"><button type="button" id="whoChip" class="who-chip" data-q="whoami" title="Tài khoản đang đăng nhập. Bấm để mở phần Tài khoản"></button><button type="button" id="whoOut" class="who-chip who-out" data-q="logout">Đăng xuất</button></div>
   <div class="tripbar" id="tripBar" aria-live="polite"></div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Các mục"></nav>
 
@@ -3921,6 +3924,7 @@ function paintWho(){const bar=document.getElementById('whoBar'),chip=document.ge
   let role='';try{if(sbAdmin)role='Quản trị viên';else if(sbGroup&&!trip().ph){role=ROLE_NAME[roleOf().role]||'';}}catch(e){}
   const mail=isAnon()?'Xem bằng mã chuyến':(sbSession.user.email||'');
   chip.innerHTML=`<span>${isAnon()?'🔑':'👤'} ${esc(mail)}</span>${role?`<b>· ${esc(role)}</b>`:''}`;chip.title=(isAnon()?'Đang xem bằng mã chuyến':'Tài khoản: '+mail)+(role?' · '+role:'')+'. Bấm để mở phần Tài khoản.';
+  const wo=document.getElementById('whoOut');if(wo)wo.textContent=isAnon()?'Thoát':'Đăng xuất';
   bar.style.display='flex';}
 function paintAccount(){
   try{paintWho();}catch(e){}
@@ -5371,7 +5375,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v112',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v113',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

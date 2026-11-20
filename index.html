@@ -5332,8 +5332,11 @@ function memSnap(id){const m=S.members.find(x=>x.id===id);if(!m)return null;cons
 function trashMembers(ids){ids.forEach(id=>{const s=memSnap(id);if(!s)return;const ad=s.advs.reduce((t,a)=>t+a.amount,0);trashPut('mem',s,s.m.name+(ad?` · đã đóng ${fmt(ad)}`:''));});}
 function trashAdvs(advs,label,batch){const names={};advs.forEach(a=>{names[a.member]=nameOf(a.member);});trashPut('adv',{advs,names,batch:batch||''},label);}
 /* quyền khôi phục mục trong chuyến: đúng quyền của mục đó (ngày = thủ quỹ) */
-function inCan(tid,kind){if(!window.supabase)return true;if(isClosed(tid)||!canEditAny(tid))return false;
-  return kind==='day'?canLead(tid):canEditTab({mem:'member',exp:'expense',room:'room',adv:'advance'}[kind]||'expense',tid);}
+/* lý do không khôi phục / xoá hẳn được một mục trong chuyến ('' = được) */
+function inWhy(tid,kind){if(!window.supabase)return '';if(isClosed(tid))return 'chuyến đã chốt sổ, hãy mở lại sổ trước';if(!canEditAny(tid))return 'bạn chỉ có quyền xem chuyến này (hoặc chưa mở đúng nhóm của chuyến)';
+  if(kind==='day')return canLead(tid)?'':'chỉ Thủ quỹ xử lý được ngày';
+  const tab={mem:'member',exp:'expense',room:'room',adv:'advance'}[kind]||'expense';return canEditTab(tab,tid)?'':'bạn không được giao mục này';}
+function inCan(tid,kind){return !inWhy(tid,kind);}
 /* danh sách mục trong 1 chuyến (gồm thùng rác khoản chi kiểu cũ trashExp) */
 function inItems(D){const L=(D.trash||[]).slice();
   (D.trashExp||[]).forEach(e=>{const c=JSON.parse(JSON.stringify(e));delete c.deletedAt;L.push({tid:'L'+e.id+'_'+(e.deletedAt||0),kind:c.rooms&&c.rooms.length?'room':'exp',at:e.deletedAt||0,by:'',label:`${c.desc} · ${fmt(c.amount)}`,data:{exp:c},legacy:e});});
@@ -5396,7 +5399,7 @@ function taRows(){const rows=[],gn=sbGroup?sbGroup.name:'';
   (TA.grp||[]).forEach(g=>rows.push({key:'g:'+g.id,kind:'grp',name:g.name,path:g.trips+' chuyến bên trong',at:Date.parse(g.deleted_at)||0,by:g.deleted_by||'',left:null,gid:g.id,src:'grp',can:!!sbAdmin}));
   (TA.trips||[]).forEach(x=>rows.push({key:'t:'+x.id,kind:'trip',name:x.name,path:'Nhóm '+x.gname,at:Date.parse(x.deleted_at)||0,by:x.deleted_by_email||'',left:x.days_left,gid:x.gid,tid:x.id,src:'trip',can:true}));
   (R.trips||[]).forEach(t=>{if(t.ph||!t.data)return;inItems(t.data).forEach(x=>{const dl=x.data&&x.data.exp?(withS(t.data,()=>dayName(x.data.exp.dayId))||x.data.dl||'ngày đã xoá'):'';
-    rows.push({key:'i:'+t.id+':'+x.tid,kind:x.kind,name:x.label||TK[x.kind][1],path:[gn,t.name,dl].filter(Boolean).join(' › '),at:x.at,by:x.by,left:trashLeft(x.at),tid:t.id,tname:t.name,src:'in',x,t,can:inCan(t.id,x.kind)});});});
+    rows.push({key:'i:'+t.id+':'+x.tid,kind:x.kind,name:x.label||TK[x.kind][1],path:[gn,t.name,dl].filter(Boolean).join(' › '),at:x.at,by:x.by,left:trashLeft(x.at),tid:t.id,tname:t.name,src:'in',x,t,can:inCan(t.id,x.kind),why:inWhy(t.id,x.kind)});});});
   return rows.sort((a,b)=>(b.at||0)-(a.at||0));}
 function taBody(){const all=taRows(),dis=dlgBusy?' disabled':'',cnt=k=>all.filter(r=>k==='all'||r.kind===k).length;
   const kinds=['all','grp','trip','day','mem','exp','room','adv'].filter(k=>k==='all'||cnt(k)||TA.k===k);
@@ -5411,12 +5414,12 @@ function taBody(){const all=taRows(),dis=dlgBusy?' disabled':'',cnt=k=>all.filte
     ${L.length?`<div class="tr-bulk"><label class="tk"><input type="checkbox" data-tas="*"${allSel?' checked':''}${dis}> Chọn tất cả (${L.length})</label><span class="tr-bulk-b"><button type="button" class="btn small" data-dl="taRM"${ns&&!dlgBusy?'':' disabled'}>Khôi phục${ns?' ('+ns+')':''}</button><button type="button" class="btn danger-o small" data-dl="taPM"${ns&&!dlgBusy?'':' disabled'}>Xoá hẳn${ns?' ('+ns+')':''}</button></span></div>`:''}</div>`+
     (L.length?`<div class="ta-list">`+L.map(r=>`<div class="ta-row${TA.sel.has(r.key)?' sel':''}"><label class="tr-chk"><input type="checkbox" data-tas="${esc(r.key)}"${TA.sel.has(r.key)?' checked':''}${dis}><span class="ta-ic" title="${TK[r.kind][1]}">${TK[r.kind][0]}</span>
       <span class="ta-main"><b>${fzMark(r.name,TA.q)}</b><span class="hint">${TK[r.kind][1]} · ${fzMark(r.path,TA.q)}</span><span class="hint">Xoá ${r.at?fdt(r.at):'?'}${r.by?' · bởi '+esc(r.by):''}${r.left==null?'':` · còn ${r.left} ngày`}</span></span></label>
-      <span class="ta-btns"><button type="button" class="btn small" data-dl="taR" data-k="${esc(r.key)}"${r.can&&!dlgBusy?'':' disabled'}${r.can?'':' title="Bạn không có quyền khôi phục mục này"'}>Khôi phục</button><button type="button" class="btn ghost small ta-del" data-dl="taP" data-k="${esc(r.key)}"${r.can&&!dlgBusy?'':' disabled'}>Xoá hẳn</button></span></div>`).join('')+`</div>`
+      <span class="ta-btns"><button type="button" class="btn small" data-dl="taR" data-k="${esc(r.key)}"${r.can&&!dlgBusy?'':' disabled'}${r.can?'':' title="Không làm được: '+esc(r.why||'bạn không có quyền')+'"'}>Khôi phục</button><button type="button" class="btn ghost small ta-del" data-dl="taP" data-k="${esc(r.key)}"${r.can&&!dlgBusy?'':' disabled'}${r.can?'':' title="Không làm được: '+esc(r.why||'bạn không có quyền')+'"'}>Xoá hẳn</button></span></div>`).join('')+`</div>`
       :`<div class="hint">${TA.loading?'Đang tải…':all.length?'Không có mục nào khớp.':'Thùng rác trống.'}</div>`);}
 /* khôi phục / xoá hẳn: 1 mục (có hỏi khi cần chọn) hoặc nhiều mục (bỏ qua mục cần chọn) */
 async function taRestore(rows,interactive){const done=[],skip=[],srvG=new Set();
   const ord=r=>r.src==='grp'?0:r.src==='trip'?1:2+TK_ORDER.indexOf(r.kind);rows=rows.slice().sort((a,b)=>ord(a)-ord(b));
-  for(const r of rows){if(!r.can){skip.push(r.name+': không có quyền');continue;}
+  for(const r of rows){if(!r.can){skip.push(r.name+': '+(r.why||'không có quyền'));continue;}
     if(r.src==='grp'||r.src==='trip'){const {error}=await sb.rpc(r.src==='grp'?'restore_group':'restore_trip',r.src==='grp'?{gid:r.gid}:{gid:r.gid,tid:r.tid});
       if(error)skip.push(r.name+': '+(error.message==='group_in_trash'?'nhóm của chuyến đang trong thùng rác, khôi phục nhóm trước':(ERR_VN[error.message]||error.message)));else{done.push(r);srvG.add(r.gid);TA.sel.delete(r.key);}continue;}
     const x=inItems(r.t.data).find(y=>y.tid===r.x.tid);if(!x){TA.sel.delete(r.key);continue;}
@@ -5428,7 +5431,7 @@ async function taRestore(rows,interactive){const done=[],skip=[],srvG=new Set();
   if(srvG.size){if(sbGroup&&srvG.has(sbGroup.id))connectGroup(sbGroup);try{await loadGroups();}catch(e){}if(sbAdmin)try{admLoad();}catch(e){}}
   try{render();}catch(e){}return {done,skip};}
 async function taPurge(rows){const done=[],skip=[];
-  for(const r of rows){if(!r.can){skip.push(r.name+': không có quyền');continue;}
+  for(const r of rows){if(!r.can){skip.push(r.name+': '+(r.why||'không có quyền'));continue;}
     if(r.src==='grp'||r.src==='trip'){const {error}=await sb.rpc(r.src==='grp'?'purge_group':'purge_trip',r.src==='grp'?{gid:r.gid}:{gid:r.gid,tid:r.tid});if(error)skip.push(r.name+': '+(ERR_VN[error.message]||error.message));else{done.push(r);TA.sel.delete(r.key);}continue;}
     const x=inItems(r.t.data).find(y=>y.tid===r.x.tid);if(x)inDrop(r.t.data,x);done.push(r);TA.sel.delete(r.key);}
   if(rows.some(r=>r.src==='in'))save();return {done,skip};}
@@ -5687,7 +5690,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v127',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v128',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

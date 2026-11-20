@@ -1575,6 +1575,7 @@ html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;bo
           <div class="field"><label for="bankAcc">Số tài khoản</label><input type="text" id="bankAcc" inputmode="numeric" autocomplete="off" maxlength="19"></div>
           <div class="field"><label for="bankName">Tên chủ tài khoản</label><input type="text" id="bankName" autocomplete="off" maxlength="50" autocapitalize="characters" placeholder="NGUYEN VAN A"></div>
         </div>
+        <div class="row" style="align-items:center;gap:10px"><button type="button" class="btn" id="bankSave">💾 Cập nhật tài khoản</button><span class="hint" id="bankSaveRes" style="min-height:0" aria-live="polite"></span></div>
       </details>
       <div class="subtabs" role="group" aria-label="Cách hiển thị" id="advMode"></div>
       <details class="bulk" id="bulkBox">
@@ -4930,6 +4931,21 @@ function paintBank(){const sel=$('#bankBin');if(!sel||!BANKS)return;const b=S.ba
   if(acc&&!/^[0-9A-Za-z]{4,19}$/.test(acc))toast('Số tài khoản chỉ gồm chữ số (4–19 ký tự).');
   render();}));
 try{paintBank();}catch(e){}
+/* v108: nút "Cập nhật tài khoản": lưu rõ ràng và báo kết quả (trước đây chỉ tự lưu khi rời ô nhập, không biết đã lưu chưa) */
+$('#bankSave').addEventListener('click',async()=>{const res=$('#bankSaveRes'),say=(m,c)=>{res.textContent=m;res.style.color=c||'';};
+  if(!bankCanEdit()){toast(DENY_MSG.bank);return;}
+  const bin=$('#bankBin').value,acc=($('#bankAcc').value||'').replace(/\s+/g,''),name=noAccent($('#bankName').value);
+  if(!bin||!/^[0-9A-Za-z]{4,19}$/.test(acc)){say('Chọn ngân hàng và nhập số tài khoản (4–19 ký tự) rồi bấm lại.','var(--neg)');return;}
+  const t=trip(),tid=R.current,same=S.bank&&S.bank.bin===bin&&S.bank.acc===acc&&(S.bank.name||'')===name;
+  if(!same){S.bank={bin,acc,name};S.bankBy=myMail()||'';S.bankAt=new Date().toISOString();}
+  render();
+  if(!window.supabase||!sbGroup||PV_TOKEN){saveLocal();say('✓ Đã lưu trên máy này lúc '+new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),'var(--pos)');return;}
+  say('Đang lưu lên máy chủ…');
+  try{if(t&&!same)schedulePush(t,0);}catch(e){}
+  for(let i=0;i<20;i++){await new Promise(r=>setTimeout(r,500));if(R.current!==tid)return;
+    if(BKREQ.tid===tid&&BKREQ.row&&BKREQ.row.mine){say('⏳ Đã gửi đề nghị, chờ Thủ quỹ khác duyệt.','var(--warn,#b36b00)');return;}
+    if(t&&!t.unsynced&&syncedSet.has(tid)){const sv=S.bank&&S.bank.acc===acc;say(sv?'✓ Đã lưu lên máy chủ lúc '+new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'Chưa lưu: máy chủ giữ tài khoản cũ.',sv?'var(--pos)':'var(--neg)');return;}}
+  say('Chưa xác nhận được đã lưu (mạng chậm?). Bấm lại sau ít giây.','var(--neg)');});
 
 /* ---------- Tổng kết: Phần của tôi, Đã nộp / Đã nhận ---------- */
 function paidUi(id,n){
@@ -5339,7 +5355,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v107',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v108',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

@@ -2812,7 +2812,7 @@ function renderResult(c){
     const m=g.main,sum=k=>g.members.reduce((t,x)=>t+c.P[x.id][k],0),open=openBal.has(m.id),comps=g.members.slice(1);
     const note=sumMode==='all'?(!isMain(m)?`<span class="gnote">↳ đi kèm ${m.parent?nameNo(m.parent):''}</span>`:''):(comps.length?`<span class="gnote">Gồm đi kèm: ${comps.map(x=>`${nameNo(x.id)} ${signed(c.P[x.id].net)}`).join(', ')}</span>`:'');
     const no=``;
-    return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togBal" data-id="${m.id}"><td class="stt">${memNo(m.id)}</td><td><div class="who">${avatar(m.id)}<span class="name">${esc(m.name)}${no}${g.members.some(x=>x.id===S.holder)?' <small style="color:var(--c-advance)">· thủ quỹ</small>':''}${note}${g.members.some(x=>x.id===S.holder)?'':paidUi(m.id,Math.round(gnet(g)))}</span></div></td>
+    return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togBal" data-id="${m.id}"><td class="stt">${gNo(m.id)}</td><td><div class="who">${avatar(m.id)}<span class="name">${esc(m.name)}${no}${g.members.some(x=>x.id===S.holder)?' <small style="color:var(--c-advance)">· thủ quỹ</small>':''}${note}${g.members.some(x=>x.id===S.holder)?'':paidUi(m.id,Math.round(gnet(g)))}</span></div></td>
     <td class="num">${fmt(sum('adv'))}</td><td class="num">${fmt(sum('paid'))}</td><td class="num">${fmt(sum('share'))}</td><td class="settle-td">${settlePill(m.id,gnet(g))}${g.members.some(x=>x.id===S.holder)?'':qrBtn(m.id,Math.round(gnet(g)))}</td></tr>`+(open?`<tr class="det"><td colspan="6">${personDetail(g,c)}</td></tr>`:'');}).join('')
     :'<tr><td colspan="6" style="text-align:center;color:var(--muted)">Chưa có thành viên.</td></tr>';
   try{renderMyPart(c);}catch(e){}
@@ -2850,7 +2850,7 @@ function roomsReportHtml(){const data=roomsReportData();
 function matrixData(){const ms=displayMembers(),rows=[];
   S.days.forEach(d=>S.expenses.filter(e=>e.dayId===d.id).forEach(e=>{const sh={};shareLines(e).forEach(l=>{sh[l.id]=(sh[l.id]||0)+l.sh;});rows.push({e,d,sh});}));
   const tot={};ms.forEach(m=>{tot[m.id]=rows.reduce((t,r)=>t+(r.sh[m.id]||0),0);});
-  const cols=modeGroups().map(g=>({id:g.main.id,label:memNo(g.main.id)+'. '+g.main.name+(sumMode==='main'&&g.members.length>1?` (+${g.members.length-1} đi kèm)`:''),ids:g.members.map(x=>x.id)}));
+  const cols=modeGroups().map(g=>({id:g.main.id,label:gNo(g.main.id)+'. '+g.main.name+(sumMode==='main'&&g.members.length>1?` (+${g.members.length-1} đi kèm)`:''),ids:g.members.map(x=>x.id)}));
   const val=(r,c)=>c.ids.reduce((t,i)=>t+(r.sh[i]||0),0),colTot=c=>c.ids.reduce((t,i)=>t+(tot[i]||0),0);
   return {ms,rows,tot,cols,val,colTot,sum:rows.reduce((t,r)=>t+r.e.amount,0)};}
 function matrixHtml(){const d=matrixData(),n=v=>v?Math.round(v).toLocaleString('vi-VN'):'';
@@ -2858,6 +2858,7 @@ function matrixHtml(){const d=matrixData(),n=v=>v?Math.round(v).toLocaleString('
     d.rows.map(r=>`<tr><td>${esc(r.e.desc)} <small>· ${esc(r.d.name)}</small></td><td class="num">${n(r.e.amount)}</td>${d.cols.map(c=>`<td class="num">${n(d.val(r,c))}</td>`).join('')}</tr>`).join('')+
     `<tr class="tot"><td>Tổng</td><td class="num">${n(d.sum)}</td>${d.cols.map(c=>`<td class="num">${n(d.colTot(c))}</td>`).join('')}</tr></tbody></table></div></div>`;}
 const modeGroups=()=>sumMode==='all'?displayMembers().map(m=>({main:m,members:[m]})):memberGroups();
+const gNo=id=>sumMode==='main'?memberGroups().findIndex(g=>g.main.id===id)+1:memNo(id);
 const sumToggleHtml=()=>`<div class="subtabs" role="group" aria-label="Cách hiển thị thành viên"><button type="button" class="subtab" aria-pressed="${sumMode==='main'}" data-act="sumMode" data-id="main">Chỉ thành viên chính (${memberGroups().length})</button><button type="button" class="subtab" aria-pressed="${sumMode==='all'}" data-act="sumMode" data-id="all">Tất cả thành viên (${displayMembers().length})</button></div>`;
 const memCell=(g)=>{const m=g.main,comps=g.members.slice(1);const note=sumMode==='main'?(comps.length?` <small style="color:var(--muted)">+ đi kèm: ${comps.map(x=>esc(x.name)).join(', ')}</small>`:''):(!isMain(m)&&m.parent&&mem(m.parent)?` <small style="color:var(--muted)">↳ đi kèm ${esc(mem(m.parent).name)}</small>`:'');
   return `<div class="who">${avatar(m.id,'xs')}<span class="name">${esc(m.name)}${note}</span></div>`;};
@@ -2897,7 +2898,7 @@ function renderReport(c){
     <div class="kpi"><span>Người tham gia</span><b>${np}</b></div>
     <div class="kpi"><span>Trung bình mỗi người</span><b class="num">${fmt(np?c.total/np:0)}</b></div>
     <div class="kpi"><span>Tổng đã đóng trước</span><b class="num">${fmt(c.advTotal)}</b></div></div>
-    <div class="tablewrap"><table class="t2"><thead><tr><th>STT</th><th>Thành viên</th><th>Chi phí tổng</th></tr></thead><tbody>${modeGroups().filter(g=>g.members.some(x=>rd.people.has(x.id))).map(g=>`<tr><td>${memNo(g.main.id)}</td><td>${memCell(g)}</td><td class="num">${fmt(g.members.reduce((t,x)=>t+c.P[x.id].share,0))}</td></tr>`).join('')}</tbody></table></div></div>`;
+    <div class="tablewrap"><table class="t2"><thead><tr><th>STT</th><th>Thành viên</th><th>Chi phí tổng</th></tr></thead><tbody>${modeGroups().filter(g=>g.members.some(x=>rd.people.has(x.id))).map(g=>`<tr><td>${gNo(g.main.id)}</td><td>${memCell(g)}</td><td class="num">${fmt(g.members.reduce((t,x)=>t+c.P[x.id].share,0))}</td></tr>`).join('')}</tbody></table></div></div>`;
   const dys=`<div class="rsec"><h3>Chi tiết theo ngày</h3><div class="hint" style="min-height:0">Tiền phòng gộp thành một dòng khoản chi trong ngày; chi tiết từng phòng xem ở mục "Theo phòng".</div>${sumToggleHtml()}${repFoldBar}`+rd.days.map(x=>`<div class="rcard" data-day="${x.d.id}">
     <div class="daytitle"><h3 style="color:var(--fg)">${esc(x.d.name)}</h3><span class="num">${dpeople(x.d).length} người · tổng ${fmt(x.total)}${x.d.place?` · ${esc(x.d.place)}`:''}</span></div>
     <div class="tablewrap"><table class="t2"><thead><tr><th>Khoản chi</th><th>Người chi</th><th>Số tiền</th><th>Chia</th><th>${sumMode==='main'?'Mỗi thành viên chính (gồm đi kèm)':'Mỗi người'}</th></tr></thead><tbody>`+
@@ -2913,7 +2914,7 @@ function renderReport(c){
   if(repDay!=='all'){const dd=day(repDay),es=S.expenses.filter(e=>e.dayId===repDay);
     dayCard=`<div class="rcard"><div class="daytitle"><h3 style="color:var(--fg)">${esc(dd.name)}</h3><span class="num">${es.length} khoản · tổng ${fmt(es.reduce((t,e)=>t+e.amount,0))} · ${dpeople(dd).length} người</span></div>`+
       (es.map(e=>`<div class="s" style="font-size:13px;color:var(--muted)">• ${esc(e.desc)}: ${fmt(e.amount)} (${nameNo(e.payer)} chi)</div>`).join('')||'<div class="hint">Ngày này chưa có khoản chi.</div>')+`</div>`;}
-  const ppl=`<div class="rsec"><h3>Chi tiết từng người</h3><div class="hint" style="min-height:0">Bấm vào một người để xem các khoản họ đã tham gia và phần phải chịu.</div>${sumToggleHtml()}<div class="tablewrap"><table class="t2"><thead><tr><th>STT</th><th>Thành viên</th><th>Đã đóng trước</th><th>Đã chi hộ</th><th>Phải chịu</th><th>Chốt sổ</th></tr></thead><tbody>${modeGroups().map(g=>{const sm=k=>g.members.reduce((t,x)=>t+c.P[x.id][k],0),net=sm('net'),key=g.main.id,open=openPS.has(key);return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togPS" data-id="${key}"><td>${memNo(g.main.id)}</td><td>${memCell(g)}</td><td class="num">${fmt(sm('adv'))}</td><td class="num">${fmt(sm('paid'))}</td><td class="num">${fmt(sm('share'))}</td><td class="num" style="color:var(${net>=0?'--pos':'--neg'});font-weight:700">${signed(net)}</td></tr>`+(open?`<tr class="det"><td colspan="6">${personDetail(g,c)}</td></tr>`:'');}).join('')}</tbody></table></div></div>`;
+  const ppl=`<div class="rsec"><h3>Chi tiết từng người</h3><div class="hint" style="min-height:0">Bấm vào một người để xem các khoản họ đã tham gia và phần phải chịu.</div>${sumToggleHtml()}<div class="tablewrap"><table class="t2"><thead><tr><th>STT</th><th>Thành viên</th><th>Đã đóng trước</th><th>Đã chi hộ</th><th>Phải chịu</th><th>Chốt sổ</th></tr></thead><tbody>${modeGroups().map(g=>{const sm=k=>g.members.reduce((t,x)=>t+c.P[x.id][k],0),net=sm('net'),key=g.main.id,open=openPS.has(key);return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togPS" data-id="${key}"><td>${gNo(g.main.id)}</td><td>${memCell(g)}</td><td class="num">${fmt(sm('adv'))}</td><td class="num">${fmt(sm('paid'))}</td><td class="num">${fmt(sm('share'))}</td><td class="num" style="color:var(${net>=0?'--pos':'--neg'});font-weight:700">${signed(net)}</td></tr>`+(open?`<tr class="det"><td colspan="6">${personDetail(g,c)}</td></tr>`:'');}).join('')}</tbody></table></div></div>`;
   const subs=[['ov','Danh sách thành viên tham gia'],['day','Theo ngày'],['item','Theo khoản chi'],['person','Từng người'],['mx','Báo cáo chi tiết'],['rm','Theo phòng']];
   const nav=`<div class="subtabs" role="tablist">`+subs.map(x=>`<button type="button" class="subtab" role="tab" aria-selected="${repTab===x[0]}" data-act="repTab" data-id="${x[0]}">${x[1]}</button>`).join('')+`</div>`;
   el.innerHTML=nav+({ov:ov,day:dys,item:items,person:ppl,mx:matrixHtml(),rm:roomsReportHtml()}[repTab]||ov);
@@ -3389,7 +3390,7 @@ function reportDoc(){
   const pct=v=>(c.total?v/c.total*100:0).toFixed(1).replace('.',',')+'%';
   // 1. Tổng quan
   const ov={name:'Danh sách thành viên tham gia',blocks:[{kv:[['Chuyến đi',trip().name],['Tổng chi phí',Math.round(c.total)],['Số ngày',S.days.length],['Người tham gia',rd.people.size],['Trung bình mỗi người',Math.round(rd.people.size?c.total/rd.people.size:0)],['Tổng đã đóng trước',Math.round(c.advTotal)]]},
-    {title:'Người tham gia ('+(sumMode==='main'?'chỉ thành viên chính, chi phí gồm người đi kèm':'tất cả thành viên')+')',cols:[{t:'STT',w:1},{t:'Thành viên',w:5},{t:'Chi phí tổng',w:2.4,num:1}],rows:modeGroups().filter(g=>g.members.some(x=>rd.people.has(x.id))).map(g=>({k:'body',v:[memNo(g.main.id),g.main.name+(sumMode==='main'&&g.members.length>1?' (+ đi kèm: '+g.members.slice(1).map(x=>x.name).join(', ')+')':''),Math.round(g.members.reduce((t,x)=>t+c.P[x.id].share,0))]}))}]};
+    {title:'Người tham gia ('+(sumMode==='main'?'chỉ thành viên chính, chi phí gồm người đi kèm':'tất cả thành viên')+')',cols:[{t:'STT',w:1},{t:'Thành viên',w:5},{t:'Chi phí tổng',w:2.4,num:1}],rows:modeGroups().filter(g=>g.members.some(x=>rd.people.has(x.id))).map(g=>({k:'body',v:[gNo(g.main.id),g.main.name+(sumMode==='main'&&g.members.length>1?' (+ đi kèm: '+g.members.slice(1).map(x=>x.name).join(', ')+')':''),Math.round(g.members.reduce((t,x)=>t+c.P[x.id].share,0))]}))}]};
   // 2. Theo ngày
   const dyRows=[];rd.days.forEach(x=>{dyRows.push({k:'group',v:[`${x.d.name}${x.d.place?' · '+x.d.place:''} · ${dpeople(x.d).length} người`,'',Math.round(x.total),'','']});
     x.es.forEach(e=>{const sc=splitCols(e);dyRows.push({k:'body',v:[e.desc,nameOf(e.payer),Math.round(e.amount),sc[0],sc[1]]});});});
@@ -3400,7 +3401,7 @@ function reportDoc(){
   itRows.push({k:'total',v:['','Tổng cộng','','',Math.round(c.total),c.total?'100%':'']});
   const it={name:'Theo khoản chi',blocks:[{title:'Tất cả các khoản chi',cols:[{t:'STT',w:1},{t:'Khoản chi',w:5},{t:'Ngày',w:2.6},{t:'Người chi',w:2.6},{t:'Số tiền',w:2.2,num:1},{t:'% tổng',w:1.4,num:1}],rows:itRows}]};
   // 4. Từng người
-  const pRows=modeGroups().map(g=>{const sm=k=>Math.round(g.members.reduce((t,x)=>t+c.P[x.id][k],0));return {k:'body',v:[memNo(g.main.id),g.main.name+(sumMode==='main'&&g.members.length>1?' (+ đi kèm: '+g.members.slice(1).map(x=>x.name).join(', ')+')':''),sm('adv'),sm('paid'),sm('share'),sm('net')]};});
+  const pRows=modeGroups().map(g=>{const sm=k=>Math.round(g.members.reduce((t,x)=>t+c.P[x.id][k],0));return {k:'body',v:[gNo(g.main.id),g.main.name+(sumMode==='main'&&g.members.length>1?' (+ đi kèm: '+g.members.slice(1).map(x=>x.name).join(', ')+')':''),sm('adv'),sm('paid'),sm('share'),sm('net')]};});
   const dRows=[];ms.forEach(m=>{const pr=rd.per[m.id],p=c.P[m.id];if(!pr.lines.length)return;
     dRows.push({k:'group',v:[memNo(m.id)+'. '+m.name,'','','',Math.round(p.share)]});
     pr.lines.forEach(l=>dRows.push({k:'body',v:[dayName(l.e.dayId),l.e.desc+(l.room?' · '+l.room:''),nameOf(l.e.payer),`${fmt(l.base)} ÷ ${l.n}`,Math.round(l.sh)]}));});
@@ -3497,7 +3498,7 @@ function summaryData(){
   let collect=0,payout=0;gs.forEach(g=>{if(g.members.some(m=>hids.has(m.id)))return;const n=gnet(g);if(n<0)collect+=-n;else payout+=n;});
   const rows=gs.map(g=>{const m=g.main,sum=k=>Math.round(g.members.reduce((t,x)=>t+c.P[x.id][k],0)),comps=g.members.slice(1);
     const note=sumMode==='all'?(!isMain(m)&&m.parent?'Đi kèm '+nameOf(m.parent):''):(comps.length?'Gồm đi kèm: '+comps.map(x=>x.name+' '+signed(c.P[x.id].net)).join(', '):'');
-    return {no:memNo(m.id),name:m.name+(g.members.some(x=>x.id===S.holder)?' (thủ quỹ)':''),adv:sum('adv'),paid:sum('paid'),share:sum('share'),net:Math.round(gnet(g)),note};});
+    return {no:gNo(m.id),name:m.name+(g.members.some(x=>x.id===S.holder)?' (thủ quỹ)':''),adv:sum('adv'),paid:sum('paid'),share:sum('share'),net:Math.round(gnet(g)),note};});
   const hold=S.holder&&mem(S.holder)?mem(S.holder).name:'';
   return {title:'TỔNG KẾT · '+trip().name,mode:sumMode==='all'?'Tất cả thành viên':'Chỉ thành viên chính',hold,
     kpis:[['Tổng chi phí',Math.round(c.total),'#16a34a'],['Tổng đã đóng trước',Math.round(c.advTotal),'#111827'],['Thủ quỹ cần thu thêm',Math.round(collect),'#dc2626'],['Thủ quỹ cần trả lại',Math.round(payout),'#16a34a']],

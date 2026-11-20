@@ -1476,6 +1476,24 @@ html.phone .settle-td .qr-btn{margin:6px 0 0 0}
 html body .acc-trips>.sub{font-size:16px!important;font-weight:700;margin:4px 0 2px}
 html body .org-mail{font-size:14px!important}
 .org-mail .badge{font-size:11px}
+/* v118: bảng điều khiển quản trị: cùng cỡ chữ, cùng khoảng cách */
+.adm-nav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.adm-nav button{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:6px 12px;border-radius:12px;border:1px solid var(--line,#d6dbe3);background:var(--card,transparent);color:var(--fg);font:600 14px/1.2 inherit;cursor:pointer;position:relative}
+.adm-nav button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.adm-nav .ic{font-size:16px}
+.adm-nav .cnt{min-width:20px;padding:0 6px;border-radius:999px;background:var(--neg,#c62828);color:#fff;font-size:12px;line-height:20px;text-align:center}
+.adm-h{font-size:16px;font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.adm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:0 0 10px}
+.adm-kpi{border:1px solid var(--line,#d6dbe3);border-radius:12px;padding:8px 10px}
+.adm-kpi b{display:block;font-size:22px;line-height:1.2}
+.adm-kpi span{font-size:13px;color:var(--muted,#667085)}
+.adm-kpi.warn{border-color:var(--neg,#c62828)}.adm-kpi.warn b{color:var(--neg,#c62828)}
+.adm-ok{margin:0 0 10px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--pos,#1b8a3a) 12%,transparent);font-size:14px;font-weight:600}
+.adm-alert{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line,#d6dbe3);font-size:14px}
+.adm-alert:first-of-type{border-top:0}
+.adm-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px}
+.adm-chip{min-height:34px;padding:4px 12px;border-radius:999px;border:1px solid var(--line,#d6dbe3);background:transparent;color:var(--fg);font:600 13px/1.2 inherit;cursor:pointer}
+.adm-chip[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
 .who-chip{max-width:100%;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--line,#d6dbe3);background:var(--card,transparent);color:var(--fg);font-size:12.5px;line-height:1.3;cursor:pointer;overflow:hidden}
 #whoBar{gap:6px;align-items:center}
 #whoChip{min-width:0;flex:0 1 auto}
@@ -3897,7 +3915,7 @@ async function afterAuth(force){
     setSync('off',isAnon()?'Chưa có chuyến nào còn hiệu lực':'Chưa có chuyến nào');showTab('group',true);return;}
   const last=lsGet(LS_GROUP),g=sbGroups.find(x=>x.id===last)||sbGroups[0];
   if(force||!sbGroup||sbGroup.id!==g.id)connectGroup(g);else{applyRole();}
-  if(sbAdmin&&!force)showTab('group',true);else goWork();}
+  if(sbAdmin&&!force){admSec='todo';showTab('group',true);}else goWork();}   /* v118: quản trị viên đăng nhập là vào thẳng mục "Cần xử lý" */
 function onSignedOut(){
   disconnectGroup();sbAdmin=false;admLoaded=false;myReq=null;myCodes=[];gStep='login';gNote='';gBusy=false;admGroups=[];admReqs=[];admAudit=[];admOpen=null;admDet={};admReady=false;admAcc=null;admAccErr='';admAccQ='';admOv={};myAccess={};myGrpExp={};admExp={};admDraft={};admCodes={};admTCodes={};admGQ='';admNewG=false;pendTrip=null;
   sbSession=null;sbGroup=null;sbGroups=[];lsDel(LS_GROUP);dropSyncedLocal();closeDlg();applyRole();render();
@@ -4102,9 +4120,16 @@ function renderGroupTab(){
   if(!authReady){el.innerHTML='<div class="hint">Đang kiểm tra đăng nhập…</div>';return;}
   if(!sbSession){el.innerHTML='';return;}
   const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
-  let h=reportsCard()+claimsCard()+mySentCard()+mySentRepCard()+myTripsCard()+tripMngCard()+trashEntry()+(sbAdmin?'':codeCard());
-  if(sbAdmin){h+=adminHtml()+stateLogCard()+adminLogCard();if(!admLoaded){admLoaded=true;admLoad();}}
+  const acct=document.getElementById('grpAcct'),bkp=document.getElementById('grpBackup'),par=el.parentNode;
+  /* đưa 2 thẻ tĩnh (Tài khoản, Sao lưu) về chỗ cũ trước khi vẽ lại, tránh bị xoá theo */
+  if(acct&&acct.parentNode!==par)par.insertBefore(acct,el);if(bkp&&bkp.parentNode!==par)par.insertBefore(bkp,el.nextSibling);
+  let h;
+  if(sbAdmin){h=admConsole();if(!admLoaded){admLoaded=true;admLoad();}}   /* v118: quản trị viên có bảng điều khiển riêng */
+  else h=reportsCard()+claimsCard()+mySentCard()+mySentRepCard()+myTripsCard()+tripMngCard()+trashEntry()+codeCard();
+  const showStatic=!sbAdmin||(admSec==='settings'&&admTab==='backup');
+  if(acct)acct.style.display=showStatic?'':'none';if(bkp)bkp.style.display=showStatic?'':'none';
   el.innerHTML=h;
+  if(sbAdmin&&showStatic){if(acct)el.appendChild(acct);if(bkp)el.appendChild(bkp);}
   /* đang Quản lý 1 nhóm: mọi phần xung quanh xám đi (vẫn bấm được để chuyển) */
   /* lịch sử nhóm: khung cuộn cao đúng 10 dòng */
   fitLogs(el);
@@ -4132,10 +4157,74 @@ function stateLogCard(){const sh=!!window.SLOG_SHOW,rows=window.SLOG||null;
     ${sh?(rows?`<div class="hist-scroll log-grid" data-rows="10">${auditHtml(rows,true)}</div>${window.SLOG_MORE?'<button type="button" class="btn ghost small" data-q="smore">Tải thêm cũ hơn</button>':''}`:'<div class="hint">Đang tải…</div>'):''}</div>`;}
 async function slogLoad(more){const {data,error}=await sb.rpc('admin_trip_state_log',{p_limit:100,p_before:more&&window.SLOG&&window.SLOG.length?window.SLOG[window.SLOG.length-1].id:null});
   if(error){window.SLOG=window.SLOG||[];toast('Không tải được lịch sử.');}else{window.SLOG=(more&&window.SLOG?window.SLOG:[]).concat(data||[]);window.SLOG_MORE=(data||[]).length>=100;}renderGroupTab();}
+/* ===== v118: BẢNG ĐIỀU KHIỂN QUẢN TRỊ: 5 mục theo thứ tự ưu tiên =====
+   🔔 Cần xử lý (báo sai, đã trả hộ, đổi tài khoản nhận, chuyến chưa xếp nhóm, cảnh báo) · 🧳 Chuyến & nhóm · 👥 Tài khoản & quyền · 🕘 Nhật ký (có tìm kiếm) · ⚙️ Cài đặt */
+let admSec='todo',LOGQ='',LOGF='all';
+const ADM_SECS=[['todo','🔔','Cần xử lý'],['trips','🧳','Chuyến & nhóm'],['accounts','👥','Tài khoản'],['log','🕘','Nhật ký'],['settings','⚙️','Cài đặt']];
+const ADM_SUBS={trips:[['groups','']],accounts:[['accounts','👤 Danh sách'],['perm','🔎 Tra cứu quyền']],settings:[['notify','🔔 Thông báo'],['codes','🔑 Mã xem'],['backup','💾 Tài khoản & sao lưu']]};
+const LOG_FILTERS=[['all','📋 Tất cả'],['state','🔒 Sổ & tài khoản nhận'],['trip','🧳 Chuyến'],['money','💸 Chi tiêu'],['perm','👥 Quyền'],['grp','🗂 Nhóm & cài đặt']];
+function logCat(a){const e=a.entity,k=a.action;
+  if(e==='trip'&&['close','reopen','bank','bank_req','bank_no'].includes(k))return 'state';
+  if(e==='trip')return 'trip';
+  if(['expense','room','advance','member'].includes(e))return 'money';
+  if(e==='admin'&&k==='code_settings')return 'grp';
+  if(['person','admin','organizer','quota'].includes(e))return 'perm';
+  return 'grp';}
+function logText(a){if(a._t)return a._t;const d=a.detail||{},tmp=document.createElement('div');tmp.innerHTML=fmtAudit(a,true);
+  a._t=(tmp.textContent||'')+' '+(a.actor_email||'')+' '+(a.group_name||'')+' '+(a.entity_name||'')+' '+Object.values(d).filter(v=>v!=null&&typeof v!=='object').join(' ');return a._t;}
+function logRows(){const src=LOGF==='state'?(window.SLOG||[]):admAudit;
+  let rows=(LOGF==='all'||LOGF==='state')?src:src.filter(a=>logCat(a)===LOGF);
+  const q=fzW(LOGQ).join(' ');if(q)rows=rows.filter(a=>fz(logText(a),q));return rows;}
+function logListHtml(){const rows=logRows(),st=LOGF==='state',more=st?window.SLOG_MORE:admAuditMore,loading=st&&!window.SLOG;
+  return loading?'<div class="hint">Đang tải…</div>':`<div class="hint" style="min-height:0">${rows.length} dòng${LOGQ.trim()?' khớp “'+esc(LOGQ.trim())+'”':''}${more?' · chỉ tìm trong phần đã tải, bấm “Tải thêm” để tìm cũ hơn':''}</div><div class="hist-scroll log-grid" data-rows="12">${auditHtml(rows,true)}</div>${more?`<button type="button" class="btn ghost small" data-q="${st?'smore':'amore'}">⬇ Tải thêm nhật ký cũ hơn</button>`:''}`;}
+function logSecHtml(){
+  return `<div class="gcard"><div class="adm-h">🕘 Nhật ký hoạt động</div>
+    <div class="row" style="align-items:flex-end"><div class="field" style="flex:1 1 220px"><input type="search" id="qLogQ" value="${esc(LOGQ)}" placeholder="🔍 Tìm: người làm, chuyến, nhóm, việc… (không cần gõ dấu)" autocomplete="off" aria-label="Tìm trong nhật ký"></div><button type="button" class="btn ghost small" data-q="alcsv">⬇ Tải CSV</button></div>
+    <div class="adm-chips">${LOG_FILTERS.map(f=>`<button type="button" class="adm-chip" aria-pressed="${LOGF===f[0]}" data-q="alf" data-v="${f[0]}">${f[1]}</button>`).join('')}</div>
+    <div id="logList">${logListHtml()}</div></div>`;}
+function logCsv(){const rows=logRows(),q2=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const lines=['Thời gian,Người làm,Nhóm,Đối tượng,Nội dung'].concat(rows.map(a=>{const t=document.createElement('div');t.innerHTML=fmtAudit(a,false);
+    return [new Date(a.at).toLocaleString('vi-VN'),a.actor_email||'Hệ thống',a.group_name||'',a.entity_name||'',t.textContent].map(q2).join(',');}));
+  const u=URL.createObjectURL(new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'})),el=document.createElement('a');
+  el.href=u;el.download='nhat-ky-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(el);el.click();el.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}
+document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qLogQ'){LOGQ=ev.target.value;const l=document.getElementById('logList');if(l){l.innerHTML=logListHtml();fitLogs(l);}}});
+/* cần xử lý */
+function admTrips(){return Object.values(admOv).flatMap(o=>(o.trips||[]).map(t=>Object.assign({gname:o.name,gid:o.id},t)));}
+function admCounts(){const rp=(window.RP_OPEN||[]).length,cl=(window.CL_OPEN||[]).length,bk=(window.ADM_BANKREQ||[]).length,uns=((admOv[SYS_GROUP]||{}).trips||[]).length;return {rp,cl,bk,uns,todo:rp+cl+bk+uns};}
+function admAlerts(){const A=[],N=window.NT;
+  if(N&&!N.err){if(!N.enabled)A.push(['✉️','Email thông báo đang <b>tắt</b>: không ai nhận mail khi có báo sai, đã trả hộ, chốt sổ…','settings','notify']);
+    else if(!N.has_password||!N.smtp_user)A.push(['✉️','Email thông báo đã bật nhưng <b>chưa nhập đủ tài khoản gửi</b> (email + mật khẩu ứng dụng).','settings','notify']);}
+  const T=admTrips(),nol=T.filter(t=>!(t.leaders&&t.leaders.length));
+  if(nol.length)A.push(['🧑‍💼',`${nol.length} chuyến <b>chưa có Thủ quỹ</b>: ${nol.slice(0,3).map(t=>esc(t.name)).join(', ')}${nol.length>3?'…':''}`,'trips']);
+  const tDef=!!window.CODE_SET.trip.default_enabled,bad=T.filter(t=>{const x=admTCodes[t.id];return x&&(tDef?!x.active:x.active);}).length;
+  if(bad)A.push(['🔑',tDef?`${bad} chuyến có <b>mã xem đã tắt hoặc hết hạn</b>`:`${bad} chuyến đang <b>bật mã xem</b>`,'trips']);
+  return A;}
+const bankTxt=b=>b?`${esc(bankName(b.bin))} · <b>${esc(b.acc||'')}</b>${b.name?' · '+esc(b.name):''}`:'(chưa có)';
+function bankReqCard(){const L=window.ADM_BANKREQ||[];if(!L.length)return '';
+  return `<div class="gcard"><div class="adm-h">🏦 Đề nghị đổi tài khoản nhận tiền (${L.length})</div><div class="hint" style="min-height:0">Chuyến có từ 2 Thủ quỹ: người đổi chờ Thủ quỹ khác duyệt. Quản trị viên cũng duyệt được.</div>`+
+    L.map(r=>`<div class="rcard"><div><b>${esc(r.trip_name)}</b> <small>· ${esc(r.group_name)}</small></div><div class="hint" style="min-height:0">${esc(r.requested_by)} đề nghị · ${fdt(r.requested_at)}</div>
+      <div>Hiện tại: ${bankTxt(r.cur_bank)}</div><div>Đề nghị: ${bankTxt(r.bank)}</div>
+      <div class="row"><button type="button" class="btn small" data-q="abk" data-v="approve" data-t="${esc(r.trip_id)}">Duyệt đổi</button><button type="button" class="btn ghost small" data-q="abk" data-v="reject" data-t="${esc(r.trip_id)}">Từ chối</button><button type="button" class="btn ghost small" data-q="otrip" data-g="${esc((admTrips().find(t=>t.id===r.trip_id)||{}).gid||'')}" data-t="${esc(r.trip_id)}">Mở chuyến</button></div></div>`).join('')+`</div>`;}
+async function loadBankReqAll(){try{const {data,error}=await sb.rpc('admin_pending_bank_requests');if(!error){window.ADM_BANKREQ=data||[];if(curTab==='group')renderGroupTab();}}catch(e){}}
+function alertsHtml(){const A=admAlerts();if(!A.length)return '';
+  return `<div class="gcard"><div class="adm-h">⚠️ Cảnh báo (${A.length})</div>`+A.map(x=>`<div class="adm-alert"><span class="ic">${x[0]}</span><span style="flex:1 1 auto">${x[1]}</span><button type="button" class="btn ghost small" data-q="asec" data-v="${x[2]}"${x[3]?` data-s="${x[3]}"`:''}>Xử lý</button></div>`).join('')+`</div>`;}
+function todoHtml(){const C=admCounts(),T=admTrips(),op=T.filter(t=>!t.closed).length,kpi=(n,ic,l,w)=>`<div class="adm-kpi${n&&w?' warn':''}"><b>${n}</b><span>${ic} ${l}</span></div>`;
+  const rec=admAudit.filter(a=>logCat(a)==='state').slice(0,6);
+  return `<div class="adm-kpis">${kpi(C.rp,'🚨','Báo sai',1)}${kpi(C.cl,'💸','Đã trả hộ',1)}${kpi(C.bk,'🏦','Đổi tài khoản',1)}${kpi(C.uns,'📥','Chưa xếp nhóm',1)}${kpi(op,'🧳','Chuyến đang mở')}${kpi(T.length-op,'🔒','Đã chốt sổ')}</div>`+
+    (C.todo?'':'<div class="adm-ok">✅ Không có việc nào cần xử lý.</div>')+
+    reportsCard()+claimsCard()+bankReqCard()+unsortedHtml()+alertsHtml()+mySentCard()+mySentRepCard()+
+    `<div class="gcard"><div class="adm-h">🔒 Chốt sổ · mở sổ · đổi tài khoản gần đây</div><div class="hist-scroll log-grid" data-rows="6">${auditHtml(rec,true)}</div><div class="row"><button type="button" class="btn ghost small" data-q="asec" data-v="log">Xem toàn bộ nhật ký</button></div></div>`;}
+function admNav(){const C=admCounts();
+  return `<div class="adm-nav" role="tablist" aria-label="Các mục quản trị">`+ADM_SECS.map(s=>`<button type="button" role="tab" aria-pressed="${admSec===s[0]}" data-q="asec" data-v="${s[0]}"><span class="ic">${s[1]}</span><span>${s[2]}</span>${s[0]==='todo'&&C.todo?`<span class="cnt">${C.todo}</span>`:''}</button>`).join('')+`</div>`;}
+function admConsole(){
+  let b;if(admSec==='todo')b=todoHtml();else if(admSec==='log')b=logSecHtml();else if(admSec==='trips')b=adminHtml()+tripMngCard()+trashEntry();else b=adminHtml();
+  return admNav()+b;}
 function adminHtml(){
   const dis=admBusy?' disabled':'';
   if(admTab==='reqs'||admTab==='audit')admTab='groups';
-  const tabs=[['perm','🔎 Tra cứu quyền'],['groups','Nhóm'],['accounts','Tài khoản'],['notify','🔔 Thông báo'],['codes','Cài đặt']].map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join('');
+  /* v118: mỗi mục lớn của bảng quản trị chỉ có các tab con của nó */
+  const subs=ADM_SUBS[admSec]||[['groups','']];if(!subs.some(s=>s[0]===admTab))admTab=subs[0][0];
+  const tabs=subs.length>1?subs.map(t=>`<button type="button" aria-pressed="${admTab===t[0]}" data-q="atab" data-v="${t[0]}">${t[1]}</button>`).join(''):'';
   let body='';
   if(admTab==='groups'){
     const q=fzW(admGQ).join(' '),hit=s=>!!q&&fz(s,q),mk=s=>fzMark(s,q);
@@ -4163,7 +4252,9 @@ function adminHtml(){
   else if(admTab==='accounts')body=accountsHtml(dis);
   else if(admTab==='notify')body=notifyHtml(dis);
   else if(admTab==='codes')body=codeSetHtml(dis);
-  return `<div class="gcard admin-card"><div class="gh"><b>🛡 Quản trị hệ thống</b></div>${msgHtml(admMsg)}<div class="seg">${tabs}</div>${body}</div>`;}
+  else if(admTab==='backup')body='<div class="hint">Tài khoản đang đăng nhập, đồng bộ, phiên bản ứng dụng và sao lưu nằm ngay bên dưới.</div>';
+  const SEC_T={trips:'🧳 Chuyến & nhóm',accounts:'👥 Tài khoản & quyền',settings:'⚙️ Cài đặt'};
+  return `<div class="gcard admin-card"><div class="adm-h">${SEC_T[admSec]||'🛡 Quản trị'}</div>${msgHtml(admMsg)}${tabs?`<div class="seg">${tabs}</div>`:''}${body}</div>`;}
 /* cài đặt mặc định của mã (cần supabase/016): bật/tắt khi tạo + số ngày hạn. Cảnh báo chỉ khi mã KHÁC mặc định
    (mặc định bật -> cảnh báo khi tắt / hết hạn; mặc định tắt -> cảnh báo khi đang bật) */
 window.CODE_SET=window.CODE_SET||{trip:{default_enabled:true,days:90},group:{default_enabled:false,days:90}};
@@ -4433,6 +4524,8 @@ async function admLoad(){
   admOv={};(ov&&ov.data||[]).forEach(x=>{admOv[x.id]=x;});
   admCodes={};(cd&&cd.data||[]).forEach(x=>{admCodes[x.group_id]=x;});
   admGroups=a.data||[];admReqs=b.data||[];admReady=true;if(c&&!c.error){admAudit=c.data||[];admAuditMore=(c.data||[]).length>=200;}
+  if(window.ADM_BANKREQ===undefined)loadBankReqAll();
+  if(!window.NT&&!window.NT_LOADING){window.NT_LOADING=true;admLoadNotify();}   /* v118: cần cho phần Cảnh báo */
   if(curTab==='group')renderGroupTab();}
 async function admLoadGroup(gid){
   const [o,c]=await Promise.all([sb.rpc('group_organizers_list',{gid}),sb.rpc('group_code_get',{gid})]);
@@ -4525,6 +4618,23 @@ async function qAct(a,b){
     if(error){toast('Chưa gửi được: '+(ERR_VN[error.message]||error.message));return;}await loadMyReq();renderGroupTab();toast('Đã gửi yêu cầu.');return;}
   if(a==='cp'){copyText(b.dataset.v,b);return;}
   if(!sbAdmin)return;
+  if(a==='asec'){admSec=b.dataset.v;admMsg='';if(b.dataset.s)admTab=b.dataset.s;
+    if(admSec==='accounts'&&!['accounts','perm'].includes(admTab))admTab='accounts';
+    if(admSec==='settings'&&!['notify','codes','backup'].includes(admTab))admTab='notify';
+    renderGroupTab();
+    if(admSec==='accounts'){if(admTab==='perm')admLoadPerm();else admLoadAcc();}
+    if(admSec==='settings'&&admTab==='notify')admLoadNotify();
+    if(admSec==='todo'){loadReports(true);loadClaimsAll(true);loadBankReqAll();}
+    if(admSec==='log'&&LOGF==='state'&&!window.SLOG)slogLoad(false);
+    await admLoad();return;}
+  if(a==='alf'){LOGF=b.dataset.v;renderGroupTab();if(LOGF==='state'&&!window.SLOG)slogLoad(false);return;}
+  if(a==='alcsv'){logCsv();return;}
+  if(a==='abk'){const tid=b.dataset.t,v=b.dataset.v;
+    const go=async()=>{const {error}=await sb.rpc('decide_bank_request',{tid,p_action:v});
+      toast(error?'Chưa làm được: '+({closed:'Sổ đã chốt, mở lại sổ trước.',not_found:'Đề nghị không còn nữa.'}[error.message]||error.message):(v==='approve'?'Đã duyệt. Tài khoản nhận đã đổi.':'Đã từ chối đề nghị.'));
+      await loadBankReqAll();await admLoad();};
+    if(v==='approve')ask('Duyệt đổi tài khoản nhận tiền của chuyến này? Từ lúc duyệt mọi người chuyển tiền vào tài khoản mới. Chỉ duyệt khi đã xác nhận với Thủ quỹ.',{title:'Duyệt đổi tài khoản?',ok:'Duyệt đổi'},go);
+    else ask('Từ chối đề nghị đổi tài khoản nhận?',{title:'Từ chối?',ok:'Từ chối',danger:true},go);return;}
   if(a==='atab'){admTab=b.dataset.v;admMsg='';renderGroupTab();if(admTab==='accounts')admLoadAcc();if(admTab==='perm')admLoadPerm();if(admTab==='notify')admLoadNotify();await admLoad();return;}
   if(a==='padd2'){const em=(b.dataset.e||(($('#qPAddE')||{}).value||'')).trim().toLowerCase(),tid=b.dataset.t||(($('#qPAddT')||{}).value||''),role=(($('#qPAddR')||{}).value)||'leader';
     const tabs=role==='helper'?[...document.querySelectorAll('#qPAddTabs input:checked')].map(x=>x.value):[];
@@ -5395,7 +5505,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v117',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v118',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

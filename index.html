@@ -1503,7 +1503,7 @@ html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;bo
     <p class="g-foot"><button type="button" class="linkbtn" data-gt="privacy">Quyền riêng tư</button></p>
   </section>
   <div class="note info" id="pvNote" style="--c:var(--accent)"></div>
-  <div id="whoBar" style="display:none;justify-content:flex-end;margin:0 0 6px"><button type="button" id="whoChip" class="who-chip" data-q="whoami" title="Tài khoản đang đăng nhập. Bấm để mở phần Tài khoản"></button><button type="button" id="whoOut" class="who-chip who-out" data-q="logout">Đăng xuất</button></div>
+  <div id="whoBar" style="display:none;justify-content:flex-end;margin:0 0 6px"><button type="button" id="whoChip" class="who-chip" data-q="whoami" title="Tài khoản đang đăng nhập. Bấm để mở phần Tài khoản"></button><button type="button" id="whoTrips" class="who-chip" data-q="mytrips" title="Chọn lại chuyến của tôi">🧳 Chuyến</button><button type="button" id="whoOut" class="who-chip who-out" data-q="logout">Đăng xuất</button></div>
   <div class="tripbar" id="tripBar" aria-live="polite"></div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Các mục"></nav>
 
@@ -4542,6 +4542,10 @@ async function qAct(a,b){
   if(a==='admrm'){ask(`Gỡ quyền quản trị của ${e}? Quyền tổ chức nhóm và vai trò trong chuyến (nếu có) vẫn giữ.`,{title:'Gỡ quản trị viên?',ok:'Gỡ quyền',danger:true},async()=>{
       if(await rpcDo('admin_set_admin_email',{p_email:e,on_off:false},'Đã gỡ quyền quản trị của '+e+'.'))await admLoadAcc();else renderGroupTab();});return;}
   if(a==='amore'){const {data}=await sb.rpc('admin_audit',{p_limit:200,p_before:admAudit.length?admAudit[admAudit.length-1].id:null});admAudit=admAudit.concat(data||[]);admAuditMore=(data||[]).length>=200;renderGroupTab();return;}
+  if(a==='mytrips'){try{showTab('group',true);}catch(x){}
+    try{await Promise.all([loadMyTrips(),loadGroups(),loadAccess()]);}catch(x){}
+    try{renderGroupTab();}catch(x){}
+    setTimeout(()=>{const h=[...document.querySelectorAll('#tab-group .gh b, [data-tab="group"] .gh b')].find(x=>/Chuyến của tôi|Chuyến đi của bạn|Nhóm/.test(x.textContent));if(h&&h.scrollIntoView)h.scrollIntoView({block:'start',behavior:'smooth'});},50);return;}
   if(a==='whoami'){try{showTab('group',true);}catch(x){}return;}
   if(a==='bkok'){bankReqAct('approve');return;}
   if(a==='bkno'){bankReqAct('reject');return;}
@@ -5375,7 +5379,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v113',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v114',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

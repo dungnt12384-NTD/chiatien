@@ -1503,7 +1503,7 @@ html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;bo
     <p class="g-foot"><button type="button" class="linkbtn" data-gt="privacy">Quyền riêng tư</button></p>
   </section>
   <div class="note info" id="pvNote" style="--c:var(--accent)"></div>
-  <div id="whoBar" style="display:none;justify-content:flex-end;margin:0 0 6px"><button type="button" id="whoChip" class="who-chip" data-q="whoami" title="Tài khoản đang đăng nhập. Bấm để mở phần Tài khoản"></button><button type="button" id="whoTrips" class="who-chip" data-q="mytrips" title="Chọn lại chuyến của tôi">🧳 Chuyến</button><button type="button" id="whoOut" class="who-chip who-out" data-q="logout">Đăng xuất</button></div>
+  <div id="whoBar" style="display:none;justify-content:flex-end;margin:0 0 6px"><button type="button" id="whoChip" class="who-chip" data-q="whoami" title="Tài khoản đang đăng nhập. Bấm để mở phần Tài khoản"></button><button type="button" id="whoOut" class="who-chip who-out" data-q="logout">Đăng xuất</button></div>
   <div class="tripbar" id="tripBar" aria-live="polite"></div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Các mục"></nav>
 
@@ -2093,7 +2093,7 @@ function renderTrips(){syncTripUi();try{renderTripExtra();}catch(e){}try{renderT
   const tn=$('#tripName');if(!editingTrip)tn.value=trip().name;
   const cur=trip();document.documentElement.style.removeProperty('--tc');
   $('#tripColors').innerHTML=TRIP_COLORS.map(c=>`<button type="button" class="sw" style="--sw:${c}" aria-pressed="${cur.color===c}" aria-label="Chọn màu ${c}" data-act="pickColor" data-color="${c}"></button>`).join('');
-  $('#tripBar').innerHTML=`${sbSession&&sbGroup?`<button type="button" class="crumb" data-tx="pickgrp" title="Bấm để chọn nhóm">${esc(sbGroup.name)} ▾</button><span>›</span>`:'<span>Đang xem chuyến</span>'}<b>${esc(cur.name)}</b>${isClosed(cur.id)?' <span class="closed-tag" title="Sổ đã chốt: không sửa được, mã QR chuyển khoản đã hiện ở Tổng kết">🔒 ĐÃ CHỐT SỔ</span>':''}<span class="num">${cur.data.members.length} người · ${cur.data.days.length} ngày · ${fmt(tripTotal(cur))}</span>`;
+  $('#tripBar').innerHTML=`${sbSession&&!PV_TOKEN?`<button type="button" class="crumb" data-tx="pickgrp" title="Bấm để chọn chuyến của tôi">🧳 ${sbAdmin&&sbGroup?esc(sbGroup.name):'Chuyến của tôi'} ▾</button><span>›</span>`:'<span>Đang xem chuyến</span>'}<b>${esc(cur.name)}</b>${isClosed(cur.id)?' <span class="closed-tag" title="Sổ đã chốt: không sửa được, mã QR chuyển khoản đã hiện ở Tổng kết">🔒 ĐÃ CHỐT SỔ</span>':''}<span class="num">${cur.data.members.length} người · ${cur.data.days.length} ngày · ${fmt(tripTotal(cur))}</span>`;
 }
 
 let swapSnap=null, swapMode=false, swapSel=null, newTripColor='', tripEditorOpen=false, tripFormOpen=false, nrDraft=null, priceWarn=null, editRooms=new Set(), editing=null, formExcl=new Set(), formKind='normal', formRooms=[], formSelf=new Set(), pickRoom=null, roomAskSkip=new Set(), roomAskForce=false;
@@ -4655,6 +4655,8 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
   if((a==='pickgrp'||a==='pickmng')&&!sbAdmin&&myTrips&&myTrips.length){   /* v93: người dùng thường không thấy nhóm: chọn thẳng chuyến */
     ask('Chọn chuyến.',{title:'Chuyến của tôi',noLabel:'Huỷ',choices:myTrips.map(x=>{const on=sbGroup&&sbGroup.id===x.group_id&&R.current===x.id;
       return {label:(on?'✓ ':'')+x.name,fn:()=>{if(on)return;tripFormOpen=false;tripEditorOpen=false;openTrip(x.group_id,x.id,a==='pickmng');}};})});return;}
+  if(a==='pickgrp'&&!sbAdmin&&!(myTrips&&myTrips.length)){   /* v115: chưa thấy chuyến nào: tải lại danh sách rồi cho chọn */
+    loadMyTrips().then(()=>{if(myTrips&&myTrips.length){renderTrips();const nb=document.querySelector('#tripBar [data-tx="pickgrp"]');if(nb)nb.click();}else toast('Bạn chưa có chuyến nào. Nhập mã chuyến ở ô bên dưới, hoặc nhờ Thủ quỹ thêm bạn vào chuyến.');});return;}
   if(a==='pickgrp'){if(!sbGroups.length)return;   /* chọn nhóm ngay tại tab Chuyến */
     ask(sbGroups.length>1?'Chọn nhóm để xem các chuyến của nhóm đó.':'Bạn mới có 1 nhóm. Có mã chuyến của nhóm khác thì nhập ở ô bên dưới danh sách chuyến.',{title:'Chọn nhóm',noLabel:'Huỷ',
       choices:sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,ac=myAccess[g.id],n=ac?(ac.trips||[]).length:g.trips;
@@ -5379,7 +5381,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v114',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v115',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

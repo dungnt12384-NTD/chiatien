@@ -3549,7 +3549,7 @@ function handleSnap(snap){
     else if(!t.sample&&!t.ph&&sbGroup&&sbGroup.can_create&&adoptOK!==false&&(t.data.members.length||t.data.expenses.length||t.data.advances.length))adoptList.push(t);   /* v119: chuyến trống trên máy không đưa lên */
   });
   adoptLocals();
-  if(remote.size>0){const n=R.trips.length;R.trips=R.trips.filter(t=>!(t.ph||(firstSnap&&t.sample)));if(R.trips.length!==n)changed=true;}   // bỏ chuyến mẫu chưa đụng tới
+  if(remote.size>0){const n=R.trips.length;R.trips=R.trips.filter(t=>!(t.ph||t.sample));if(R.trips.length!==n)changed=true;}   // v119: khi đã nối máy chủ thì không giữ chuyến mẫu / chuyến giữ chỗ nào trên máy
   if(!R.trips.length){R.trips.push(placeholder());changed=true;}
   if(!R.trips.some(t=>t.id===R.current))R.current=R.trips[0].id;
   if(firstSnap&&sbGroup){const lt=lsGet('chiatien-lt-'+sbGroup.id);if(lt&&lt!==R.current&&R.trips.some(t=>t.id===lt)){R.current=lt;changed=true;}}
@@ -3939,7 +3939,10 @@ function signOutAsk(){
 
 /* ---------- tab Quản trị / Của tôi ---------- */
 /* v112: chip tài khoản đang đăng nhập ở góc phải trên, ai cũng thấy ở mọi tab */
-function paintWho(){const bar=document.getElementById('whoBar'),chip=document.getElementById('whoChip');if(!bar||!chip)return;
+function paintWho(){const bar=document.getElementById('whoBar'),chip=document.getElementById('whoChip');
+  /* v119: khi đã đăng nhập / vào bằng mã thì ẩn "Thêm chuyến mẫu" và "Xoá tất cả chuyến" (chỉ dành cho dùng thử trên máy) */
+  ['btnSample','btnClear'].forEach(i=>{const e=document.getElementById(i);if(e)e.style.display=(window.supabase&&sbSession)?'none':'';});
+  if(!bar||!chip)return;
   if(!window.supabase||!sbSession||PV_TOKEN){bar.style.display='none';return;}
   let role='';try{if(sbAdmin)role='Quản trị viên';else if(sbGroup&&!trip().ph){role=ROLE_NAME[roleOf().role]||'';}}catch(e){}
   const mail=isAnon()?'Xem bằng mã chuyến':(sbSession.user.email||'');
@@ -5509,7 +5512,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v119',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v120',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

@@ -2792,7 +2792,7 @@ function splitAdv(c){
   const P={};Object.keys(c.P).forEach(k=>P[k]={...c.P[k]});
   memberGroups().forEach(g=>{const n=g.members.length;if(n<2)return;
     const T=g.members.reduce((t,m)=>t+c.P[m.id].adv,0);
-    g.members.forEach(m=>{const p=P[m.id],a=T/n;p.bal+=a-p.adv;p.adv=a;p.net=Math.round(p.bal);});});
+    g.members.forEach(m=>{const p=P[m.id],a=T/n,d=a-p.adv;p.bal+=d;p.adv=a;p.net=Math.round(p.net+d);});});
   return {...c,P};}
 function renderResult(c){
   c=splitAdv(c);
@@ -2800,7 +2800,8 @@ function renderResult(c){
   const gs=sumMode==='all'?order.map(m=>({main:m,members:[m]})):gs0;
   $('#sumMode').innerHTML=`<button type="button" class="subtab" aria-pressed="${sumMode==='main'}" data-act="sumMode" data-id="main">Chỉ thành viên chính (${gs0.length})</button><button type="button" class="subtab" aria-pressed="${sumMode==='all'}" data-act="sumMode" data-id="all">Tất cả thành viên (${order.length})</button>`;
   let collect=0,payout=0;
-  gs.forEach(g=>{if(g.members.some(m=>m.id===S.holder))return;const n=gnet(g);if(n<0)collect+=-n;else payout+=n;});
+  const hg=gs0.find(g=>g.members.some(m=>m.id===S.holder)),hids=new Set(hg?hg.members.map(m=>m.id):[]);
+  gs.forEach(g=>{if(g.members.some(m=>hids.has(m.id)))return;const n=gnet(g);if(n<0)collect+=-n;else payout+=n;});
   $('#kpis').innerHTML=
    `<div class="kpi big"><span>Tổng chi phí</span><b class="num">${fmt(c.total)}</b></div>`+
    `<div class="kpi"><span>Tổng đã đóng trước</span><b class="num">${fmt(c.advTotal)}</b></div>`+
@@ -3492,7 +3493,8 @@ function reportPdf(){
 function summaryData(){
   const c=splitAdv(compute()),order=displayMembers(),gs0=memberGroups(),gs=sumMode==='all'?order.map(m=>({main:m,members:[m]})):gs0;
   const gnet=g=>g.members.reduce((t,m)=>t+c.P[m.id].net,0);
-  let collect=0,payout=0;gs.forEach(g=>{if(g.members.some(m=>m.id===S.holder))return;const n=gnet(g);if(n<0)collect+=-n;else payout+=n;});
+  const hg=gs0.find(g=>g.members.some(m=>m.id===S.holder)),hids=new Set(hg?hg.members.map(m=>m.id):[]);
+  let collect=0,payout=0;gs.forEach(g=>{if(g.members.some(m=>hids.has(m.id)))return;const n=gnet(g);if(n<0)collect+=-n;else payout+=n;});
   const rows=gs.map(g=>{const m=g.main,sum=k=>Math.round(g.members.reduce((t,x)=>t+c.P[x.id][k],0)),comps=g.members.slice(1);
     const note=sumMode==='all'?(!isMain(m)&&m.parent?'Đi kèm '+nameOf(m.parent):''):(comps.length?'Gồm đi kèm: '+comps.map(x=>x.name+' '+signed(c.P[x.id].net)).join(', '):'');
     return {no:memNo(m.id),name:m.name+(g.members.some(x=>x.id===S.holder)?' (thủ quỹ)':''),adv:sum('adv'),paid:sum('paid'),share:sum('share'),net:Math.round(gnet(g)),note};});

@@ -1,0 +1,2 @@
+-- 039: ghi nhật ký khi đổi tài khoản nhận tiền (chỉ 4 số cuối) + RPC admin_trip_state_log (chốt / mở sổ / đổi tài khoản, mọi chuyến, chỉ quản trị viên).
+-- Đã áp dụng qua migration 039_log_bank_change và 039b_admin_trip_state_log. Quay lại: khôi phục trg_trips bản 026 (không có nhánh 'bank'), drop function admin_trip_state_log.

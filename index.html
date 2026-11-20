@@ -3918,7 +3918,8 @@ function paintAccount(){
   if(sbGroup&&!trip().ph){const r=roleOf().role;if(r!=='admin')chips.push(ROLE_NAME[r]);}
   el.innerHTML=(isAnon()?'<div style="font-size:15px">Bạn đang xem bằng <b>mã chuyến</b>, không cần tài khoản.</div>':`<div style="font-size:15px;overflow-wrap:anywhere">Tài khoản: <b>${esc(sbSession.user.email||'')}</b></div>`)+
     (chips.length?`<div class="row" style="gap:8px;align-items:center">${chips.map(r=>`<span class="badge on">${r}</span>`).join('')}${sbGroup?`<span class="hint" style="min-height:0">nhóm <b>${esc(sbGroup.name)}</b></span>`:''}</div>`:'')+
-    `<div class="row"><button type="button" class="btn ghost" data-q="sync">Đồng bộ lại ngay</button><button type="button" class="btn danger-o" data-q="logout">${isAnon()?'Thoát':'Đăng xuất'}</button></div>`;}
+    `<div class="row"><button type="button" class="btn ghost" data-q="sync">Đồng bộ lại ngay</button><button type="button" class="btn danger-o" data-q="logout">${isAnon()?'Thoát':'Đăng xuất'}</button></div>`+
+    `<div class="row" style="align-items:center;gap:8px"><button type="button" class="btn ghost" data-q="upd">🔄 Cập nhật ứng dụng</button><span class="hint" style="min-height:0">Bản đang dùng: <b>${APP_VER}</b></span></div>`;}
 function groupsCard(){
   if(!sbGroups.length)return `<div class="gcard"><div class="gh"><b>🧳 Chuyến đi của bạn</b></div><div class="hint" style="min-height:0">${isAnon()?'Mã bạn đã nhập hết hạn, bị khoá hoặc đã đổi. Hỏi thủ quỹ mã mới rồi nhập bên dưới.':'Bạn chưa tham gia chuyến nào. Nhập mã chuyến bên dưới, hoặc xin quyền tổ chức chuyến đi.'}</div></div>`;
   return `<div class="gcard"><div class="gh"><b>👥 ${sbGroups.length>1?'Nhóm của bạn':'Nhóm'}</b></div>`+sbGroups.map(g=>{const cur=sbGroup&&sbGroup.id===g.id,a=myAccess[g.id];
@@ -4082,7 +4083,7 @@ function renderGroupTab(){
   if(!sbSession){el.innerHTML='';return;}
   const keep=document.activeElement&&document.activeElement.id,val=keep?document.activeElement.value:null;
   let h=reportsCard()+claimsCard()+mySentCard()+mySentRepCard()+myTripsCard()+tripMngCard()+trashEntry()+(sbAdmin?'':codeCard());
-  if(sbAdmin){h+=adminHtml()+adminLogCard();if(!admLoaded){admLoaded=true;admLoad();}}
+  if(sbAdmin){h+=adminHtml()+stateLogCard()+adminLogCard();if(!admLoaded){admLoaded=true;admLoad();}}
   el.innerHTML=h;
   /* đang Quản lý 1 nhóm: mọi phần xung quanh xám đi (vẫn bấm được để chuyển) */
   /* lịch sử nhóm: khung cuộn cao đúng 10 dòng */
@@ -4097,6 +4098,12 @@ function adminLogCard(){const rows=admAudit.filter(x=>ADM_ENT.includes(x.entity)
   const sh=!!window.ADM_LOG_SHOW;
   return `<div class="gcard log-card">${logHead('🕘 Nhật ký quản trị'+(rows.length?` (${rows.length}${admAuditMore?'+':''})`:''),sh,'data-q="alogs"')}
     ${sh?`<div class="hist-scroll log-grid" data-rows="${admLogOpen?20:6}">${auditHtml(rows,true)}</div>${rows.length>6?`<button type="button" class="btn ghost small" data-q="alog" aria-expanded="${admLogOpen}">${admLogOpen?'Thu gọn':'Xem nhiều hơn'}</button>`:''}${admLogOpen&&admAuditMore?'<button type="button" class="btn ghost small" data-q="amore">Tải thêm nhật ký cũ hơn</button>':''}`:''}</div>`;}
+/* v106: lịch sử chốt / mở sổ / đổi tài khoản nhận của MỌI chuyến, gom một chỗ cho quản trị viên */
+function stateLogCard(){const sh=!!window.SLOG_SHOW,rows=window.SLOG||null;
+  return `<div class="gcard log-card">${logHead('🔒 Chốt sổ · Mở sổ · Đổi tài khoản nhận (mọi chuyến)'+(rows&&rows.length?` (${rows.length}${window.SLOG_MORE?'+':''})`:''),sh,'data-q="slogs"')}
+    ${sh?(rows?`<div class="hist-scroll log-grid" data-rows="10">${auditHtml(rows,true)}</div>${window.SLOG_MORE?'<button type="button" class="btn ghost small" data-q="smore">Tải thêm cũ hơn</button>':''}`:'<div class="hint">Đang tải…</div>'):''}</div>`;}
+async function slogLoad(more){const {data,error}=await sb.rpc('admin_trip_state_log',{p_limit:100,p_before:more&&window.SLOG&&window.SLOG.length?window.SLOG[window.SLOG.length-1].id:null});
+  if(error){window.SLOG=window.SLOG||[];toast('Không tải được lịch sử.');}else{window.SLOG=(more&&window.SLOG?window.SLOG:[]).concat(data||[]);window.SLOG_MORE=(data||[]).length>=100;}renderGroupTab();}
 function adminHtml(){
   const dis=admBusy?' disabled':'';
   if(admTab==='reqs'||admTab==='audit')admTab='groups';
@@ -4406,6 +4413,8 @@ async function rpcDo(name,args,okMsg){admBusy=true;admMsg='';renderGroupTab();
   admMsg=error?'Chưa làm được: '+(ERR_VN[error.message]||error.message):(okMsg?'OK:'+okMsg:'');return error?null:(data===null?true:data);}
 const ERR_VN={forbidden:'Bạn không có quyền làm việc này.',bad_email:'Email chưa đúng.',last_leader:'Chuyến phải còn ít nhất một thủ quỹ.',empty_name:'Chưa nhập tên.',need_email:'Cần đăng nhập bằng email.',rate_limited:'Bạn thao tác quá nhiều, thử lại sau.',self:'Không tự gỡ quyền quản trị của chính mình.',last_admin:'Phải còn ít nhất một quản trị viên.',bad_value:'Giá trị chưa hợp lệ.',bad_member:'Người đã trả không có trong chuyến.',bad_amount:'Số tiền chưa hợp lệ.',bad_desc:'Chưa nhập nội dung.',bad_day:'Ngày không có trong chuyến.',closed:'Sổ đã chốt, không gửi thêm được.',too_many:'Đang có quá nhiều đề nghị chờ duyệt, đợi thủ quỹ xử lý bớt.',claim_done:'Đề nghị này đã được xử lý rồi.',claim_not_rejected:'Chỉ đề nghị bị từ chối mới gửi lại được.',bad_host:'Máy chủ SMTP chưa đúng.',bad_port:'Cổng phải là 465 hoặc 587.',bad_password:'Mật khẩu chưa hợp lệ.',duplicate:'Đề nghị này bạn đã gửi rồi và đang chờ duyệt, không cần gửi lại.',report_not_done:'Báo sai này chưa được xử lý nên chưa báo lại được.',not_found:'Không tìm thấy.',system_group:'Thư mục "Chưa xếp nhóm" là của hệ thống, không xoá được.',is_admin:'Đây là quản trị viên: gỡ quyền quản trị trước rồi mới xoá tài khoản.'};
 async function qAct(a,b){
+  if(a==='upd'){appUpdate(true);return;}
+  if(a==='updgo'){appReload();return;}
   if(!sb)return;const id=b&&b.dataset.id,e=b&&b.dataset.e;
   if(a==='sync'){if(!dbRef){toast('Chưa kết nối nhóm.');return;}R.trips.forEach(t=>{if(!t.sample&&!t.ph&&canEditAny(t.id))schedulePush(t,0);});if(sbUnsub){const g=sbGroup;connectGroup(g);}toast('Đang đồng bộ lại.');return;}
   if(a==='logout'){signOutAsk();return;}
@@ -4514,6 +4523,8 @@ async function qAct(a,b){
       if(await rpcDo('admin_set_admin_email',{p_email:e,on_off:false},'Đã gỡ quyền quản trị của '+e+'.'))await admLoadAcc();else renderGroupTab();});return;}
   if(a==='amore'){const {data}=await sb.rpc('admin_audit',{p_limit:200,p_before:admAudit.length?admAudit[admAudit.length-1].id:null});admAudit=admAudit.concat(data||[]);admAuditMore=(data||[]).length>=200;renderGroupTab();return;}
   if(a==='alog'){admLogOpen=!admLogOpen;renderGroupTab();return;}
+  if(a==='slogs'){window.SLOG_SHOW=!window.SLOG_SHOW;renderGroupTab();if(window.SLOG_SHOW)slogLoad(false);return;}
+  if(a==='smore'){slogLoad(true);return;}
   if(a==='accx'){const e=b.dataset.e;window.ACC_OPEN=(window.ACC_OPEN===e?null:e);renderGroupTab();const c=document.querySelector('.acc-card.open');if(c&&c.scrollIntoView)c.scrollIntoView({block:'nearest'});return;}
   if(a==='alogs'){window.ADM_LOG_SHOW=!window.ADM_LOG_SHOW;if(!window.ADM_LOG_SHOW)admLogOpen=false;renderGroupTab();return;}
   if(a==='gnew'){admNewG=true;renderGroupTab();const i=$('#qNewG');if(i)i.focus();return;}
@@ -4561,6 +4572,7 @@ function fmtAudit(a,showGroup){
   const m={'admin/code_settings':`đổi cài đặt <b>${n}</b>: mặc định ${d.old_enabled==null?'':(d.old_enabled?'bật':'tắt')+' '+d.old_days+' ngày → '}<b>${d.enabled?'bật':'tắt'}</b>, hạn <b>${esc(String(d.days))} ngày</b>`,'group/create':`tạo nhóm <b>${n}</b>`,'group/rename':`đổi tên nhóm <b>${esc(d.from||'')}</b> thành <b>${esc(d.to||'')}</b>`,'group/delete':`xoá hẳn nhóm <b>${n}</b>`,'group/trash':`chuyển nhóm <b>${n}</b> vào thùng rác`,'group/restore':`khôi phục nhóm <b>${n}</b>`,
     'trip/create':`tạo chuyến <b>${n}</b>`,'trip/rename':`đổi tên chuyến <b>${esc(d.from||'')}</b> thành <b>${esc(d.to||'')}</b>`,'trip/delete':d.purge?`xoá hẳn chuyến <b>${n}</b>`:`chuyển chuyến <b>${n}</b> vào thùng rác`,'trip/restore':`khôi phục chuyến <b>${n}</b>`,'trip/edit':`sửa chuyến <b>${n}</b>`,
     'trip/close':`chốt sổ chuyến <b>${n}</b>`,'trip/reopen':`mở lại sổ chuyến <b>${n}</b>`,
+    'trip/bank':`đổi tài khoản nhận tiền chuyến <b>${n}</b>: ${d.from_last4?'…'+esc(d.from_last4)+(d.from_name?' ('+esc(d.from_name)+')':''):'(chưa có)'} → <b>${d.to_last4?'…'+esc(d.to_last4)+(d.to_name?' ('+esc(d.to_name)+')':''):'(xoá)'}</b>`,
     'expense/add':`thêm khoản chi <b>${n}</b>${amt}`,'expense/edit':`sửa khoản chi <b>${n}</b>${chg}`,'expense/remove':`xoá khoản chi <b>${n}</b>${amt}`,
     'room/add':`thêm tiền phòng <b>${n}</b>${amt}`,'room/edit':`sửa tiền phòng <b>${n}</b>${chg}`,'room/remove':`xoá tiền phòng <b>${n}</b>${amt}`,
     'advance/add':`ghi <b>${n}</b> đóng trước${amt}`,'advance/edit':`sửa tiền đóng trước của <b>${n}</b>${chg}`,'advance/remove':`xoá tiền đóng trước của <b>${n}</b>${amt}`,
@@ -5298,5 +5310,23 @@ try{applyRole();}catch(e){}
 </div>
 
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
+<script>
+/* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
+var APP_VER='v106',UPD_LAST=0,UPD_NEW=null;
+async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
+    const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
+  location.reload();}
+function updBanner(v){let b=document.getElementById('updBar');if(!b){b=document.createElement('div');b.id='updBar';b.setAttribute('role','status');
+    b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:140;max-width:min(94vw,460px);display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:12px;background:var(--fg);color:var(--bg);font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.3)';document.body.appendChild(b);}
+  b.innerHTML='<span style="flex:1 1 auto">🆕 Có bản mới <b>'+v+'</b></span><button type="button" data-q="updgo" style="min-height:36px;padding:0 14px;border-radius:9px;border:0;font-weight:700;background:var(--accent,#2f6df6);color:#fff;cursor:pointer">Cập nhật</button>';}
+async function appUpdate(manual){if(location.protocol==='file:'||(!manual&&Date.now()-UPD_LAST<60000))return;UPD_LAST=Date.now();
+  try{const r=await fetch('sw.js?_='+Date.now(),{cache:'no-store'});const m=/VERSION\s*=\s*'([^']+)'/.exec(await r.text());const v=m&&m[1];
+    if(v&&v!==APP_VER){UPD_NEW=v;updBanner(v);if(manual&&typeof toast==='function')toast('Có bản mới '+v+'. Bấm "Cập nhật" ở phía trên.');}
+    else if(manual&&typeof toast==='function')toast('Bạn đang dùng bản mới nhất ('+APP_VER+').');}
+  catch(e){if(manual&&typeof toast==='function')toast('Không kiểm tra được (mất mạng?).');}}
+window.addEventListener('load',()=>setTimeout(()=>appUpdate(false),3000));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')appUpdate(false);});
+setInterval(()=>appUpdate(false),600000);
+</script>
 
 </body></html>

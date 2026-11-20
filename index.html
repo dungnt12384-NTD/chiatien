@@ -3464,7 +3464,7 @@ async function doPush(id){
       try{if(e.rev!=null)setRev(id,e.rev);}catch(x){}
       if(validTrip(e.remote)){t.data=JSON.parse(JSON.stringify(e.remote.data));t.name=e.remote.name;normTrip(t);lastJson.set(id,snapJson(t));baseMap.set(id,JSON.parse(JSON.stringify(t.data)));if(id===R.current)S=t.data;}
       toast((DENY_MSG[e.reason]||'Bạn không có quyền sửa phần này.')+' Đã trả lại số liệu trên máy chủ.');
-      saveLocal();render();setSync('ok');return;}
+      saveLocal();render();setSync('ok');if(e.reason==='bank_pending')setTimeout(()=>loadBankReq(true),400);return;}
     if(e&&(e.code==='closed'||e.code==='deleted')){t.unsynced=false;
       if(e.code==='closed'){const r=tripRoles.get(id);if(r&&!r.closed_at)r.closed_at=new Date().toISOString();if(validTrip(e.remote)){t.data=JSON.parse(JSON.stringify(e.remote.data));t.name=e.remote.name;normTrip(t);lastJson.set(id,snapJson(t));baseMap.set(id,JSON.parse(JSON.stringify(t.data)));if(id===R.current)S=t.data;}
         toast('Chuyến "'+t.name+'" đã chốt sổ, phần vừa sửa không được lưu.');}
@@ -3552,6 +3552,7 @@ function makeAdapter(gid){
       /* v103: người khác chốt / mở lại sổ -> báo ngay và vẽ lại (trước đây phải tải lại trang mới thấy) */
       try{let chg=false;m.forEach((v,id)=>{const o=old.get(id);if(o&&!!o.closed_at!==!!v.closed_at){const t=R.trips.find(x=>x.id===id);chg=true;toast('Chuyến "'+(t?t.name:'')+'" '+(v.closed_at?'đã được chốt sổ.':'đã được mở lại sổ.'));}});
         if(chg)setTimeout(()=>{try{applyLocks();render();renderTripExtra();}catch(e){}},0);}catch(e){}}
+    try{loadBankReq(false);}catch(e){}
     return a.data||[];};
   const toSnap=rows=>({metadata:{fromCache:false},docs:rows.map(r=>({id:r.id,rev:r.rev,exists:true,data:()=>r.data}))});
   return {
@@ -3687,7 +3688,7 @@ function isClosed(id){const r=tripRoles.get(id||R.current);return !!(r&&r.closed
 function canEditAny(id){if(!window.supabase)return true;if(PV_TOKEN||!sbSession||!sbGroup)return false;return roleOf(id).role!=='viewer';}
 function canLead(id){if(!window.supabase)return true;if(PV_TOKEN||!sbSession||!sbGroup)return false;const r=roleOf(id).role;return r==='leader'||r==='admin';}
 /* v87: máy chủ (supabase/022) kiểm từng phần khi lưu; đây là chữ báo khi bị từ chối và các kiểm tra tương ứng trên giao diện */
-const DENY_MSG={bank:'Chỉ Thủ quỹ được đổi tài khoản nhận tiền.',member:'Bạn không được giao sửa Người đi.',advance:'Bạn không được giao sửa Tiền đã đóng.',
+const DENY_MSG={bank:'Chỉ Thủ quỹ được đổi tài khoản nhận tiền.',bank_pending:'Chuyến có từ 2 Thủ quỹ nên đổi tài khoản nhận cần Thủ quỹ khác duyệt. Đề nghị đã được gửi, tài khoản cũ vẫn giữ nguyên.',member:'Bạn không được giao sửa Người đi.',advance:'Bạn không được giao sửa Tiền đã đóng.',
   expense:'Bạn không được giao nhập khoản chi.',exp_other:'Bạn chỉ sửa / xoá được khoản chi do chính mình tạo.'};
 function expMine(e){if(!e||(e.rooms&&e.rooms.length))return true;if(!window.supabase||!sbGroup||PV_TOKEN)return true;
   let id=null;try{id=R.current;}catch(x){}if(canLead(id)||!canEditAny(id))return true;   /* người chỉ xem: để lớp khoá chung ẩn nút như cũ */
@@ -4522,6 +4523,9 @@ async function qAct(a,b){
   if(a==='admrm'){ask(`Gỡ quyền quản trị của ${e}? Quyền tổ chức nhóm và vai trò trong chuyến (nếu có) vẫn giữ.`,{title:'Gỡ quản trị viên?',ok:'Gỡ quyền',danger:true},async()=>{
       if(await rpcDo('admin_set_admin_email',{p_email:e,on_off:false},'Đã gỡ quyền quản trị của '+e+'.'))await admLoadAcc();else renderGroupTab();});return;}
   if(a==='amore'){const {data}=await sb.rpc('admin_audit',{p_limit:200,p_before:admAudit.length?admAudit[admAudit.length-1].id:null});admAudit=admAudit.concat(data||[]);admAuditMore=(data||[]).length>=200;renderGroupTab();return;}
+  if(a==='bkok'){bankReqAct('approve');return;}
+  if(a==='bkno'){bankReqAct('reject');return;}
+  if(a==='bkcancel'){bankReqAct('cancel');return;}
   if(a==='alog'){admLogOpen=!admLogOpen;renderGroupTab();return;}
   if(a==='slogs'){window.SLOG_SHOW=!window.SLOG_SHOW;renderGroupTab();if(window.SLOG_SHOW)slogLoad(false);return;}
   if(a==='smore'){slogLoad(true);return;}
@@ -4572,6 +4576,8 @@ function fmtAudit(a,showGroup){
   const m={'admin/code_settings':`đổi cài đặt <b>${n}</b>: mặc định ${d.old_enabled==null?'':(d.old_enabled?'bật':'tắt')+' '+d.old_days+' ngày → '}<b>${d.enabled?'bật':'tắt'}</b>, hạn <b>${esc(String(d.days))} ngày</b>`,'group/create':`tạo nhóm <b>${n}</b>`,'group/rename':`đổi tên nhóm <b>${esc(d.from||'')}</b> thành <b>${esc(d.to||'')}</b>`,'group/delete':`xoá hẳn nhóm <b>${n}</b>`,'group/trash':`chuyển nhóm <b>${n}</b> vào thùng rác`,'group/restore':`khôi phục nhóm <b>${n}</b>`,
     'trip/create':`tạo chuyến <b>${n}</b>`,'trip/rename':`đổi tên chuyến <b>${esc(d.from||'')}</b> thành <b>${esc(d.to||'')}</b>`,'trip/delete':d.purge?`xoá hẳn chuyến <b>${n}</b>`:`chuyển chuyến <b>${n}</b> vào thùng rác`,'trip/restore':`khôi phục chuyến <b>${n}</b>`,'trip/edit':`sửa chuyến <b>${n}</b>`,
     'trip/close':`chốt sổ chuyến <b>${n}</b>`,'trip/reopen':`mở lại sổ chuyến <b>${n}</b>`,
+    'trip/bank_req':`đề nghị đổi tài khoản nhận tiền chuyến <b>${n}</b> sang ${d.to_last4?'…'+esc(d.to_last4)+(d.to_name?' ('+esc(d.to_name)+')':''):'(xoá)'}, chờ Thủ quỹ khác duyệt`,
+    'trip/bank_no':`${d.how==='cancel'?'huỷ':'từ chối'} đề nghị đổi tài khoản nhận tiền chuyến <b>${n}</b>${d.by?' (người đề nghị '+esc(d.by)+')':''}`,
     'trip/bank':`đổi tài khoản nhận tiền chuyến <b>${n}</b>: ${d.from_last4?'…'+esc(d.from_last4)+(d.from_name?' ('+esc(d.from_name)+')':''):'(chưa có)'} → <b>${d.to_last4?'…'+esc(d.to_last4)+(d.to_name?' ('+esc(d.to_name)+')':''):'(xoá)'}</b>`,
     'expense/add':`thêm khoản chi <b>${n}</b>${amt}`,'expense/edit':`sửa khoản chi <b>${n}</b>${chg}`,'expense/remove':`xoá khoản chi <b>${n}</b>${amt}`,
     'room/add':`thêm tiền phòng <b>${n}</b>${amt}`,'room/edit':`sửa tiền phòng <b>${n}</b>${chg}`,'room/remove':`xoá tiền phòng <b>${n}</b>${amt}`,
@@ -4888,14 +4894,35 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
 $('#qrClose').addEventListener('click',()=>{$('#qrModal').hidden=true;});
 $('#qrModal').addEventListener('click',e=>{if(e.target.id==='qrModal')$('#qrModal').hidden=true;});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#qrModal').hidden){$('#qrModal').hidden=true;}});
+/* v107: chuyến có từ 2 Thủ quỹ -> đổi tài khoản nhận phải được Thủ quỹ khác duyệt (supabase/040) */
+let BKREQ={tid:null,row:null,at:0};
+function bankReqHtml(){const r=BKREQ.tid===R.current?BKREQ.row:null;if(!r)return '';
+  const bk=r.bank,txt=bk?`${esc(bankName(bk.bin))} · <b>${esc(bk.acc||'')}</b>${bk.name?' · '+esc(bk.name):''}`:'<b>xoá tài khoản nhận</b>';
+  return r.mine?`<div class="bank-warn" style="border-color:var(--accent,#2f6df6)">⏳ Bạn đã đề nghị đổi tài khoản nhận sang: ${txt}. Chờ Thủ quỹ khác duyệt. Tài khoản hiện tại vẫn giữ nguyên.<div class="row" style="margin-top:6px"><button type="button" class="btn ghost small" data-q="bkcancel">Huỷ đề nghị</button></div></div>`
+    :`<div class="bank-warn">⚠ <b>${esc(r.requested_by)}</b> đề nghị đổi tài khoản nhận sang: ${txt} (lúc ${fdt(r.requested_at)}). Chỉ duyệt khi chính bạn đã xác nhận với người đó.<div class="row" style="margin-top:6px"><button type="button" class="btn small" data-q="bkok">Duyệt đổi</button><button type="button" class="btn ghost small" data-q="bkno">Từ chối</button></div></div>`;}
+async function loadBankReq(force){
+  if(!window.supabase||!sbSession||!sbGroup||PV_TOKEN||isAnon()||!canLead()||!syncedSet.has(R.current))return;
+  const tid=R.current;if(BKREQ.tid!==tid){BKREQ={tid,row:null,at:0};}
+  if(!force&&Date.now()-BKREQ.at<20000)return;BKREQ.at=Date.now();
+  const {data,error}=await sb.rpc('trip_bank_pending',{tid});if(error||R.current!==tid)return;
+  const row=(data&&data[0])||null;if(J(row)!==J(BKREQ.row)){BKREQ.row=row;try{paintBank();}catch(x){}}}
+async function bankReqAct(act){const tid=R.current;
+  const go=async()=>{const {error}=await sb.rpc('decide_bank_request',{tid,p_action:act});
+    if(error){toast({self:'Bạn không tự duyệt đề nghị của chính mình được.',closed:'Sổ đã chốt, mở lại sổ trước.',not_found:'Đề nghị không còn nữa.',forbidden:'Bạn không có quyền.'}[error.message]||('Chưa làm được: '+error.message));}
+    else toast(act==='approve'?'Đã duyệt. Tài khoản nhận đã đổi.':act==='reject'?'Đã từ chối đề nghị.':'Đã huỷ đề nghị.');
+    await loadBankReq(true);};
+  if(act==='approve')ask('Duyệt đổi tài khoản nhận tiền của chuyến này? Từ lúc duyệt, mọi người chuyển tiền vào tài khoản mới.',{title:'Duyệt đổi tài khoản?',ok:'Duyệt đổi'},go);
+  else if(act==='reject')ask('Từ chối đề nghị đổi tài khoản nhận?',{title:'Từ chối?',ok:'Từ chối',danger:true},go);
+  else go();}
 function paintBank(){const sel=$('#bankBin');if(!sel||!BANKS)return;const b=S.bank||{};
   if(!sel.options.length)sel.innerHTML='<option value="">Chọn ngân hàng…</option>'+BANKS.map(x=>`<option value="${x[0]}">${esc(x[1])}</option>`).join('');
   const act=document.activeElement;
   if(act!==sel)sel.value=b.bin||'';if(act!==$('#bankAcc'))$('#bankAcc').value=b.acc||'';if(act!==$('#bankName'))$('#bankName').value=b.name||'';
   $('#bankSum').textContent=bankOk()?'· '+bankName(b.bin)+' '+b.acc:'· chưa có';
   const locked=!!(window.supabase&&sbGroup&&!PV_TOKEN&&isClosed()),can=bankCanEdit()&&!locked;['bankBin','bankAcc','bankName'].forEach(k=>{const e=$('#'+k);if(!e)return;if(!can){e.disabled=true;e.dataset.bk='1';}else if(e.dataset.bk){e.disabled=false;delete e.dataset.bk;}});
-  const m=$('#bankMeta');if(m)m.innerHTML=bankMetaHtml()+(can?'':`<div class="hint" style="min-height:0">🔒 ${locked?'Sổ đã chốt nên tài khoản nhận tiền bị khoá. Muốn đổi, Thủ quỹ mở lại sổ.':'Chỉ Thủ quỹ đổi được tài khoản nhận tiền.'}</div>`)+(bankOk()&&!qrReady()?'<div class="hint" style="min-height:0">Mã QR chuyển khoản sẽ hiện cho mọi người sau khi Thủ quỹ chốt sổ.</div>':'');
-  try{paintBankWarn();}catch(e){}}
+  const m=$('#bankMeta');if(m)m.innerHTML=bankMetaHtml()+bankReqHtml()+(can?'':`<div class="hint" style="min-height:0">🔒 ${locked?'Sổ đã chốt nên tài khoản nhận tiền bị khoá. Muốn đổi, Thủ quỹ mở lại sổ.':'Chỉ Thủ quỹ đổi được tài khoản nhận tiền.'}</div>`)+(bankOk()&&!qrReady()?'<div class="hint" style="min-height:0">Mã QR chuyển khoản sẽ hiện cho mọi người sau khi Thủ quỹ chốt sổ.</div>':'');
+  try{paintBankWarn();}catch(e){}
+  try{loadBankReq(false);}catch(e){}}
 ['bankBin','bankAcc','bankName'].forEach(k=>$('#'+k).addEventListener('change',()=>{
   if(!bankCanEdit()){toast(DENY_MSG.bank);paintBank();return;}
   const bin=$('#bankBin').value,acc=($('#bankAcc').value||'').replace(/\s+/g,''),name=noAccent($('#bankName').value);
@@ -5312,7 +5339,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v106',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v107',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

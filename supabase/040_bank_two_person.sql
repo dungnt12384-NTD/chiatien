@@ -1,0 +1,3 @@
+-- 040: chuyen co tu 2 Thu quy: doi tai khoan nhan (da co san) can Thu quy khac duyet.
+-- Bang trip_bank_requests; save_trip tao de nghi thay vi ghi; RPC trip_bank_pending, decide_bank_request(approve|reject|cancel); admin_trip_state_log them bank_req/bank_no.
+-- Quan tri vien khong bi chan. Quay lai: khoi phuc save_trip ban 039, drop 2 RPC va bang.

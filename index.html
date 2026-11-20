@@ -1418,6 +1418,7 @@ html.phone table.log-tbl td.lt-g::before{content:"Nhóm: "!important}
 .undo-fab .ud-n:empty{display:none}
 html.phone .undo-fab .ud-t{display:none}
 html.phone .undo-fab button{padding:0 10px}
+html.phone .undo-fab{bottom:calc(98px + env(safe-area-inset-bottom,0px))}
 @media print{.undo-fab{display:none!important}}
 /* v85: tô sáng nhấp nháy sau Hoàn tác / Làm lại, giữ đến khi bấm "Đã xem" */
 .ud-hl{outline:2px solid #f59e0b!important;outline-offset:2px;border-radius:10px;animation:udBlink 1.1s ease-in-out infinite}
@@ -5671,7 +5672,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v125',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v126',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

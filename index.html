@@ -2471,7 +2471,7 @@ function meSave(direct){
   if(ch.move)lines.push(`Vị trí: đặt ${d.where==='before'?'trước':'sau'} "${nameOf(ch.move)}"`);
   else if(ch.role&&eff.role==='comp')lines.push(`Vị trí: ngay sau thành viên chính "${nameOf(eff.parent)}"`);
   const apply=()=>{
-    if(ch.name)m.name=ch.name;
+    if(ch.name){const old=m.name;m.name=ch.name;try{window.ctnMiniRename&&window.ctnMiniRename(old,ch.name);}catch(e){}}
     if(ch.role){if(eff.role==='comp')m.parent=eff.parent;else delete m.parent;S.members=S.members.filter(x=>x!==m);S.members.push(m);S.members=displayMembers();
       if(eff.role==='comp'&&!ch.move){const pm=mem(eff.parent);if(pm)placeFirst(m,pm);}}
     if(ch.move){const t=mem(ch.move);
@@ -3464,7 +3464,7 @@ document.addEventListener('submit',ev=>{const f=ev.target.closest('[data-rename]
   if(S.members.some(m=>m.id!==id&&m.name.toLowerCase()===n.toLowerCase())){say('#memberMsg','Tên này đã có trong nhóm. Thêm họ hoặc biệt danh để phân biệt.');return;}
   if(n===mem(id).name){renamingId=null;render();return;}
   ask(`Đổi tên "${mem(id).name}" thành "${n}"? Mọi khoản chi và kết quả sẽ hiện theo tên mới.`,{ok:'Đổi tên'},()=>{
-    mem(id).name=n;renamingId=null;render();say('#memberMsg','Đã đổi tên.');});});
+    const old=mem(id).name;mem(id).name=n;renamingId=null;try{window.ctnMiniRename&&window.ctnMiniRename(old,n);}catch(e){}render();say('#memberMsg','Đã đổi tên.');});});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&renamingId){renamingId=null;render();}});
 
 /* kéo thả đổi thứ tự khoản chi (chuột, cảm ứng, bàn phím) */
@@ -5794,7 +5794,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v138',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v139',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
@@ -5916,6 +5916,15 @@ function open(){close();msg='';var o=document.createElement('div');o.id='miniOv'
   o.addEventListener('input',function(e){var t=e.target;if(t.id==='mnDesc')dr.desc=t.value;else if(t.id==='mnAmt'){var v=num(t.value);dr.amount=v?v.toLocaleString('vi-VN'):'';t.value=dr.amount;}});
   o.addEventListener('change',function(e){if(e.target.id==='mnPayer')dr.payer=e.target.value;});
   o.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='mnName'){e.preventDefault();act('addp');}});}
+/* nhóm lớn đổi tên người đi -> đổi theo ở danh sách, các khoản, bản nháp */
+window.ctnMiniRename=function(a,b){try{if(!a||!b||a===b)return;
+  var rn=function(x){return x===a?b:x;},rl=function(L){var o=[];(L||[]).forEach(function(x){x=rn(x);if(o.indexOf(x)<0)o.push(x);});return o;};
+  if(st.people.indexOf(a)<0)return;
+  if(st.people.indexOf(b)>=0){/* tên mới đã có sẵn trong nhóm nhỏ: gộp */}
+  st.people=rl(st.people);
+  st.bills.forEach(function(x){x.payer=rn(x.payer);x.ids=rl(x.ids);x.fr=rl(x.fr);});
+  dr.payer=rn(dr.payer);dr.ids=rl(dr.ids);dr.fr=rl(dr.fr);
+  save();paint();}catch(e){}};
 function addPerson(n){n=String(n||'').trim();if(!n)return false;if(inP(n))return false;st.people.push(n);return true;}
 function readForm(){var amt=num(dr.amount),sel=dr.ids.filter(inP);
   if(!amt){msg='Nhập số tiền bill.';return null;}if(!dr.payer){msg='Chọn người trả bill.';return null;}if(!sel.length){msg='Chọn ít nhất 1 người tham gia (bấm tên, hoặc “Chọn hết”).';return null;}

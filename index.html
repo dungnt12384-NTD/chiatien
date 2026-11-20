@@ -1597,6 +1597,20 @@ html:not(.phone)[data-skin="goc"] .tabs{margin-inline:0!important}
 html[data-skin="goc"] .tab[aria-selected="true"]{background:var(--accent)!important;color:var(--on)!important}
 html[data-skin="goc"] .tab[aria-selected="true"] svg{fill:var(--on)!important;stroke:var(--on)!important;color:var(--on)!important}
 html[data-skin="goc"] .tab[aria-selected="true"]::after,html[data-skin="goc"] .tab[aria-selected="true"]::before{display:none!important}
+/* ===== Số dương (xanh) / số âm (đỏ) rõ ràng ở mọi bộ giao diện + chỉnh tương phản (đặt CUỐI để thắng các khối trên) ===== */
+:root[data-skin]{--pos:#15803d;--neg:#c62828;--pos-bg:#e6f6ec;--neg-bg:#fdeaea}
+:root[data-skin="ios"]{--brand:#0062cc;--accent:#0062cc;--gold:#0062cc;--muted:#55555c}
+:root[data-skin="hoanghon"]{--brand:#c2410c;--accent:#c2410c;--gold:#c2410c}
+:root[data-skin="goc"]{--brand:#237a34;--accent:#237a34;--gold:#237a34;--brand-d:#1b5e28}
+:root[data-skin="mono"]{--muted:#5b6270}
+@media (prefers-color-scheme:dark){:root[data-skin]:not([data-theme="light"]){--pos:#4ade80;--neg:#ff7b7b;--pos-bg:#12301f;--neg-bg:#3a1b1d}
+  :root[data-skin="ios"]:not([data-theme="light"]){--on:#000}}
+:root[data-skin][data-theme="dark"]{--pos:#4ade80;--neg:#ff7b7b;--pos-bg:#12301f;--neg-bg:#3a1b1d}
+:root[data-skin="ios"][data-theme="dark"]{--on:#000}
+html[data-skin] .bal.pos,html[data-skin] .st.pos b,html[data-skin] .st.pos i{color:var(--pos)!important}
+html[data-skin] .bal.neg,html[data-skin] .st.neg b,html[data-skin] .st.neg i{color:var(--neg)!important}
+html[data-skin] .bal.pos{background:var(--pos-bg)!important}
+html[data-skin] .bal.neg{background:var(--neg-bg)!important}
 </style>
 
 
@@ -5657,7 +5671,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v123',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v124',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

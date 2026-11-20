@@ -9,8 +9,8 @@ Quy ước làm việc: sửa xong tự commit + push, không cần hỏi (chỉ
 - STT khi chọn "Chỉ thành viên chính" đánh liên tục 1..n (677686f, hàm `gNo`). CHƯA xác nhận trên web thật.
 
 ## Việc tồn
+- (Bỏ qua: khoản bị mất ở Cà Mau, anh Dũng đã xác nhận bỏ.)
 - Anh kiểm tra trên web: 2 lần sửa sau cùng (e4766b9, 677686f), gồm cả bảng xuất/PDF/báo cáo ở chế độ "Chỉ thành viên chính".
-- Khoản "cà phê trưa 580.000" và khoản của người hỗ trợ trong chuyến Cà Mau bị mất (sự cố 19/11), cần nhập lại.
 
 ## Bước tiếp
 1. Anh xác nhận 2 lần sửa trên.

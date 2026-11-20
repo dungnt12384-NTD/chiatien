@@ -1653,7 +1653,7 @@ html .bal.neg,html .st.neg b,html .st.neg i,html .kpi b.kneg{-webkit-text-fill-c
 .mini-pbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0;padding:8px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)}
 .mini-fl{margin-left:2px}
 .mini-dlg .chips{margin:6px 0}
-.mini-free{border-color:var(--pos)!important;background:var(--pos-bg)!important}
+html button.tog.mini-free[aria-pressed="true"],.mini-free{border-color:var(--pos)!important;background:var(--pos-bg)!important}
 .mini-x{margin-left:4px;color:var(--neg);font-weight:700}
 .mini-dt{margin:6px 0}.mini-dt>summary{cursor:pointer;font-size:13px;color:var(--muted);padding:6px 0}
 .mini-chip.is-free{border-color:var(--pos);background:var(--pos-bg)}
@@ -5794,7 +5794,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v135',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v136',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
@@ -5870,40 +5870,43 @@ function calc(bills){var P={};st.people.forEach(function(p){P[p]={paid:0,share:0
   var i=0,j=0;while(i<db.length&&j<cr.length){var x=Math.min(db[i].v,cr[j].v);if(x>0)tr.push({from:db[i].n,to:cr[j].n,v:x});db[i].v-=x;cr[j].v-=x;if(db[i].v<=0)i++;if(cr[j].v<=0)j++;}
   return {P:P,tr:tr};}
 function viewBills(){if(edit){var b=st.bills.filter(function(x){return x.id===edit;});if(b.length)return b;}return st.bills;}
+function peopleBox(open){
+  return '<details class="mini-dt"'+(open?' open':'')+'><summary><b>Danh sách tổng</b> ('+st.people.length+' người): thêm / xoá tên</summary>'+
+    '<div class="mini-row"><input type="text" id="mnName" placeholder="Thêm tên, bấm Enter" autocomplete="off"><button type="button" class="btn small" data-mn="addp">Thêm</button></div>'+
+    '<div class="mini-row"><button type="button" class="btn ghost small" data-mn="fromtrip">Lấy danh sách từ chuyến</button></div>'+
+    (st.people.length?'<div class="hint" style="min-height:0">Bấm vào tên để xoá khỏi danh sách tổng:</div><div class="chips">'+st.people.map(function(p){return chip(p,'','data-mn="delp" data-n="'+esc(p)+'" title="Bấm để xoá khỏi danh sách tổng"','<span class="mini-x">×</span>');}).join('')+'</div>':'<div class="hint" style="min-height:0">Chưa có ai. Thêm tên hoặc lấy danh sách từ chuyến.</div>')+'</details>';}
 function html(){var h='<div class="skin-dlg mini-dlg" role="dialog" aria-modal="true" aria-label="Chia nhóm nhỏ"><h3>🍻 Chia nhóm nhỏ</h3>'+
   '<div class="hint" style="min-height:0;color:var(--muted);font-size:13px">Khoản riêng của nhóm nhỏ (karaoke, cà phê…). <b>Không cộng vào chuyến, không đồng bộ, không gửi thông báo.</b> Chỉ lưu trên máy này, dùng lại được cho chuyến khác.</div>'+
   (msg?'<div class="mini-msg">'+esc(msg)+'</div>':'');
-  /* 1. danh sách tổng (nguồn để chọn người cho từng khoản) */
-  h+='<div class="sk-h">1. Danh sách tổng ('+st.people.length+' người)</div>'+
-     '<div class="mini-row"><input type="text" id="mnName" placeholder="Thêm tên, bấm Enter" autocomplete="off"><button type="button" class="btn small" data-mn="addp">Thêm</button></div>'+
-     '<div class="mini-row"><button type="button" class="btn ghost small" data-mn="fromtrip">Lấy danh sách từ chuyến</button></div>'+
-     (st.people.length?'<details class="mini-dt"><summary>Xoá tên khỏi danh sách tổng</summary><div class="chips">'+st.people.map(function(p){return chip(p,'','data-mn="delp" data-n="'+esc(p)+'" title="Bấm để xoá khỏi danh sách tổng"','<span class="mini-x">×</span>');}).join('')+'</div></details>':'<div class="hint" style="min-height:0">Chưa có ai. Thêm tên hoặc lấy danh sách từ chuyến, rồi chọn người đi ở từng khoản bên dưới.</div>');
-  if(!st.people.length)return h+'<button type="button" class="btn skin-close" data-mn="close">Xong</button></div>';
-  /* 2. các khoản (bấm để nạp lại vào ô nhập ngay bên dưới) */
-  h+='<div class="sk-h">2. Các khoản ('+st.bills.length+')</div>';
-  h+=st.bills.length?'<div class="hint" style="min-height:0">Bấm vào một khoản để nạp lại vào ô nhập bên dưới (sửa hoặc dùng lại) và xem kết quả riêng của khoản đó.</div>'+
-    st.bills.map(function(b){var pp=payers(b),n=pp.length,fz=b.ids.filter(inP).length-n;
-      return '<button type="button" class="mini-bill'+(edit===b.id?' sel':'')+'" data-mn="pick" data-id="'+b.id+'" aria-pressed="'+(edit===b.id)+'"><span style="flex:1 1 auto;min-width:0"><b>'+esc(b.desc||'Khoản chi')+'</b> · '+money(b.amount)+'<span class="hint" style="display:block;min-height:0">'+esc(b.payer)+' trả · '+b.ids.filter(inP).length+' người đi, chia '+n+' người ('+money(n?b.amount/n:0)+'/người)'+(fz>0?', '+fz+' miễn':'')+'</span></span><span class="mini-go">'+(edit===b.id?'Đang xem':'Xem')+'</span></button>';}).join(''):'<div class="hint" style="min-height:0">Chưa có khoản nào. Nhập ở ô bên dưới.</div>';
-  /* ô nhập / sửa khoản: đặt ngay dưới danh sách khoản; MỘT danh sách người tham gia + người miễn */
+  if(!st.people.length)return h+'<div class="sk-h">Bước 1: thêm người</div>'+peopleBox(true)+'<button type="button" class="btn skin-close" data-mn="close">Xong</button></div>';
+  /* 1. nhập / sửa khoản: ở trên cùng. MỘT danh sách người tham gia; tên xám = không đi, tên sáng = đi, 🆓 = đi nhưng miễn tiền */
   var nIn=dr.ids.filter(inP).length,nFr=dr.fr.filter(function(n){return dr.ids.indexOf(n)>=0&&inP(n);}).length;
   h+='<div class="mini-form" id="mnForm"><div class="sk-h" style="margin:6px 0 0">'+(edit?'Sửa khoản đang chọn':'Thêm khoản chi')+'</div>'+
     '<input type="text" id="mnDesc" placeholder="Tên khoản (vd: Karaoke)" value="'+esc(dr.desc)+'" autocomplete="off">'+
     '<input type="text" id="mnAmt" inputmode="numeric" placeholder="Số tiền bill" value="'+esc(dr.amount)+'" autocomplete="off">'+
     '<select id="mnPayer" aria-label="Người trả"><option value="">Ai trả bill?</option>'+st.people.map(function(p){return '<option value="'+esc(p)+'"'+(dr.payer===p?' selected':'')+'>'+esc(p)+'</option>';}).join('')+'</select>'+
-    '<div class="mini-row" style="justify-content:space-between"><span class="hint" style="min-height:0"><b>Người tham gia:</b> '+nIn+'/'+st.people.length+' đi'+(nFr?', trong đó '+nFr+' miễn':'')+'</span><span style="display:flex;gap:6px"><button type="button" class="btn ghost small" data-mn="all">Chọn hết</button><button type="button" class="btn ghost small" data-mn="none">Bỏ hết</button></span></div>'+
-    '<div class="hint" style="min-height:0">Bấm tên: <b>đi</b> → bấm nữa: <b>🆓 đi nhưng miễn tiền</b> → bấm nữa: không đi.</div>'+
-    '<div class="chips">'+st.people.map(function(p){var go=dr.ids.indexOf(p)>=0,fr=go&&dr.fr.indexOf(p)>=0;return chip(p,(go?' sel':'')+(fr?' mini-free':''),'data-mn="tg" data-n="'+esc(p)+'" aria-pressed="'+go+'"',fr?'<span class="mini-fl" title="Miễn tiền">🆓</span>':'');}).join('')+'</div>'+
+    '<div class="sub" style="margin:4px 0 0">Chia cho (bấm tên để chọn người đi)</div>'+
+    '<div class="mini-row" style="justify-content:space-between"><span class="hint" style="min-height:0">'+nIn+'/'+st.people.length+' người đi'+(nFr?', trong đó '+nFr+' miễn':'')+'</span><span style="display:flex;gap:6px"><button type="button" class="btn ghost small" data-mn="all">Chọn hết</button><button type="button" class="btn ghost small" data-mn="none">Bỏ chọn hết</button></span></div>'+
+    '<div class="chips">'+st.people.map(function(p){var go=dr.ids.indexOf(p)>=0,fr=go&&dr.fr.indexOf(p)>=0;return chip(p,' tog'+(fr?' mini-free':''),'style="--c:var(--c-expense,var(--accent))" data-mn="tg" data-n="'+esc(p)+'" aria-pressed="'+go+'"',fr?'<span class="mini-fl" title="Miễn tiền">🆓</span>':'');}).join('')+'</div>'+
+    '<div class="hint" style="min-height:0">Bấm lần 1: đi · lần 2: <b>🆓 đi nhưng miễn tiền</b> · lần 3: không đi.</div>'+
     (edit?'<div class="mini-row"><button type="button" class="btn" data-mn="updb">Cập nhật khoản này</button><button type="button" class="btn ghost" data-mn="newb">＋ Lưu thành khoản mới</button></div><div class="mini-row"><button type="button" class="btn ghost small" data-mn="unpick">Bỏ chọn (xem tất cả)</button><button type="button" class="btn ghost small" data-mn="delb">Xoá khoản này</button></div>'
           :'<button type="button" class="btn" data-mn="addb">＋ Thêm khoản</button>')+'</div>';
+  /* 2. các khoản đã nhập: bấm để nạp lại vào ô nhập phía trên và xem kết quả riêng */
+  h+='<div class="sk-h">Các khoản đã nhập ('+st.bills.length+')</div>';
+  h+=st.bills.length?'<div class="hint" style="min-height:0">Bấm vào một khoản để nạp lại vào ô nhập phía trên (sửa hoặc dùng lại) và xem kết quả riêng của khoản đó.</div>'+
+    st.bills.map(function(b){var pp=payers(b),n=pp.length,fz=b.ids.filter(inP).length-n;
+      return '<button type="button" class="mini-bill'+(edit===b.id?' sel':'')+'" data-mn="pick" data-id="'+b.id+'" aria-pressed="'+(edit===b.id)+'"><span style="flex:1 1 auto;min-width:0"><b>'+esc(b.desc||'Khoản chi')+'</b> · '+money(b.amount)+'<span class="hint" style="display:block;min-height:0">'+esc(b.payer)+' trả · '+b.ids.filter(inP).length+' người đi, chia '+n+' người ('+money(n?b.amount/n:0)+'/người)'+(fz>0?', '+fz+' miễn':'')+'</span></span><span class="mini-go">'+(edit===b.id?'Đang xem':'Xem')+'</span></button>';}).join(''):'<div class="hint" style="min-height:0">Chưa có khoản nào.</div>';
   /* 3. kết quả: của khoản đang chọn, hoặc của tất cả */
   if(st.bills.length){var vb=viewBills(),c=calc(vb),one=vb.length===1&&edit,rows=st.people.filter(function(p){return c.P[p].paid>0||c.P[p].share>0;});
-    h+='<div class="sk-h">3. Kết quả: '+(one?esc(vb[0].desc||'khoản đang chọn'):'tất cả '+vb.length+' khoản')+'</div>'+
+    h+='<div class="sk-h">Kết quả: '+(one?esc(vb[0].desc||'khoản đang chọn'):'tất cả '+vb.length+' khoản')+'</div>'+
       (one?'<div class="hint" style="min-height:0">Chỉ tính riêng khoản này. <a href="#" data-mn="unpick" class="lnk">Xem kết quả tất cả các khoản</a></div>':'<div class="hint" style="min-height:0">Gộp mọi khoản. Bấm một khoản ở trên để xem riêng khoản đó.</div>')+
       '<div class="tablewrap"><table class="t2"><thead><tr><th>Người</th><th>Đã trả</th><th>Phải chịu</th><th>Chênh</th></tr></thead><tbody>'+rows.map(function(p){var x=c.P[p],d=Math.round(x.paid-x.share);
         return '<tr><td>'+esc(p)+'</td><td class="num">'+money(x.paid)+'</td><td class="num">'+money(x.share)+'</td><td class="num" style="font-weight:700;color:'+(d>0?'var(--pos)':d<0?'var(--neg)':'inherit')+'">'+(d>0?'+':d<0?'−':'')+money(Math.abs(d))+'</td></tr>';}).join('')+'</tbody></table></div>'+
       (c.tr.length?'<div class="mini-tr"><b>Ai chuyển cho ai:</b>'+c.tr.map(function(t){return '<div>'+esc(t.from)+' → '+esc(t.to)+': <b>'+money(t.v)+'</b></div>';}).join('')+'</div>':'<div class="hint">Không ai phải chuyển thêm.</div>')+
       '<div class="mini-row"><button type="button" class="btn small" data-mn="copy">Sao chép kết quả</button></div>';}
-  h+='<div class="sk-h">Làm lại</div><div class="mini-row"><button type="button" class="btn ghost small" data-mn="newtrip">Buổi mới (giữ danh sách tổng, xoá các khoản)</button><button type="button" class="btn ghost small" data-mn="clear">Xoá hết</button></div>';
+  /* 4. danh sách tổng: ở cuối, thu gọn */
+  h+='<div class="sk-h">Danh sách người</div>'+peopleBox(false);
+  h+='<div class="mini-row"><button type="button" class="btn ghost small" data-mn="newtrip">Buổi mới (giữ danh sách tổng, xoá các khoản)</button><button type="button" class="btn ghost small" data-mn="clear">Xoá hết</button></div>';
   return h+'<button type="button" class="btn skin-close" data-mn="close">Xong</button></div>';}
 function text(){var vb=viewBills(),c=calc(vb),L=['CHIA NHÓM NHỎ'];vb.forEach(function(b){var n=payers(b).length;L.push('- '+(b.desc||'Khoản chi')+': '+money(b.amount)+' ('+b.payer+' trả, chia '+n+' người, '+money(n?b.amount/n:0)+'/người)');});
   L.push('');c.tr.forEach(function(t){L.push(t.from+' chuyển '+t.to+': '+money(t.v));});if(!c.tr.length)L.push('Không ai phải chuyển thêm.');return L.join('\n');}

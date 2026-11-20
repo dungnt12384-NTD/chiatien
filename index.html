@@ -1607,10 +1607,10 @@ html[data-skin="goc"] .tab[aria-selected="true"]::after,html[data-skin="goc"] .t
   :root[data-skin="ios"]:not([data-theme="light"]){--on:#000}}
 :root[data-skin][data-theme="dark"]{--pos:#4ade80;--neg:#ff7b7b;--pos-bg:#12301f;--neg-bg:#3a1b1d}
 :root[data-skin="ios"][data-theme="dark"]{--on:#000}
-html[data-skin] .bal.pos,html[data-skin] .st.pos b,html[data-skin] .st.pos i{color:var(--pos)!important}
-html[data-skin] .bal.neg,html[data-skin] .st.neg b,html[data-skin] .st.neg i{color:var(--neg)!important}
-html[data-skin] .bal.pos{background:var(--pos-bg)!important}
-html[data-skin] .bal.neg{background:var(--neg-bg)!important}
+html .bal.pos,html .st.pos b,html .st.pos i,html .kpi b.kpos{-webkit-text-fill-color:var(--pos)!important;color:var(--pos)!important}
+html .bal.neg,html .st.neg b,html .st.neg i,html .kpi b.kneg{-webkit-text-fill-color:var(--neg)!important;color:var(--neg)!important}
+html .bal.pos{background:var(--pos-bg)!important}
+html .bal.neg{background:var(--neg-bg)!important}
 </style>
 
 
@@ -2871,8 +2871,8 @@ function renderResult(c){
   $('#kpis').innerHTML=
    `<div class="kpi big"><span>Tổng chi phí</span><b class="num">${fmt(c.total)}</b></div>`+
    `<div class="kpi"><span>Tổng đã đóng trước</span><b class="num">${fmt(c.advTotal)}</b></div>`+
-   `<div class="kpi"><span>Thủ quỹ cần thu thêm</span><b class="num" style="color:var(--neg)">${fmt(collect)}</b><small>Cộng số tiền các thành viên còn thiếu (cột Chốt sổ màu đỏ) phải nộp thêm.</small></div>`+
-   `<div class="kpi"><span>Thủ quỹ cần trả lại</span><b class="num" style="color:var(--pos)">${fmt(payout)}</b><small>Cộng số tiền các thành viên đang dư (cột Chốt sổ màu xanh), gồm cả người đã tự chi hộ, được hoàn lại.</small></div>`;
+   `<div class="kpi"><span>Thủ quỹ cần thu thêm</span><b class="num kneg" style="color:var(--neg)">${fmt(collect)}</b><small>Cộng số tiền các thành viên còn thiếu (cột Chốt sổ màu đỏ) phải nộp thêm.</small></div>`+
+   `<div class="kpi"><span>Thủ quỹ cần trả lại</span><b class="num kpos" style="color:var(--pos)">${fmt(payout)}</b><small>Cộng số tiền các thành viên đang dư (cột Chốt sổ màu xanh), gồm cả người đã tự chi hộ, được hoàn lại.</small></div>`;
   $('#warns').innerHTML=c.warns.map(w=>`<div class="note" style="margin-bottom:6px">${esc(w)}</div>`).join('');
   $('#balBody').innerHTML=gs.length?gs.map(g=>{
     const m=g.main,sum=k=>g.members.reduce((t,x)=>t+c.P[x.id][k],0),open=openBal.has(m.id),comps=g.members.slice(1);
@@ -5671,7 +5671,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v124',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v125',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

@@ -4622,7 +4622,7 @@ const auditHtml=(rows,showGroup)=>rows.length?rows.map(a=>fmtAudit(a,showGroup))
 function renderTripExtra(){
   try{paintWho();}catch(e){}
   const el=document.getElementById('tripExtra');if(!el)return;
-  const gn=document.getElementById('tripGrpName');if(gn)gn.textContent=!PV_TOKEN&&sbSession&&sbGroup&&sbAdmin?sbGroup.name+' ▾':'';   /* v93: nhóm chỉ quản trị viên thấy */
+  const gn=document.getElementById('tripGrpName');if(gn)gn.textContent=!PV_TOKEN&&sbSession?(sbGroup&&sbAdmin?sbGroup.name+' ▾':'🧳 Chuyến của tôi ▾'):'';   /* v116: luôn có nút chọn chuyến ở đầu tab Chuyến, kể cả khi chưa có chuyến / chưa có nhóm */   /* v93: nhóm chỉ quản trị viên thấy */
   if(PV_TOKEN||!window.supabase||!sbSession||!sbGroup){el.innerHTML='';return;}
   const t=trip(),r=roleOf(),cl=isClosed(),ed=canEditAny(),ld=canLead(),synced=syncedSet.has(t.id)&&!t.ph;
   if(t.ph&&(syncState==='connecting'||syncState==='slow')){el.innerHTML=`<div class="gcard"><div class="hint" style="min-height:0">⏳ Đang tải các chuyến${sbAdmin?` của nhóm “${esc(sbGroup.name)}”`:''}…${syncState==='slow'?' Mạng đang chậm, chờ thêm chút.':''}</div></div>`;return;}
@@ -5381,7 +5381,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v115',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v116',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

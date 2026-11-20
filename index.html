@@ -1578,6 +1578,25 @@ html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;bo
 .skin-modes{display:flex;gap:8px;flex-wrap:wrap}
 .skin-modes .skin-opt{flex:1 1 90px;justify-content:center}
 .skin-close{margin-top:16px;width:100%}
+/* ===== Giao diện "Gốc" (mẫu từ artifact thanhtu): một màu chủ đạo xanh lá, thẻ phẳng viền mảnh, thanh chuyến đặc màu, thanh tab dạng thẻ ===== */
+:root[data-skin="goc"]{--brand:#2f9e44;--brand-d:#237a34;--brand-bg:rgba(47,158,68,.12);--accent:#2f9e44;--gold:#2f9e44;--on:#fff;--bg:#f3f5f9;--surface:#fff;--surface2:#f7f8fb;--fill:rgba(22,32,46,.06);--fill2:rgba(22,32,46,.12);--line:#e3e7ef;--fg:#16202e;--muted:#5d6b80;--h2:#16202e;--pos:#15803d;--neg:#c62828;--pv-navy:#16202e;--pv-navy-d:#16202e;--pv-blue:#2f9e44;--pv-sky:#51cf66;--pv-green:#2f9e44;--pv-grad:linear-gradient(#2f9e44,#2f9e44);--pv-bar:linear-gradient(#2f9e44,#2f9e44);--pv-text:linear-gradient(#16202e,#16202e);--glass:#fff;--glass-br:#e3e7ef;--card:#fff;--card-br:#e3e7ef;--sel:#fff;--kpi:linear-gradient(#f7f8fb,#f7f8fb);--shadow:0 1px 2px rgba(20,30,50,.05),0 4px 14px rgba(20,30,50,.05)}
+@media (prefers-color-scheme:dark){:root[data-skin="goc"]:not([data-theme="light"]){--brand:#69db7c;--brand-d:#8ce99a;--brand-bg:rgba(105,219,124,.2);--accent:#69db7c;--gold:#69db7c;--on:#0b1220;--bg:#0f141c;--surface:#18202b;--surface2:#1e2835;--fill:rgba(255,255,255,.08);--fill2:rgba(255,255,255,.15);--line:#2b3748;--fg:#e8edf5;--muted:#9aa8bc;--h2:#e8edf5;--pos:#4ade80;--neg:#ff7b7b;--pv-navy:#e8edf5;--pv-navy-d:#e8edf5;--pv-blue:#69db7c;--pv-sky:#8ce99a;--pv-green:#4ade80;--pv-grad:linear-gradient(#69db7c,#69db7c);--pv-bar:linear-gradient(#69db7c,#69db7c);--pv-text:linear-gradient(#e8edf5,#e8edf5);--glass:#18202b;--glass-br:#2b3748;--card:#18202b;--card-br:#2b3748;--sel:#1e2835;--kpi:linear-gradient(#1e2835,#1e2835);--shadow:none}}
+:root[data-skin="goc"][data-theme="dark"]{--brand:#69db7c;--brand-d:#8ce99a;--brand-bg:rgba(105,219,124,.2);--accent:#69db7c;--gold:#69db7c;--on:#0b1220;--bg:#0f141c;--surface:#18202b;--surface2:#1e2835;--fill:rgba(255,255,255,.08);--fill2:rgba(255,255,255,.15);--line:#2b3748;--fg:#e8edf5;--muted:#9aa8bc;--h2:#e8edf5;--pos:#4ade80;--neg:#ff7b7b;--pv-navy:#e8edf5;--pv-navy-d:#e8edf5;--pv-blue:#69db7c;--pv-sky:#8ce99a;--pv-green:#4ade80;--pv-grad:linear-gradient(#69db7c,#69db7c);--pv-bar:linear-gradient(#69db7c,#69db7c);--pv-text:linear-gradient(#e8edf5,#e8edf5);--glass:#18202b;--glass-br:#2b3748;--card:#18202b;--card-br:#2b3748;--sel:#1e2835;--kpi:linear-gradient(#1e2835,#1e2835);--shadow:none}
+html[data-skin="goc"] .tripbar{background:var(--accent)!important;color:var(--on)!important;border:0!important;border-radius:12px!important;padding:10px 16px!important;box-shadow:none!important;margin-inline:0!important;gap:6px 14px!important}
+html[data-skin="goc"] .tripbar>b{order:0!important;flex-basis:auto!important;font-family:inherit!important;font-size:16px!important;font-weight:700!important;letter-spacing:0!important;line-height:1.3!important;text-transform:none!important;margin:0!important;background:none!important;color:var(--on)!important;-webkit-text-fill-color:var(--on)!important}
+html[data-skin="goc"] .tripbar>span,html[data-skin="goc"] .tripbar>.num{order:0!important;color:var(--on)!important;opacity:.92!important;font-size:14px!important}
+html[data-skin="goc"] .tripbar .crumb{color:var(--on)!important;text-decoration:underline!important;text-transform:none!important;font-size:14px!important;font-weight:600!important;letter-spacing:0!important}
+html[data-skin="goc"] .sec{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:16px!important;box-shadow:var(--shadow)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-skin="goc"] .sec::before{display:none!important}
+html[data-skin="goc"] .sec-h h2{font-family:inherit!important;text-transform:none!important;background:none!important;color:var(--fg)!important;-webkit-text-fill-color:var(--fg)!important}
+html[data-skin="goc"] .btn:not(.ghost):not(.gray):not(.del):not(.danger):not(.success):not(.skin-close){background:var(--accent)!important;color:var(--on)!important;border-radius:10px!important;box-shadow:none!important}
+html[data-skin="goc"] .btn.skin-close{background:var(--accent)!important;color:var(--on)!important}
+html[data-skin="goc"] .gcard,html[data-skin="goc"] .rcard,html[data-skin="goc"] .kpi,html[data-skin="goc"] .stat{background:var(--surface2)!important;border:1px solid var(--line)!important;border-radius:12px!important;box-shadow:none!important}
+html[data-skin="goc"] .tabs{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:14px!important;box-shadow:var(--shadow)!important}
+html:not(.phone)[data-skin="goc"] .tabs{margin-inline:0!important}
+html[data-skin="goc"] .tab[aria-selected="true"]{background:var(--accent)!important;color:var(--on)!important}
+html[data-skin="goc"] .tab[aria-selected="true"] svg{fill:var(--on)!important;stroke:var(--on)!important;color:var(--on)!important}
+html[data-skin="goc"] .tab[aria-selected="true"]::after,html[data-skin="goc"] .tab[aria-selected="true"]::before{display:none!important}
 </style>
 
 
@@ -4386,7 +4405,7 @@ function gtrashHtmlOld(dis){const L=window.ADM_GTRASH||[];if(!L.length)return ''
 document.addEventListener('input',ev=>{const t=ev.target;if(t&&/^qPref(TrOff|Tr|Um)$/.test(t.id||''))(window.PREF_DRAFT=window.PREF_DRAFT||{})[t.id]=t.value;});
 document.addEventListener('change',ev=>{const t=ev.target;if(t&&t.id==='qPrefTrOff'){(window.PREF_DRAFT=window.PREF_DRAFT||{})[t.id]=t.value;}});
 function prefHtml(dis){const P=window.APP_PREFS||{},D=window.PREF_DRAFT||{},td0=+(P.trash_days??30),um0=+(P.undo_max||50),off=D.qPrefTrOff!=null?D.qPrefTrOff==='0':td0===0,td=D.qPrefTr!=null?D.qPrefTr:(td0||30),um=D.qPrefUm!=null?D.qPrefUm:um0;
-  return `<div class="rcard cs-card"><div class="sub">🎨 Giao diện</div><div class="row" style="align-items:center"><button type="button" class="btn" data-theme-open>Chọn giao diện</button></div><div class="hint" style="min-height:0">Chọn bộ màu (Petrovietnam, iOS, Rừng xanh, Hoàng hôn, Tím, Đen trắng) và chế độ sáng / tối. Lưu riêng trên thiết bị này.</div></div>
+  return `<div class="rcard cs-card"><div class="sub">🎨 Giao diện</div><div class="row" style="align-items:center"><button type="button" class="btn" data-theme-open>Chọn giao diện</button></div><div class="hint" style="min-height:0">Chọn bộ màu (Petrovietnam, iOS, Rừng xanh, Hoàng hôn, Tím, Đen trắng, Gốc) và chế độ sáng / tối. Lưu riêng trên thiết bị này.</div></div>
     <div class="rcard cs-card"><div class="sub">🗑 Thùng rác chuyến tự dọn</div>
       <div class="row" style="align-items:flex-end">
         <div class="field" style="flex:1 1 160px"><label for="qPrefTrOff">Cách dọn</label><select id="qPrefTrOff"><option value="1"${off?'':' selected'}>Tự xoá hẳn sau số ngày</option><option value="0"${off?' selected':''}>Không tự xoá (chỉ xoá khi bấm Xoá hẳn)</option></select></div>
@@ -5657,7 +5676,7 @@ setInterval(()=>appUpdate(false),600000);
 
 <script>
 (function(){
-var SK=[['pv','Petrovietnam','#00a04b','#2e3a87'],['ios','iOS','#5ac8fa','#007aff'],['rung','Rừng xanh','#4ade80','#14532d'],['hoanghon','Hoàng hôn','#f59e0b','#9d174d'],['tim','Tím','#a78bfa','#4c1d95'],['mono','Đen trắng','#9ca3af','#111827']];
+var SK=[['pv','Petrovietnam','#00a04b','#2e3a87'],['ios','iOS','#5ac8fa','#007aff'],['rung','Rừng xanh','#4ade80','#14532d'],['hoanghon','Hoàng hôn','#f59e0b','#9d174d'],['tim','Tím','#a78bfa','#4c1d95'],['mono','Đen trắng','#9ca3af','#111827'],['goc','Gốc (xanh lá)','#51cf66','#2f9e44']];
 var MD=[['auto','🖥 Theo máy'],['light','☀️ Sáng'],['dark','🌙 Tối']];
 function get(k,d){try{return localStorage.getItem(k)||d;}catch(e){return d;}}
 function put(k,v){try{localStorage.setItem(k,v);}catch(e){}}

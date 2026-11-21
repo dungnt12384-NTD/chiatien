@@ -4582,7 +4582,7 @@ function tmgrHtml(){if(!admReady)return '<div class="hint">Đang tải danh sác
   const T=window.TM,V=tmView(),all=tmAll();
   const gsel=`<select id="tmG" aria-label="Lọc theo nhóm"><option value="">Tất cả nhóm</option>${admGroups.map(g=>`<option value="${esc(g.id)}"${T.g===g.id?' selected':''}>${esc(g.id===SYS_GROUP?'Chưa xếp nhóm':g.name)}</option>`).join('')}</select>`;
   const ssel=`<select id="tmS" aria-label="Lọc theo tình trạng"><option value="">Mọi tình trạng</option><option value="open"${T.st==='open'?' selected':''}>Đang mở</option><option value="closed"${T.st==='closed'?' selected':''}>Đã chốt sổ</option></select>`;
-  return `<div class="gcard"><div class="adm-h">🗂 Quản lý chuyến (${all.length})</div><div class="hint" style="min-height:0">Tick nhiều chuyến rồi chuyển vào một nhóm hoặc xoá một lần. Xoá = đưa vào Thùng rác, khôi phục lại được ở mục “Chuyến &amp; nhóm”.</div>
+  return `<div class="gcard"><div class="adm-h">🗂 Quản lý chuyến (${all.length})</div><div class="hint" style="min-height:0">Tick nhiều chuyến rồi chuyển vào một nhóm hoặc xoá một lần. Xoá = đưa vào Thùng rác, khôi phục lại được ở mục Thùng rác bên dưới.</div>
     <div class="row" style="gap:8px;align-items:center"><div class="field" style="flex:1 1 180px"><input type="search" id="tmQ" value="${esc(T.q)}" placeholder="🔍 Tìm tên chuyến, nhóm, thủ quỹ" autocapitalize="off" autocomplete="off" aria-label="Tìm chuyến"></div>${gsel}${ssel}</div>
     <label class="tm-all"><input type="checkbox" id="tmAll"> Chọn tất cả đang hiện (<span id="tmCnt">${V.length}</span>)</label>
     <div id="tmBar" class="tm-bar">${tmBarHtml()}</div>
@@ -4609,7 +4609,7 @@ async function slogLoad(more){const {data,error}=await sb.rpc('admin_trip_state_
 /* ===== v118: BẢNG ĐIỀU KHIỂN QUẢN TRỊ: 5 mục theo thứ tự ưu tiên =====
    🔔 Cần xử lý (báo sai, đã trả hộ, đổi tài khoản nhận, chuyến chưa xếp nhóm, cảnh báo) · 🧳 Chuyến & nhóm · 👥 Tài khoản & quyền · 🕘 Nhật ký (có tìm kiếm) · ⚙️ Cài đặt */
 let admSec='todo',LOGQ='',LOGF='all';
-const ADM_SECS=[['todo','🔔','Cần xử lý'],['trips','🧳','Chuyến & nhóm'],['tmgr','🗂','Quản lý chuyến'],['codes','🔗','Mã & link'],['accounts','👥','Tài khoản'],['log','🕘','Nhật ký'],['settings','⚙️','Cài đặt']];
+const ADM_SECS=[['todo','🔔','Cần xử lý'],['trips','🧳','Chuyến & nhóm'],['codes','🔗','Mã & link'],['accounts','👥','Tài khoản'],['log','🕘','Nhật ký'],['settings','⚙️','Cài đặt']];
 const ADM_SUBS={trips:[['groups','']],accounts:[['accounts','']],perm:[['perm','']],settings:[['notify','🔔 Thông báo'],['codes','🔑 Mã xem'],['backup','💾 Tài khoản & sao lưu']]};
 const LOG_FILTERS=[['all','📋 Tất cả'],['state','🔒 Sổ & tài khoản nhận'],['trip','🧳 Chuyến'],['money','💸 Chi tiêu'],['perm','👥 Quyền'],['grp','🗂 Nhóm & cài đặt']];
 function logCat(a){const e=a.entity,k=a.action;
@@ -4702,7 +4702,7 @@ function usrConsole(){
   else b=`<div class="gcard admin-card"><div class="adm-h">⚙️ Tài khoản &amp; sao lưu</div><div class="hint">Tài khoản đang đăng nhập, đồng bộ, phiên bản ứng dụng và sao lưu nằm ngay bên dưới.</div></div>`;
   return usrNav()+b;}
 function admConsole(){
-  let b;if(admSec==='todo')b=todoHtml();else if(admSec==='log')b=logSecHtml();else if(admSec==='trips')b=tripMngCard()+adminHtml()+trashEntry();else if(admSec==='tmgr')b=tmgrHtml();else if(admSec==='codes')b=featSecHtml();else b=adminHtml();
+  let b;if(admSec==='todo')b=todoHtml();else if(admSec==='log')b=logSecHtml();else if(admSec==='trips')b=tripMngCard()+adminHtml()+tmgrHtml()+trashEntry();else if(admSec==='codes')b=featSecHtml();else b=adminHtml();
   return admNav()+b;}
 function adminHtml(){
   const dis=admBusy?' disabled':'';
@@ -5243,7 +5243,7 @@ async function qAct(a,b){
       toast(bad.length?`Đã chuyển ${ok}, lỗi ${bad.length}: ${bad[0]}`:`Đã chuyển ${ok} chuyến sang “${g.name.replace(/ \(.*$/,'')}”.`);}}))});return;}
   if(a==='tmdel'){const S=tmSelected();if(!S.length){toast('Chưa chọn chuyến nào.');return;}
     const nm=S.slice(0,8).map(t=>'“'+t.name+'”').join(', ')+(S.length>8?` và ${S.length-8} chuyến khác`:'');
-    ask(`Xoá ${S.length} chuyến: ${nm}? Các chuyến này được đưa vào Thùng rác, khôi phục lại được ở mục “Chuyến & nhóm”.`,{title:`Xoá ${S.length} chuyến?`,ok:`Xoá ${S.length} chuyến`,danger:true,noLabel:'Không, giữ nguyên'},async()=>{
+    ask(`Xoá ${S.length} chuyến: ${nm}? Các chuyến này được đưa vào Thùng rác, khôi phục lại được ở mục Thùng rác.`,{title:`Xoá ${S.length} chuyến?`,ok:`Xoá ${S.length} chuyến`,danger:true,noLabel:'Không, giữ nguyên'},async()=>{
       admBusy=true;renderGroupTab();let ok=0;const bad=[];
       for(const t of S){const {error}=await sb.rpc('trash_trip',{gid:t.gid,tid:t.id});if(error)bad.push(t.name+': '+(ERR_VN[error.message]||error.message));else{ok++;delete TM.sel[t.id];}}
       admBusy=false;await admLoad();try{await loadGroups();}catch(e){}
@@ -6104,7 +6104,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v198',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v199',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){   /* chờ bản mới cài xong rồi mới tải lại (không xoá bộ nhớ đệm trước, tránh trang trắng ERR_FAILED) */
   try{const reg=await navigator.serviceWorker.getRegistration();if(reg){await reg.update().catch(()=>{});const w=reg.installing||reg.waiting;
       if(w&&w.state!=='activated'&&w.state!=='redundant')await new Promise(res=>{const t=setTimeout(res,6000);w.addEventListener('statechange',()=>{if(w.state==='activated'||w.state==='redundant'){clearTimeout(t);res();}});});}}catch(e){}

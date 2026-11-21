@@ -1593,6 +1593,19 @@ html.phone[data-ptable="grid"] .tablewrap td:first-child,html.phone[data-ptable=
 html.phone[data-ptable="grid"] .tablewrap td[data-label]::before,html.phone[data-ptable="grid"] #balBody tr.clk td[data-label]::before{content:none!important;display:none!important}
 html.phone[data-ptable="grid"] .tablewrap td+td,html.phone[data-ptable="grid"] .tablewrap th+th{border-left:1px solid var(--line)!important}
 html.phone[data-ptable="grid"] .tablewrap tr.det td{white-space:normal!important}
+/* Bảng quyền của chuyến trên điện thoại: mỗi dòng là 1 thẻ gọn (tài khoản / quyền / gắn từ đâu), không phải kéo ngang, ở cả hai kiểu hiện bảng */
+html.phone .tablewrap:has(table.perm-tbl){overflow:visible!important;border:0!important;border-radius:0!important}
+html.phone .tablewrap table.perm-tbl{display:block!important;width:100%!important;min-width:0!important;font-size:13.5px!important}
+html.phone .tablewrap table.perm-tbl thead{display:none!important}
+html.phone .tablewrap table.perm-tbl tbody{display:block!important}
+html.phone .tablewrap table.perm-tbl tr{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 12px!important;margin:0 0 8px;border:1px solid var(--line)!important;border-radius:12px!important;background:var(--surface)!important}
+html.phone .tablewrap table.perm-tbl td{display:block!important;border:0!important;padding:0!important;white-space:normal!important;text-align:left!important;overflow-wrap:anywhere;font-weight:400;font-size:13.5px!important}
+html.phone .tablewrap table.perm-tbl td::before{content:none!important;display:none!important}
+html.phone .tablewrap table.perm-tbl td:nth-child(1){grid-column:1;grid-row:1;font-weight:700}
+html.phone .tablewrap table.perm-tbl td:nth-child(2){grid-column:1;grid-row:2}
+html.phone .tablewrap table.perm-tbl td:nth-child(3){grid-column:1;grid-row:3;color:var(--muted);font-size:12px!important}
+html.phone .tablewrap table.perm-tbl td:nth-child(3)::before{content:"Gắn từ: "!important;display:inline!important}
+html.phone .tablewrap table.perm-tbl td:nth-child(4){grid-column:2;grid-row:1/4;align-self:start}
 /* ===== Giao diện "Gốc" (mẫu từ artifact thanhtu): một màu chủ đạo xanh lá, thẻ phẳng viền mảnh, thanh chuyến đặc màu, thanh tab dạng thẻ ===== */
 /* ===== Số dương (xanh) / số âm (đỏ) rõ ràng ở mọi bộ giao diện + chỉnh tương phản (đặt CUỐI để thắng các khối trên) ===== */
 :root[data-skin]{--pos:#15803d;--neg:#c62828;--pos-bg:#e6f6ec;--neg-bg:#fdeaea}
@@ -5897,7 +5910,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v183',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v184',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

@@ -1749,6 +1749,18 @@ html:not(.phone) table.perm-tbl tbody td{padding:9px 8px;border-block:1px solid 
 html:not(.phone) table.perm-tbl tbody td:first-child{border-left:4px solid var(--rc,var(--brand));border-radius:10px 0 0 10px;padding-left:10px}
 html:not(.phone) table.perm-tbl tbody td:last-child{border-right:1px solid var(--line);border-radius:0 10px 10px 0}
 html:not(.phone) table.perm-tbl thead th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border:0}
+
+/* Danh sách gợi ý email (gán người vào chuyến / thêm quản trị): bảng kính mờ trong suốt, sổ lên trên ô nhập */
+#accSug.acc-sug{position:fixed;z-index:2147483000;overflow:auto;overscroll-behavior:contain;padding:6px;border-radius:18px;color:var(--fg,#111);background:color-mix(in srgb,var(--surface,#fff) 76%,transparent);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);border:1px solid color-mix(in srgb,var(--line,#ccc) 65%,transparent);box-shadow:0 14px 40px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);animation:sugUp .16s ease-out}
+#accSug[data-dir="down"]{animation-name:sugDown}
+@keyframes sugUp{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes sugDown{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
+#accSug .sug-item{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:6px 10px;border:0;background:transparent;color:inherit;font:inherit;font-size:14.5px;text-align:left;border-radius:12px;cursor:pointer}
+#accSug .sug-item+.sug-item{box-shadow:0 -1px 0 color-mix(in srgb,var(--line,#ccc) 55%,transparent)}
+#accSug .sug-item:hover,#accSug .sug-item:active{background:color-mix(in srgb,var(--brand,var(--accent)) 16%,transparent)}
+#accSug .sug-av{flex:none;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--brand,var(--accent)),color-mix(in srgb,var(--brand,var(--accent)) 60%,#001))}
+#accSug .sug-t{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-weight:500}
+#accSug .sug-t mark{background:color-mix(in srgb,var(--brand,var(--accent)) 24%,transparent);color:inherit;border-radius:4px;padding:0 1px}
 </style>
 
 
@@ -4866,15 +4878,17 @@ async function admLoadAcc(){
     if(admAcc===null){admLoadAcc().then(()=>{if(cur===inp&&document.activeElement===inp)show(inp);}).catch(()=>{});return;}
     const L=list(inp);if(!L.length){if(box){box.remove();box=null;}return;}
     if(!box){box=document.createElement('div');box.id='accSug';box.setAttribute('role','listbox');
-      box.style.cssText='position:fixed;z-index:2147483000;max-height:220px;overflow:auto;background:var(--surface,#fff);color:var(--fg,#000);border:1px solid var(--line,#ccc);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:4px';
+      box.className='acc-sug';
       box.addEventListener('mousedown',e=>e.preventDefault());
       box.addEventListener('pointerdown',e=>e.preventDefault());
       box.addEventListener('click',e=>{const b=e.target.closest('[data-em]');if(!b||!cur)return;e.stopPropagation();const i=cur;picking=true;i.value=b.dataset.em;i.dispatchEvent(new Event('input',{bubbles:true}));hide();i.focus();picking=false;});
       document.body.appendChild(box);}
-    box.innerHTML=L.map(e=>`<button type="button" role="option" data-em="${esc(e)}" style="display:block;width:100%;text-align:left;padding:9px 10px;border:0;background:transparent;color:inherit;font:inherit;border-radius:8px;cursor:pointer;overflow-wrap:anywhere">${esc(e)}</button>`).join('');
-    const r=inp.getBoundingClientRect(),h=Math.min(220,L.length*40+8),below=innerHeight-r.bottom;
-    box.style.left=r.left+'px';box.style.width=r.width+'px';
-    if(below<h+10&&r.top>below){box.style.top='auto';box.style.bottom=(innerHeight-r.top+4)+'px';}else{box.style.bottom='auto';box.style.top=(r.bottom+4)+'px';}}
+    box.innerHTML=L.map(e=>`<button type="button" role="option" class="sug-item" data-em="${esc(e)}"><span class="sug-av" aria-hidden="true">${esc(e.charAt(0).toUpperCase())}</span><span class="sug-t">${fzMark(e,inp.value)}</span></button>`).join('');
+    /* ưu tiên sổ lên TRÊN ô nhập (bàn phím điện thoại che phía dưới); chỉ sổ xuống khi phía trên không đủ chỗ */
+    const r=inp.getBoundingClientRect(),vh=(window.visualViewport?visualViewport.height:innerHeight),h=Math.min(240,L.length*48+12),above=r.top-8,below=vh-r.bottom-8;
+    const w=Math.min(Math.max(r.width,260),innerWidth-16);box.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+'px';box.style.width=w+'px';
+    if(above>=Math.min(h,140)||above>=below){box.style.maxHeight=Math.max(96,Math.min(240,above))+'px';box.style.top='auto';box.style.bottom=(innerHeight-r.top+6)+'px';box.dataset.dir='up';}
+    else{box.style.maxHeight=Math.max(96,Math.min(240,below))+'px';box.style.bottom='auto';box.style.top=(r.bottom+6)+'px';box.dataset.dir='down';}}
   document.addEventListener('focusin',e=>{if(e.target&&ids.includes(e.target.id)){clearTimeout(hideT);show(e.target);}});
   document.addEventListener('input',e=>{if(e.target&&ids.includes(e.target.id))show(e.target);});
   document.addEventListener('focusout',e=>{if(e.target&&ids.includes(e.target.id)){hideT=setTimeout(hide,200);}});

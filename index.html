@@ -1582,6 +1582,17 @@ html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;bo
 .skin-modes{display:flex;gap:8px;flex-wrap:wrap}
 .skin-modes .skin-opt{flex:1 1 90px;justify-content:center}
 .skin-close{margin-top:16px;width:100%}
+/* Bảng trên điện thoại: chọn "Dạng bảng" (data-ptable="grid") để bảng giống máy tính, cuộn ngang nếu rộng */
+html.phone[data-ptable="grid"] .tablewrap{border:1px solid var(--line)!important;overflow-x:auto!important;border-radius:12px}
+html.phone[data-ptable="grid"] .tablewrap table:not(.log-tbl){display:table!important;width:max-content!important;min-width:100%!important;font-size:13px}
+html.phone[data-ptable="grid"] .tablewrap thead{display:table-header-group!important}
+html.phone[data-ptable="grid"] .tablewrap tbody{display:table-row-group!important}
+html.phone[data-ptable="grid"] .tablewrap tr,html.phone[data-ptable="grid"] #balBody tr.clk{display:table-row!important;border:0!important;border-radius:0!important;padding:0!important;background:transparent}
+html.phone[data-ptable="grid"] .tablewrap td,html.phone[data-ptable="grid"] .tablewrap th,html.phone[data-ptable="grid"] #balBody tr.clk td{display:table-cell!important;padding:7px 9px!important;white-space:nowrap!important;text-align:right;font-weight:inherit;font-size:13px;grid-column:auto!important}
+html.phone[data-ptable="grid"] .tablewrap td:first-child,html.phone[data-ptable="grid"] .tablewrap th:first-child,html.phone[data-ptable="grid"] #balBody tr.clk td:nth-child(2){text-align:left!important;font-weight:600}
+html.phone[data-ptable="grid"] .tablewrap td[data-label]::before,html.phone[data-ptable="grid"] #balBody tr.clk td[data-label]::before{content:none!important;display:none!important}
+html.phone[data-ptable="grid"] .tablewrap td+td,html.phone[data-ptable="grid"] .tablewrap th+th{border-left:1px solid var(--line)!important}
+html.phone[data-ptable="grid"] .tablewrap tr.det td{white-space:normal!important}
 /* ===== Giao diện "Gốc" (mẫu từ artifact thanhtu): một màu chủ đạo xanh lá, thẻ phẳng viền mảnh, thanh chuyến đặc màu, thanh tab dạng thẻ ===== */
 /* ===== Số dương (xanh) / số âm (đỏ) rõ ràng ở mọi bộ giao diện + chỉnh tương phản (đặt CUỐI để thắng các khối trên) ===== */
 :root[data-skin]{--pos:#15803d;--neg:#c62828;--pos-bg:#e6f6ec;--neg-bg:#fdeaea}
@@ -5897,7 +5908,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v173',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v174',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
@@ -5917,11 +5928,12 @@ setInterval(()=>appUpdate(false),600000);
 <script>
 (function(){
 var SK=[['pv','Petrovietnam','#00a04b','#2e3a87'],['ios','iOS','#5ac8fa','#007aff'],['rung','Rừng xanh','#4ade80','#14532d'],['hoanghon','Hoàng hôn','#f59e0b','#9d174d'],['tim','Tím','#a78bfa','#4c1d95'],['mono','Đen trắng','#9ca3af','#111827'],['phang','Phẳng xanh','#60a5fa','#2563eb'],['giay','Giấy ấm','#e0b074','#8a4b1c'],['kinh','Kính mờ','#38bdf8','#a855f7']];
+var PT=[['','🃏 Dạng thẻ (xếp dọc)'],['grid','▦ Dạng bảng như máy tính']];
 var WD=[['','Hiện tại'],['wide','Rộng hơn'],['full','Tràn màn hình']];
 var MD=[['auto','🖥 Theo máy'],['light','☀️ Sáng'],['dark','🌙 Tối']];
 function get(k,d){try{return localStorage.getItem(k)||d;}catch(e){return d;}}
 function put(k,v){try{localStorage.setItem(k,v);}catch(e){}}
-function apply(){var s=get('ctn-skin','pv'),m=get('ctn-mode','auto'),w=get('ctn-width',''),h=document.documentElement;if(w)h.setAttribute('data-width',w);else h.removeAttribute('data-width');
+function apply(){var s=get('ctn-skin','pv'),m=get('ctn-mode','auto'),w=get('ctn-width',''),h=document.documentElement;var pt=get("ctn-ptable","");if(pt)h.setAttribute("data-ptable",pt);else h.removeAttribute("data-ptable");if(w)h.setAttribute('data-width',w);else h.removeAttribute('data-width');
   if(s==='pv')h.removeAttribute('data-skin');else h.setAttribute('data-skin',s);
   if(m==='light'||m==='dark')h.setAttribute('data-theme',m);else h.removeAttribute('data-theme');
   try{var bg=getComputedStyle(h).getPropertyValue('--bg').trim();if(bg)document.querySelectorAll('meta[name="theme-color"]').forEach(function(x){x.setAttribute('content',bg);});}catch(e){}}
@@ -5930,6 +5942,7 @@ function onKey(e){if(e.key==='Escape'){e.stopPropagation();close();}}
 function paint(){var o=document.getElementById('skinOv');if(!o)return;var s=get('ctn-skin','pv'),m=get('ctn-mode','auto');
   o.querySelectorAll('[data-sk]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sk')===s));});
   o.querySelectorAll('[data-md]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-md')===m));});}
+function paintP(){var o=document.getElementById('skinOv');if(!o)return;var w=get('ctn-ptable','');o.querySelectorAll('[data-pt]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-pt')===w));});}
 function paintW(){var o=document.getElementById('skinOv');if(!o)return;var w=get('ctn-width','');o.querySelectorAll('[data-wd]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-wd')===w));});}
 function open(){close();var o=document.createElement('div');o.id='skinOv';o.className='skin-ov';
   var h='<div class="skin-dlg" role="dialog" aria-modal="true" aria-label="Chọn giao diện"><h3>🎨 Giao diện</h3><div class="hint" style="min-height:0;color:var(--muted);font-size:13px">Chọn bộ màu và chế độ sáng / tối. Lưu riêng trên thiết bị này.</div><div class="sk-h">Bộ màu</div><div class="skin-grid">';
@@ -5938,11 +5951,13 @@ function open(){close();var o=document.createElement('div');o.id='skinOv';o.clas
   MD.forEach(function(x){h+='<button type="button" class="skin-opt" data-md="'+x[0]+'">'+x[1]+'</button>';});
   h+='</div><div class="sk-h">Độ rộng trang (máy tính / iPad)</div><div class="skin-modes">';
   WD.forEach(function(x){h+='<button type="button" class="skin-opt" data-wd="'+x[0]+'">'+x[1]+'</button>';});
+  if(document.documentElement.classList.contains('phone')){h+='</div><div class="sk-h">Bảng trên điện thoại</div><div class="skin-modes">';PT.forEach(function(x){h+='<button type="button" class="skin-opt" data-pt="'+x[0]+'">'+x[1]+'</button>';});}
   h+='</div><button type="button" class="btn skin-close">Xong</button></div>';
-  o.innerHTML=h;document.body.appendChild(o);paint();paintW();document.addEventListener('keydown',onKey,true);
+  o.innerHTML=h;document.body.appendChild(o);paint();paintW();paintP();document.addEventListener('keydown',onKey,true);
   o.addEventListener('click',function(e){var t=e.target;if(t===o){close();return;}
     var b=t.closest&&t.closest('[data-sk]');if(b){put('ctn-skin',b.getAttribute('data-sk'));apply();paint();return;}
     b=t.closest&&t.closest('[data-md]');if(b){put('ctn-mode',b.getAttribute('data-md'));apply();paint();return;}
+    b=t.closest&&t.closest('[data-pt]');if(b){put('ctn-ptable',b.getAttribute('data-pt'));apply();paintP();return;}
     b=t.closest&&t.closest('[data-wd]');if(b){put('ctn-width',b.getAttribute('data-wd'));apply();paintW();return;}
     if(t.closest&&t.closest('.skin-close'))close();});}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-theme-open]');if(b){e.preventDefault();open();}});

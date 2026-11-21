@@ -316,6 +316,7 @@ textarea.codebox{width:100%;border:1px solid var(--line);border-radius:10px;back
 .pend-chip{padding:3px 12px 3px 4px}
 #gclear{position:fixed;z-index:150;width:26px;height:26px;border-radius:50%;border:0;background:var(--line);color:var(--fg);font-size:18px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
 #gclear:hover{background:var(--nb-bg)}
+input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;display:none}
 input[type=text]:not([readonly]){padding-right:36px}
 .mchip.msel{border-color:var(--neg);background:var(--neg-bg);box-shadow:0 0 0 2px color-mix(in srgb,var(--neg) 30%,transparent)}
 #advKpi .kpi.big{grid-column:1/-1}
@@ -3033,7 +3034,7 @@ function addClear(sel){const i=$(sel);if(!i||i.parentNode.classList.contains('sb
 /* nút × xoá nhanh cho mọi ô nhập chữ/số (hiện khi bấm vào ô có nội dung) */
 (function(){const GC=document.createElement('button');GC.type='button';GC.id='gclear';GC.hidden=true;GC.textContent='×';GC.setAttribute('aria-label','Xoá nội dung ô này');GC.title='Xoá nội dung ô này';document.body.appendChild(GC);
   let cur=null,GCtap=false;
-  const ok=t=>t&&t.matches&&t.matches('input[type=text]')&&!t.readOnly&&!t.disabled&&!t.closest('.sbox');
+  const ok=t=>t&&t.matches&&t.matches('input[type=text],input[type=search]')&&!t.readOnly&&!t.disabled&&!t.closest('.sbox');
   function pos(){const t=cur;if(!t||!document.contains(t)||!t.value){GC.hidden=true;return;}
     const r=t.getBoundingClientRect();if(r.width<60||r.bottom<0||r.top>innerHeight){GC.hidden=true;return;}
     GC.hidden=false;GC.style.left=(r.right-34)+'px';GC.style.top=(r.top+r.height/2-13)+'px';}
@@ -5872,7 +5873,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v170',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v171',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

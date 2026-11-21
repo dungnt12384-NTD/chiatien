@@ -4521,7 +4521,7 @@ async function slogLoad(more){const {data,error}=await sb.rpc('admin_trip_state_
 /* ===== v118: BẢNG ĐIỀU KHIỂN QUẢN TRỊ: 5 mục theo thứ tự ưu tiên =====
    🔔 Cần xử lý (báo sai, đã trả hộ, đổi tài khoản nhận, chuyến chưa xếp nhóm, cảnh báo) · 🧳 Chuyến & nhóm · 👥 Tài khoản & quyền · 🕘 Nhật ký (có tìm kiếm) · ⚙️ Cài đặt */
 let admSec='todo',LOGQ='',LOGF='all';
-const ADM_SECS=[['todo','🔔','Cần xử lý'],['trips','🧳','Chuyến & nhóm'],['codes','🔗','Mã & link'],['accounts','👥','Tài khoản'],['log','🕘','Nhật ký'],['settings','⚙️','Cài đặt']];
+const ADM_SECS=[['todo','🔔','Cần xử lý'],['perm','🔎','Tra cứu quyền'],['trips','🧳','Chuyến & nhóm'],['codes','🔗','Mã & link'],['accounts','👥','Tài khoản'],['log','🕘','Nhật ký'],['settings','⚙️','Cài đặt']];
 const ADM_SUBS={trips:[['groups','']],accounts:[['accounts','']],perm:[['perm','']],settings:[['notify','🔔 Thông báo'],['codes','🔑 Mã xem'],['backup','💾 Tài khoản & sao lưu']]};
 const LOG_FILTERS=[['all','📋 Tất cả'],['state','🔒 Sổ & tài khoản nhận'],['trip','🧳 Chuyến'],['money','💸 Chi tiêu'],['perm','👥 Quyền'],['grp','🗂 Nhóm & cài đặt']];
 function logCat(a){const e=a.entity,k=a.action;
@@ -4576,7 +4576,7 @@ function todoHtml(){const C=admCounts(),T=admTrips(),op=T.filter(t=>!t.closed).l
     reportsCard()+claimsCard()+bankReqCard()+unsortedHtml()+alertsHtml()+mySentCard()+mySentRepCard()+
     `<div class="gcard"><div class="adm-h">🔒 Chốt sổ · mở sổ · đổi tài khoản gần đây</div><div class="hist-scroll log-grid" data-rows="6">${auditHtml(rec,true)}</div><div class="row"><button type="button" class="btn ghost small" data-q="asec" data-v="log">Xem toàn bộ nhật ký</button></div></div>`;}
 function admNav(){const C=admCounts();
-  return `<div class="adm-nav adm-nav-top" role="tablist" aria-label="Tra cứu quyền"><button type="button" role="tab" aria-pressed="${admSec==='perm'}" data-q="asec" data-v="perm"><span class="ic">🔎</span><span>Tra cứu quyền</span></button></div><div class="adm-nav" role="tablist" aria-label="Các mục quản trị">`+ADM_SECS.map(s=>`<button type="button" role="tab" aria-pressed="${admSec===s[0]}" data-q="asec" data-v="${s[0]}"><span class="ic">${s[1]}</span><span>${s[2]}</span>${s[0]==='todo'&&C.todo?`<span class="cnt">${C.todo}</span>`:''}</button>`).join('')+`</div>`;}
+  return `<div class="adm-nav" role="tablist" aria-label="Các mục quản trị">`+ADM_SECS.map(s=>`<button type="button" role="tab" aria-pressed="${admSec===s[0]}" data-q="asec" data-v="${s[0]}"><span class="ic">${s[1]}</span><span>${s[2]}</span>${s[0]==='todo'&&C.todo?`<span class="cnt">${C.todo}</span>`:''}</button>`).join('')+`</div>`;}
 /* ===== Bảng điều khiển cho tài khoản thường: cùng kiểu với quản trị viên (thanh mục + thẻ tiêu đề), chỉ gồm 3 mục của người dùng ===== */
 let usrSec='todo';
 const USR_SECS=[['todo','🔔','Cần xử lý'],['trips','🧳','Chuyến'],['codes','🔗','Mã & link'],['set','⚙️','Tài khoản']];
@@ -5982,7 +5982,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v186',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v187',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

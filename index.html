@@ -1795,6 +1795,14 @@ html.phone details.ptrip .hint{font-size:11.5px;margin:2px 0}
 html.phone details.ptrip>.row{margin:2px 0 0}
 details.ptrip>summary.ptrip-s{min-height:30px}
 html:not(.phone) table.perm-tbl tbody td{padding:6px 8px}
+/* điện thoại: nút gỡ ✕ nổi ở góc phải trên, không chiếm chỗ trong lưới => thẻ có nút và thẻ không có nút cao bằng nhau, hai dòng sát nhau */
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl tr{position:relative;display:block!important;padding:6px 10px 6px 11px!important}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl tr:has(.p-rm){padding-right:42px!important}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td{display:block!important;margin:0!important}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(2){margin-top:2px!important}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(4),html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl.perm-tbl3 td:nth-child(3){position:absolute!important;top:50%;right:8px;transform:translateY(-50%);width:auto!important}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl .pbadges{margin:0;gap:4px}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td .badge{display:inline-block;margin:0}
 
 /* Danh sách gợi ý email: giống bảng chọn chuyến của iPhone (kính mờ đậm, bo lớn, chữ to, dấu ✓), sổ lên trên ô nhập */
 #accSug.acc-sug{position:fixed;z-index:2147483000;overflow:auto;overscroll-behavior:contain;padding:6px 0;border-radius:28px;color:var(--fg,#111);background:color-mix(in srgb,var(--surface,#fff) 68%,transparent);-webkit-backdrop-filter:saturate(200%) blur(30px);backdrop-filter:saturate(200%) blur(30px);border:1px solid color-mix(in srgb,#fff 55%,transparent);box-shadow:0 18px 50px rgba(15,23,42,.32),0 2px 8px rgba(15,23,42,.10);animation:sugUp .16s ease-out}
@@ -6044,7 +6052,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v193',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v194',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

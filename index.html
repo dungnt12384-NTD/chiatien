@@ -4778,20 +4778,20 @@ async function admLoadAcc(){
   else{admAcc=data||[];admAccErr='';}
   if(curTab==='group')renderGroupTab();}
 /* gợi ý email từ danh sách tài khoản (quản trị viên) cho ô Email khi gán quyền / thêm quản trị; tự vẽ, không dùng datalist vì Chrome hay không hiện trong hộp thoại */
-(function(){let box=null,cur=null,hideT=0;
+(function(){let box=null,cur=null,hideT=0,picking=false;
   const ids=['dlgEmail','qAdm','qPAddE'];
   function list(inp){const q=inp.value.trim();const have=inp.id==='dlgEmail'?new Set((tPeople||[]).map(p=>p.email)):new Set();
     const set=new Set((admAcc||[]).map(a=>a.email));(window.PERM||[]).forEach(r=>{if(r.email)set.add(r.email);});
     return [...set].filter(e=>e&&!have.has(e)&&fz(e,q)).sort().slice(0,60);}
   function hide(){if(box){box.remove();box=null;}cur=null;}
-  function show(inp){if(!sbAdmin)return;cur=inp;
+  function show(inp){if(!sbAdmin||picking)return;cur=inp;
     if(admAcc===null){admLoadAcc().then(()=>{if(cur===inp&&document.activeElement===inp)show(inp);}).catch(()=>{});return;}
     const L=list(inp);if(!L.length){if(box){box.remove();box=null;}return;}
     if(!box){box=document.createElement('div');box.id='accSug';box.setAttribute('role','listbox');
       box.style.cssText='position:fixed;z-index:2147483000;max-height:220px;overflow:auto;background:var(--surface,#fff);color:var(--fg,#000);border:1px solid var(--line,#ccc);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:4px';
       box.addEventListener('mousedown',e=>e.preventDefault());
       box.addEventListener('pointerdown',e=>e.preventDefault());
-      box.addEventListener('click',e=>{const b=e.target.closest('[data-em]');if(!b||!cur)return;const i=cur;i.value=b.dataset.em;i.dispatchEvent(new Event('input',{bubbles:true}));hide();i.focus();i.dispatchEvent(new Event('focusin',{bubbles:true}));});
+      box.addEventListener('click',e=>{const b=e.target.closest('[data-em]');if(!b||!cur)return;e.stopPropagation();const i=cur;picking=true;i.value=b.dataset.em;i.dispatchEvent(new Event('input',{bubbles:true}));hide();i.focus();picking=false;});
       document.body.appendChild(box);}
     box.innerHTML=L.map(e=>`<button type="button" role="option" data-em="${esc(e)}" style="display:block;width:100%;text-align:left;padding:9px 10px;border:0;background:transparent;color:inherit;font:inherit;border-radius:8px;cursor:pointer;overflow-wrap:anywhere">${esc(e)}</button>`).join('');
     const r=inp.getBoundingClientRect(),h=Math.min(220,L.length*40+8),below=innerHeight-r.bottom;
@@ -5890,7 +5890,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v180',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v181',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

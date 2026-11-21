@@ -3026,7 +3026,7 @@ function addClear(sel){const i=$(sel);if(!i||i.parentNode.classList.contains('sb
 /* nút × xoá nhanh cho mọi ô nhập chữ/số (hiện khi bấm vào ô có nội dung) */
 (function(){const GC=document.createElement('button');GC.type='button';GC.id='gclear';GC.hidden=true;GC.textContent='×';GC.setAttribute('aria-label','Xoá nội dung ô này');GC.title='Xoá nội dung ô này';document.body.appendChild(GC);
   let cur=null,GCtap=false;
-  const ok=t=>t&&t.matches&&t.matches('input[type=text],input[type=search]')&&!t.readOnly&&!t.disabled&&!t.closest('.sbox');
+  const ok=t=>t&&t.matches&&t.matches('input[type=text],input[type=search],input[type=email]')&&!t.readOnly&&!t.disabled&&!t.closest('.sbox');
   function pos(){const t=cur;if(!t||!document.contains(t)||!t.value){GC.hidden=true;return;}
     const r=t.getBoundingClientRect();if(r.width<60||r.bottom<0||r.top>innerHeight){GC.hidden=true;return;}
     GC.hidden=false;GC.style.left=(r.right-34)+'px';GC.style.top=(r.top+r.height/2-13)+'px';}
@@ -4707,7 +4707,7 @@ function permHtml(){
   const rmBtn=r=>`<button type="button" class="btn ghost small p-rm" data-q="prm2" data-t="${esc(r.trip_id)}" data-e="${esc(r.email)}" data-n="${esc(r.trip_name||'')}" title="Gỡ quyền ${r.role==='leader'?'thủ quỹ':r.role==='viewer'?'người xem':'người hỗ trợ'}" aria-label="Gỡ quyền">✕</button>`;
   const D=window.PADD||{},pr=D.r||'leader';
   const addForm=(tid,email)=>{const tripSel=tid?'':`<div class="field" style="flex:1 1 200px"><label for="qPAddT">Chuyến</label><select id="qPAddT"><option value="">— Chọn chuyến —</option>${admGroups.map(g=>{const ts=((admOv[g.id]||{}).trips||[]);return ts.length?`<optgroup label="${esc(g.name)}">${ts.map(t=>`<option value="${esc(t.id)}"${D.t===t.id?' selected':''}>${esc(t.name)}${t.closed?' (đã chốt)':''}</option>`).join('')}</optgroup>`:'';}).join('')}</select></div>`;
-    const emailIn=email?'':`<div class="field" style="flex:1 1 200px"><label for="qPAddE">Email</label><input type="email" id="qPAddE" list="pAccList" value="${esc(D.e||'')}" placeholder="email@gmail.com" autocapitalize="off" autocomplete="off"></div><datalist id="pAccList">${accs.map(a=>`<option value="${esc(a.email)}">`).join('')}</datalist>`;
+    const emailIn=email?'':`<div class="field" style="flex:1 1 200px"><label for="qPAddE">Email</label><input type="email" id="qPAddE" value="${esc(D.e||'')}" placeholder="email@gmail.com" autocapitalize="off" autocomplete="off"></div>`;
     return `<div class="perm-add"><div class="sub">＋ ${tid?'Gán người cho chuyến này':'Gán tài khoản này vào chuyến'}</div><div class="row" style="align-items:flex-end;gap:8px">${emailIn}${tripSel}
       <div class="field" style="flex:1 1 150px"><label for="qPAddR">Vai trò</label><select id="qPAddR"><option value="leader"${pr==='leader'?' selected':''}>Thủ quỹ</option><option value="helper"${pr==='helper'?' selected':''}>Người hỗ trợ</option><option value="viewer"${pr==='viewer'?' selected':''}>Người xem (chỉ xem)</option></select></div>
       <button type="button" class="btn small" data-q="padd2"${tid?` data-t="${esc(tid)}"`:''}${email?` data-e="${esc(email)}"`:''}>Gán</button></div>
@@ -4779,9 +4779,10 @@ async function admLoadAcc(){
   if(curTab==='group')renderGroupTab();}
 /* gợi ý email từ danh sách tài khoản (quản trị viên) cho ô Email khi gán quyền / thêm quản trị; tự vẽ, không dùng datalist vì Chrome hay không hiện trong hộp thoại */
 (function(){let box=null,cur=null,hideT=0;
-  const ids=['dlgEmail','qAdm'];
-  function list(inp){const q=inp.value.trim().toLowerCase();const have=inp.id==='dlgEmail'?new Set((tPeople||[]).map(p=>p.email)):new Set();
-    return (admAcc||[]).map(a=>a.email).filter(e=>e&&!have.has(e)&&(!q||e.toLowerCase().includes(q))).slice(0,40);}
+  const ids=['dlgEmail','qAdm','qPAddE'];
+  function list(inp){const q=inp.value.trim();const have=inp.id==='dlgEmail'?new Set((tPeople||[]).map(p=>p.email)):new Set();
+    const set=new Set((admAcc||[]).map(a=>a.email));(window.PERM||[]).forEach(r=>{if(r.email)set.add(r.email);});
+    return [...set].filter(e=>e&&!have.has(e)&&fz(e,q)).sort().slice(0,60);}
   function hide(){if(box){box.remove();box=null;}cur=null;}
   function show(inp){if(!sbAdmin)return;cur=inp;
     if(admAcc===null){admLoadAcc().then(()=>{if(cur===inp&&document.activeElement===inp)show(inp);}).catch(()=>{});return;}
@@ -5889,7 +5890,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v178',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v179',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

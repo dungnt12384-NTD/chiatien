@@ -4648,7 +4648,7 @@ const ROLE_TIP=[
   [/Quản trị viên/,'Quản trị viên: toàn quyền hệ thống – mọi nhóm, mọi chuyến, tài khoản, cài đặt, thùng rác nhóm.'],
   [/Được tạo chuyến/,'Được tạo chuyến: quản trị viên cho phép tạo chuyến mới trong nhóm; người tạo tự làm Thủ quỹ chuyến đó. Không xem hay sửa được chuyến của người khác.'],
   [/Thủ quỹ/,'Thủ quỹ: toàn quyền 1 chuyến – sửa mọi mục, thêm / gỡ thủ quỹ và người hỗ trợ, mã chuyến, link công khai, chốt sổ, xoá / khôi phục chuyến, xử lý báo sai.'],
-  [/(Người )?[Hh]ỗ trợ/,'Người hỗ trợ: chỉ nhập / sửa ở các mục được tick (Người đi, Đã đóng, Phòng, Khoản chi); tạo link công khai, xử lý báo sai. Không thêm / gỡ người, không đổi mã, không chốt sổ, không xoá chuyến.'],
+  [/(Người )?[Hh]ỗ trợ/,'Người hỗ trợ: chỉ nhập / sửa ở các mục được tick (Người đi, Đã đóng, Phòng, Khoản chi); xử lý báo sai (không xem được mã chuyến và link công khai). Không thêm / gỡ người, không đổi mã, không chốt sổ, không xoá chuyến.'],
   [/Người xem/,'Người xem: được thủ quỹ / quản trị viên gán theo email; xem toàn bộ chuyến, không sửa được; vẫn gửi được "Báo sai" và "Tôi đã trả".'],
   [/[Cc]hỉ xem|[Xx]em bằng mã/,'Chỉ xem: xem toàn bộ chuyến, không sửa được; thấy sai thì bấm "Báo sai" để thủ quỹ sửa.']];
 function roleTipOf(txt){txt=String(txt||'').trim();if(!txt||txt.length>90)return '';const r=ROLE_TIP.find(x=>x[0].test(txt));return r?r[1]:'';}
@@ -5103,7 +5103,7 @@ function renderTripExtra(){
     <div class="row tx-row">
       <button type="button" class="btn ghost small" data-tx="reports">${hr?'Báo sai'+(rc?` <span class="cnt">${rc}</span>`:''):'Báo sai'}</button>
       ${ld||!cl?`<button type="button" class="btn ghost small" data-tx="claims">${ld?'Đã trả hộ'+(clCount.get(t.id)?` <span class="cnt">${clCount.get(t.id)}</span>`:''):'Tôi đã trả'}</button>`:''}
-      ${ed?`<button type="button" class="btn ghost small${cWarn?' code-warn':''}" data-tx="code"${cWarn?` title="Mã chuyến đang ${cTxt}: người có mã không vào xem được"`:''}>${cWarn?'⚠️ ':''}Mã chuyến${cWarn?' ('+cTxt+')':''}</button><button type="button" class="btn ghost small" data-tx="share">Link công khai</button>`:''}
+      ${ld?`<button type="button" class="btn ghost small${cWarn?' code-warn':''}" data-tx="code"${cWarn?` title="Mã chuyến đang ${cTxt}: người có mã không vào xem được"`:''}>${cWarn?'⚠️ ':''}Mã chuyến${cWarn?' ('+cTxt+')':''}</button><button type="button" class="btn ghost small" data-tx="share">Link công khai</button>`:''}
       ${ld?`<button type="button" class="btn ghost small" data-tx="${cl?'reopen':'close'}">${cl?'Mở lại sổ':'Chốt sổ'}</button>`:''}
     </div></div>`;}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-tx]');if(!b)return;ev.preventDefault();
@@ -5155,6 +5155,7 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
         const {error}=await sb.rpc('close_trip',{tid:t.id,p_close:cl});
         if(error){toast('Chưa làm được: '+(ERR_VN[error.message]||error.message));return;}
         const r=tripRoles.get(t.id);if(r)r.closed_at=cl?new Date().toISOString():null;applyLocks();renderTripExtra();try{render();}catch(e){}toast(cl?'Đã chốt sổ. Mã QR chuyển khoản đã hiện, tài khoản nhận đã khoá.':'Đã mở lại sổ.');});return;}
+  if((a==='code'||a==='share')&&!canLead()){toast('Chỉ thủ quỹ và quản trị viên mới xem được mã chuyến và link công khai.');return;}
   openDlg(a);});
 
 /* ---------- hộp thoại ---------- */
@@ -5845,7 +5846,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v168',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v169',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

@@ -1650,6 +1650,45 @@ details.ptrip[open]>summary.ptrip-s{padding-bottom:5px}
 .tm-row input{flex:none;width:20px;height:20px;margin-top:2px}
 .tm-t{min-width:0;display:flex;flex-direction:column;gap:1px;overflow-wrap:anywhere}
 .tm-t small{color:var(--muted);font-size:12px}
+/* v200: Chuyến & nhóm (quản trị) – một danh sách thư mục */
+.tsec-h{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.tsec-h .adm-h{margin:0}
+.tsec-b{display:flex;gap:6px;flex-wrap:wrap}
+.tsec-f{gap:8px;align-items:center}
+.tsec-f select{flex:0 1 auto;min-width:140px}
+.tm-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 10px;padding:2px 2px;border:0;background:transparent}
+.tm-bar.on{position:sticky;top:6px;z-index:5;padding:8px 10px;border-radius:12px;background:var(--surface);border:1.5px solid var(--accent);box-shadow:0 6px 18px rgba(16,24,40,.14)}
+.tf-tree{display:flex;flex-direction:column;gap:8px}
+.tf-tree .tf{padding:0!important;overflow:hidden;border-radius:12px}
+.tf-h{display:flex;align-items:center;gap:8px;padding:8px 10px}
+.tf-ck,.tf-row input.tm-ck{flex:none;width:19px;height:19px;margin:0;accent-color:var(--accent)}
+.tf-ck0{flex:none;width:19px}
+.tf-tog{all:unset;box-sizing:border-box;flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer}
+.tf-tog .chev{flex:none;transition:transform .15s;color:var(--muted)}
+.tf-tog[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.tf-n{display:flex;flex-direction:column;min-width:0}
+.tf-n b{font-size:14.5px;overflow-wrap:anywhere}
+.tf-n small{font-size:12px;color:var(--muted)}
+.tf-gc{flex:none}
+.tf-gc .badge{font-size:11px}
+.tf-set{flex:none;min-width:36px;padding-inline:8px}
+.tf-sys{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))!important}
+.tf-list{border-top:1px solid var(--line)}
+.tf-row{display:flex;align-items:center;gap:8px;padding:7px 10px 7px 10px;border-bottom:1px solid var(--line)}
+.tf-row:last-child{border-bottom:0}
+.tf-row.on{background:var(--brand-bg,rgba(0,122,255,.08))}
+.tf-l{flex:1 1 auto;min-width:0;display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.tf-l input{margin-top:2px!important}
+.tf-l .tm-t b{font-weight:600;font-size:14px}
+.tf-bd{display:flex;flex-wrap:wrap;gap:4px}
+.tf-bd:empty{display:none}
+.tf-bd .badge{font-size:11px;padding:0 7px}
+.tf-act{flex:none;display:flex;gap:4px}
+.tf-act .btn{min-height:32px;padding:0 10px}
+.tf-more{font-weight:800;letter-spacing:1px}
+.tf .mng-panel{border-top:1px solid var(--line);padding:8px 10px}
+html.phone .tf-gc{display:none}
+html.phone .tf-act .btn{padding:0 8px}
 /* bảng 3 cột (Tài khoản | Quyền | ✕) của khung nhóm */
 table.perm-tbl.perm-tbl3 th:nth-child(1){width:50%}table.perm-tbl.perm-tbl3 th:nth-child(2){width:38%}table.perm-tbl.perm-tbl3 th:nth-child(3){width:56px}
 table.perm-tbl.perm-tbl3 td:nth-child(3){text-align:center;padding-inline:4px!important}
@@ -4574,7 +4613,7 @@ function tmAll(){const L=[];admGroups.forEach(g=>((admOv[g.id]||{}).trips||[]).f
 function tmView(){const T=window.TM;return tmAll().filter(t=>(!T.g||t.gid===T.g)&&(!T.st||(T.st==='closed')===t.closed)&&fz(t.name+' '+t.gname+' '+t.leaders.join(' '),T.q));}
 function tmSelected(){const all=tmAll(),s=window.TM.sel;return all.filter(t=>s[t.id]);}
 function tmBarHtml(){const n=tmSelected().length,dis=admBusy?' disabled':'';
-  return n?`<b>Đã chọn ${n} chuyến</b><span class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn small" data-q="tmmove"${dis}>📁 Chuyển vào nhóm…</button><button type="button" class="btn small danger" data-q="tmdel"${dis}>🗑 Xoá ${n} chuyến</button><button type="button" class="btn ghost small" data-q="tmclear">Bỏ chọn</button></span>`:'<span class="hint" style="min-height:0">Tick các chuyến cần chuyển nhóm hoặc xoá.</span>';}
+  return n?`<b>Đã chọn ${n} chuyến</b><span class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn small" data-q="tmmove"${dis}>📁 Chuyển vào nhóm…</button><button type="button" class="btn small danger" data-q="tmdel"${dis}>🗑 Xoá ${n} chuyến</button><button type="button" class="btn ghost small" data-q="tmclear">Bỏ chọn</button></span>`:'<span class="hint" style="min-height:0">☑️ Tick ô trước chuyến (hoặc ô của cả nhóm) để chuyển nhóm hay xoá nhiều chuyến một lần.</span>';}
 function tmListHtml(){const V=tmView(),T=window.TM;
   if(!V.length)return '<div class="hint">Không có chuyến nào khớp.</div>';
   return V.map(t=>`<label class="tm-row"><input type="checkbox" class="tm-ck" value="${esc(t.id)}"${T.sel[t.id]?' checked':''}><span class="tm-t"><b>${fzMark(t.name,T.q)}</b>${t.closed?' <span class="badge">đã chốt sổ</span>':''}<small>${fzMark(t.gname,T.q)}${t.leaders.length?' · Thủ quỹ: '+t.leaders.map(esc).join(', '):''}</small></span></label>`).join('');}
@@ -4587,13 +4626,44 @@ function tmgrHtml(){if(!admReady)return '<div class="hint">Đang tải danh sác
     <label class="tm-all"><input type="checkbox" id="tmAll"> Chọn tất cả đang hiện (<span id="tmCnt">${V.length}</span>)</label>
     <div id="tmBar" class="tm-bar">${tmBarHtml()}</div>
     <div class="tm-list" id="tmList">${tmListHtml()}</div></div>`;}
-function tmPaint(listToo){const bar=document.getElementById('tmBar');if(bar)bar.innerHTML=tmBarHtml();
-  if(listToo){const l=document.getElementById('tmList');if(l)l.innerHTML=tmListHtml();const c=document.getElementById('tmCnt');if(c)c.textContent=tmView().length;const a=document.getElementById('tmAll');if(a)a.checked=false;}}
-document.addEventListener('change',ev=>{const t=ev.target;if(!t)return;
-  if(t.classList&&t.classList.contains('tm-ck')){if(t.checked)TM.sel[t.value]=1;else delete TM.sel[t.value];tmPaint(false);}
-  else if(t.id==='tmAll'){document.querySelectorAll('input.tm-ck').forEach(x=>{x.checked=t.checked;if(t.checked)TM.sel[x.value]=1;else delete TM.sel[x.value];});tmPaint(false);}
-  else if(t.id==='tmG'){TM.g=t.value;tmPaint(true);}else if(t.id==='tmS'){TM.st=t.value;tmPaint(true);}});
-document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='tmQ'){TM.q=ev.target.value;tmPaint(true);}});
+function tmPaint(){const bar=document.getElementById('tmBar');if(bar){bar.innerHTML=tmBarHtml();bar.classList.toggle('on',tmSelected().length>0);}
+  const l=document.getElementById('tmList');if(l&&admReady)l.innerHTML=tmTreeHtml();}
+document.addEventListener('change',ev=>{const t=ev.target;if(!t||!t.classList)return;
+  if(t.classList.contains('tm-ck')){if(t.checked)TM.sel[t.value]=1;else delete TM.sel[t.value];tmPaint();}
+  else if(t.classList.contains('tf-ck')){const g=admGroups.find(x=>x.id===t.dataset.g);if(!g)return;tfShown(g).L.forEach(x=>{if(t.checked)TM.sel[x.id]=1;else delete TM.sel[x.id];});if(t.checked)TM.open[g.id]=true;tmPaint();}
+  else if(t.id==='tmS'){TM.st=t.value;tmPaint();}});
+document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='tmQ'){TM.q=ev.target.value;tmPaint();}});
+/* ===== v200: mục "Chuyến & nhóm" của quản trị viên gom về MỘT danh sách: nhóm là thư mục, mỗi chuyến có ô tick;
+   chuyển nhóm / xoá làm qua thanh hành động; việc riêng của chuyến ở nút ⋯; việc của nhóm ở nút ⚙️; một ô tìm; một nút Thùng rác ===== */
+TM.open=TM.open||{};
+function tfTrips(g){return ((admOv[g.id]||{}).trips||[]).map(t=>({id:t.id,name:t.name,gid:g.id,gname:g.id===SYS_GROUP?'Chưa xếp nhóm':g.name,closed:!!t.closed,hidden:!!t.hidden,leaders:t.leaders||[],helpers:t.helpers||0}));}
+function tfShown(g){const T=TM,q=T.q.trim(),gname=g.id===SYS_GROUP?'Chưa xếp nhóm':g.name,gHit=!!q&&fz(gname,q),all=tfTrips(g);
+  const L=all.filter(t=>(!T.st||(T.st==='closed')===t.closed)&&(!q||gHit||fz(t.name+' '+t.leaders.join(' '),q)));return {all,L,gHit,gname};}
+function tfRow(t,q){const tc=admTCodes[t.id],T=TM;
+  const code=tc&&tc.active?`<span class="badge gc-on" title="Hết hạn ${esc(fd(tc.expires_at))}">🔑 ${tc.viewers} xem bằng mã</span>`:'';
+  return `<div class="tf-row${T.sel[t.id]?' on':''}"><label class="tf-l"><input type="checkbox" class="tm-ck" value="${esc(t.id)}"${T.sel[t.id]?' checked':''}><span class="tm-t"><b>${fzMark(t.name,q)}</b><span class="tf-bd">${t.closed?'<span class="badge">đã chốt sổ</span>':''}${t.hidden?'<span class="badge">ẩn với mã nhóm</span>':''}${code}</span><small>Thủ quỹ: ${t.leaders.length?t.leaders.map(esc).join(', '):'chưa có'}${t.helpers?` · ${t.helpers} hỗ trợ`:''}</small></span></label>
+    <span class="tf-act"><button type="button" class="btn ghost small" data-q="otrip" data-g="${esc(t.gid)}" data-t="${esc(t.id)}">Mở</button><button type="button" class="btn ghost small tf-more" data-q="tmore" data-g="${esc(t.gid)}" data-t="${esc(t.id)}" aria-label="Việc khác cho chuyến" title="Việc khác">⋯</button></span></div>`;}
+function tmTreeHtml(){const T=TM,q=T.q.trim(),dis=admBusy?' disabled':'';
+  const GS=admGroups.slice().sort((a,b)=>a.id===SYS_GROUP?-1:b.id===SYS_GROUP?1:0);let out='';
+  GS.forEach(g=>{const {all,L,gHit,gname}=tfShown(g),sys=g.id===SYS_GROUP;
+    if(sys&&!all.length)return;if(q&&!L.length&&!gHit)return;
+    const op=admOpen===g.id,ex=q?true:(T.open[g.id]!=null?T.open[g.id]:sys),selN=L.filter(t=>T.sel[t.id]).length;
+    out+=`<div class="rcard grp-row tf${op?' cur':''}${sys?' tf-sys':''}"><div class="tf-h">`+
+      (L.length?`<input type="checkbox" class="tf-ck" data-g="${esc(g.id)}"${selN&&selN===L.length?' checked':''} aria-label="Chọn mọi chuyến trong ${esc(gname)}">`:'<span class="tf-ck0"></span>')+
+      `<button type="button" class="tf-tog" data-q="tfold" data-id="${esc(g.id)}" aria-expanded="${ex}"><span class="chev">▸</span><span class="tf-n"><b>${sys?'📥':'📁'} ${fzMark(gname,q)}</b><small>${L.length!==all.length?L.length+'/':''}${all.length} chuyến${selN?` · đã chọn ${selN}`:''}</small></span></button>`+
+      (sys?'':`<span class="tf-gc">${codeBadgeS(admCodes[g.id])}</span><button type="button" class="btn ghost small tf-set${op?' is-open':''}" data-q="gopen" data-id="${esc(g.id)}" aria-expanded="${op}" title="${op?'Đóng':'Đổi tên, mã nhóm, lịch sử, xoá nhóm'}" aria-label="${op?'Đóng quản lý nhóm':'Quản lý nhóm'}">${op?'✕':'⚙️'}</button>`)+`</div>`+
+      (op?`<div class="lv2 mng-panel"><div class="hint" style="min-height:0">Tạo ${fd(g.created_at)}${g.creator_email?' bởi '+esc(g.creator_email):''}</div>${groupDetailHtml(g,admDet[g.id]||{},dis)}</div>`:'')+
+      (ex?`<div class="tf-list">${L.length?L.map(t=>tfRow(t,q)).join(''):'<div class="hint" style="min-height:0;padding:6px 10px">Chưa có chuyến nào.</div>'}</div>`:'')+`</div>`;});
+  return out||`<div class="hint">${q?'Không có nhóm hoặc chuyến nào khớp.':'Chưa có nhóm nào.'}</div>`;}
+function tripsSecHtml(){const T=TM,dis=admBusy?' disabled':'',gt=(window.ADM_GTRASH||[]).length;
+  const ssel=`<select id="tmS" aria-label="Lọc theo tình trạng"><option value="">Mọi tình trạng</option><option value="open"${T.st==='open'?' selected':''}>Đang mở</option><option value="closed"${T.st==='closed'?' selected':''}>Đã chốt sổ</option></select>`;
+  return `<div class="gcard admin-card tsec"><div class="tsec-h"><div class="adm-h">🧳 Chuyến &amp; nhóm</div><span class="tsec-b"><button type="button" class="btn small" data-q="gnew"${admNewG?' disabled':''}>＋ Tạo nhóm</button><button type="button" class="btn ghost small" data-tx="trashall">🗑 Thùng rác${gt?` (${gt} nhóm)`:''}</button></span></div>${msgHtml(admMsg)}`+
+    (admNewG?`<div class="rcard new-g"><div class="sub">Tạo nhóm mới</div><div class="field"><input type="text" id="qNewG" maxlength="60" placeholder="Tên nhóm, ví dụ: Cào Cào Dưỡng Sinh" aria-label="Tên nhóm mới"></div><div class="row"><button type="button" class="btn" data-q="gcreate"${dis}>Xác nhận</button><button type="button" class="btn ghost" data-q="gnewx">Huỷ bỏ</button></div></div>`:'')+
+    `<div class="row tsec-f"><div class="field" style="flex:1 1 200px"><input type="search" id="tmQ" value="${esc(T.q)}" placeholder="🔍 Tìm chuyến, nhóm, thủ quỹ" autocapitalize="off" autocomplete="off" aria-label="Tìm chuyến, nhóm hoặc thủ quỹ"></div>${ssel}</div>
+    <div id="tmBar" class="tm-bar${tmSelected().length?' on':''}">${tmBarHtml()}</div><div id="tmList" class="tf-tree">${admReady?tmTreeHtml():'<div class="hint">Đang tải danh sách…</div>'}</div></div>`;}
+/* làm 1 việc của chuyến (mở hộp thoại của tab Chuyến) sau khi chuyến đó thành chuyến đang mở */
+function tmWithTrip(gid,tid,fn){const ok=()=>sbGroup&&sbGroup.id===gid&&R.current===tid&&typeof syncedSet!=='undefined';
+  if(ok()){fn();return;}openTrip(gid,tid,true);const until=Date.now()+12000;const tick=()=>{if(ok()){fn();return;}if(Date.now()<until)setTimeout(tick,250);};setTimeout(tick,250);}
 function unsortedHtml(){const ov=admOv[SYS_GROUP],L=ov&&ov.trips||[];if(!L.length)return '';
   const dis=admBusy?' disabled':'';
   return `<div class="rcard new-g"><div class="sub">📥 Chuyến chưa xếp nhóm (${L.length})</div><div class="hint" style="min-height:0">Chuyến do người dùng tự tạo. Xem ai tạo rồi bấm “Xếp vào nhóm”.</div>`+
@@ -4702,7 +4772,7 @@ function usrConsole(){
   else b=`<div class="gcard admin-card"><div class="adm-h">⚙️ Tài khoản &amp; sao lưu</div><div class="hint">Tài khoản đang đăng nhập, đồng bộ, phiên bản ứng dụng và sao lưu nằm ngay bên dưới.</div></div>`;
   return usrNav()+b;}
 function admConsole(){
-  let b;if(admSec==='todo')b=todoHtml();else if(admSec==='log')b=logSecHtml();else if(admSec==='trips')b=tripMngCard()+adminHtml()+tmgrHtml()+trashEntry();else if(admSec==='codes')b=featSecHtml();else b=adminHtml();
+  let b;if(admSec==='todo')b=todoHtml();else if(admSec==='log')b=logSecHtml();else if(admSec==='trips')b=tripsSecHtml();else if(admSec==='codes')b=featSecHtml();else b=adminHtml();
   return admNav()+b;}
 function adminHtml(){
   const dis=admBusy?' disabled':'';
@@ -5232,6 +5302,12 @@ async function qAct(a,b){
   if(a==='gnew'){admNewG=true;renderGroupTab();const i=$('#qNewG');if(i)i.focus();return;}
   if(a==='gnewx'){admNewG=false;renderGroupTab();return;}
   if(a==='gopen'){admSwitch(admOpen===id?null:id);return;}
+  if(a==='tfold'){const g=admGroups.find(x=>x.id===id);if(!g)return;const cur=TM.open[id]!=null?TM.open[id]:id===SYS_GROUP;TM.open[id]=!cur;tmPaint();return;}
+  if(a==='tmore'){const gid=b.dataset.g,tid=b.dataset.t,tt=tmAll().find(x=>x.id===tid);
+    const run=k=>tmWithTrip(gid,tid,()=>{const x=document.createElement('button');x.type='button';x.hidden=true;x.dataset.tx=k;document.body.appendChild(x);x.click();x.remove();});
+    ask(`Chuyến “${tt?tt.name:''}”${tt?' · '+tt.gname:''}`,{title:'Việc khác cho chuyến',noLabel:'Đóng',choices:[
+      {label:'🕘 Lịch sử thay đổi',fn:()=>run('hist')},{label:'👥 Thủ quỹ và người hỗ trợ',fn:()=>run('people')},
+      {label:'👀 Ai đang xem (thông tin hiện tại)',fn:()=>run('viewers')},{label:'📄 Sao chép chuyến',fn:()=>run('copyto')}]});return;}
   if(a==='tmclear'){TM.sel={};renderGroupTab();return;}
   if(a==='tmmove'){const S=tmSelected();if(!S.length){toast('Chưa chọn chuyến nào.');return;}
     const GL=admGroups.filter(g=>g.id!==SYS_GROUP).map(g=>({id:g.id,name:g.name})).concat([{id:SYS_GROUP,name:'Chưa xếp nhóm (không thuộc nhóm nào)'}]);
@@ -6104,7 +6180,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v199',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v200',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){   /* chờ bản mới cài xong rồi mới tải lại (không xoá bộ nhớ đệm trước, tránh trang trắng ERR_FAILED) */
   try{const reg=await navigator.serviceWorker.getRegistration();if(reg){await reg.update().catch(()=>{});const w=reg.installing||reg.waiting;
       if(w&&w.state!=='activated'&&w.state!=='redundant')await new Promise(res=>{const t=setTimeout(res,6000);w.addEventListener('statechange',()=>{if(w.state==='activated'||w.state==='redundant'){clearTimeout(t);res();}});});}}catch(e){}

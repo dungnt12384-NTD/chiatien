@@ -4738,10 +4738,17 @@ function permHtml(){
     const body=er.map(r=>`<tr><td data-label="Tài khoản">${link('a:'+r.email,r.email)}</td><td data-label="Quyền">${pBadge(r)}</td><td data-label="Gắn từ đâu">${srcOf(r,t)}</td><td data-label="">${r.scope==='trip'&&(r.role==='leader'||r.role==='helper'||r.role==='viewer')?rmBtn(r):''}</td></tr>`).join('');
     const gst=(rows,lbl)=>{const n=rows.filter(r=>!r.email&&r.active).length,off=rows.filter(r=>!r.email&&!r.active).length;return n||off?`<div class="hint" style="min-height:0">👤 ${lbl}: ${n} đang xem${off?` · ${off} mã cũ đã tắt / hết hạn`:''}</div>`:'';};
     return (er.length?`<div class="tablewrap"><table class="perm-tbl"><thead><tr><th>Tài khoản</th><th>Quyền</th><th>Gắn từ đâu</th><th></th></tr></thead><tbody>${body}</tbody></table></div>`:'<div class="hint" style="min-height:0">Chưa có ai.</div>')+gst(own,'Khách vào bằng mã chuyến')+gst(grp,'Khách vào bằng mã nhóm');};
+  /* bảng quyền của 1 nhóm: Tài khoản | Quyền | Gắn từ đâu (hệ thống / cấp nhóm / chuyến nào) | Gỡ */
+  const grpTable=(own,tr)=>{const RO={admin:0,organizer:1,leader:2,helper:3,viewer:4,code_trip:5,code_group:6},rk=r=>RO[r.role]!=null?RO[r.role]:9;
+    const src=r=>r.role==='admin'?'Hệ thống (quản trị viên toàn quyền)':r.scope==='trip'?`Chuyến "${esc(r.trip_name||'?')}"`:'Cấp nhóm';
+    const er=[].concat(admins,own.filter(r=>r.email),tr.filter(r=>r.email)).sort((a,b)=>rk(a)-rk(b)||String(a.email).localeCompare(String(b.email))||String(a.trip_name||'').localeCompare(String(b.trip_name||'')));
+    const body=er.map(r=>`<tr><td data-label="Tài khoản">${link('a:'+r.email,r.email)}</td><td data-label="Quyền">${pBadge(r)}</td><td data-label="Gắn từ đâu">${src(r)}</td><td data-label="">${r.scope==='trip'&&r.trip_id&&(r.role==='leader'||r.role==='helper'||r.role==='viewer')?rmBtn(r):''}</td></tr>`).join('');
+    const gst=(rows,lbl)=>{const n=rows.filter(r=>!r.email&&r.active).length,off=rows.filter(r=>!r.email&&!r.active).length;return n||off?`<div class="hint" style="min-height:0">👤 ${lbl}: ${n} đang xem${off?` · ${off} mã cũ đã tắt / hết hạn`:''}</div>`:'';};
+    return (er.length?`<div class="tablewrap"><table class="perm-tbl"><thead><tr><th>Tài khoản</th><th>Quyền</th><th>Gắn từ đâu</th><th></th></tr></thead><tbody>${body}</tbody></table></div>`:'<div class="hint" style="min-height:0">Chưa có ai.</div>')+gst(own,'Khách vào bằng mã nhóm')+gst(tr,'Khách vào bằng mã chuyến');};
   const det=k=>{if(!k)return '';const ty=k[0],id=k.slice(2);let title='',body='';
     if(ty==='g'){const g=groups.find(x=>x.id===id);if(!g)return '';title='Nhóm '+g.name;
       const own=P.filter(r=>r.group_id===id&&r.scope==='group'),tr=P.filter(r=>r.group_id===id&&r.scope==='trip');
-      body=`<div class="sub">Cấp nhóm</div>`+people(admins.concat(own))+`<div class="sub">Theo từng chuyến (${new Set(tr.map(r=>r.trip_id)).size} chuyến)</div>`+people(tr,r=>r.trip_name);}
+      body=`<div class="sub">Ai có quyền trong nhóm này (${new Set(tr.map(r=>r.trip_id)).size} chuyến có quyền riêng)</div>`+grpTable(own,tr);}
     else if(ty==='t'){const t=trips.find(x=>x.id===id);if(!t)return '';title='Chuyến '+t.name;
       const grp=P.filter(r=>r.group_id===t.gid&&(r.role==='organizer'||(r.role==='code_group'&&!t.hidden))),own=P.filter(r=>r.trip_id===id);
       body=`<div class="hint" style="min-height:0">Thuộc nhóm ${link('g:'+t.gid,t.gname)}${t.hidden?' · ẩn với mã nhóm':''}${t.closed?' · đã chốt sổ':''}</div><div class="sub">Ai có quyền trong chuyến này</div>`+tripTable(own,grp,id,t)+addForm(id,null);}
@@ -5910,7 +5917,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v184',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v185',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

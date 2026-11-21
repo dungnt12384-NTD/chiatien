@@ -4720,11 +4720,11 @@ function permHtml(){
     return out.length?out.join(''):'<div class="hint" style="min-height:0">Chưa có ai.</div>';};
   /* bảng quyền của 1 chuyến: Người | Quyền | Gắn từ đâu | Gỡ */
   const srcOf=(r,t)=>r.role==='admin'?'Hệ thống (quản trị viên toàn quyền)':r.role==='organizer'?`Nhóm "${esc(t.gname)}" (người tổ chức)`:r.role==='code_group'?`Mã nhóm "${esc(t.gname)}"`:r.role==='code_trip'?'Mã chuyến':r.scope==='group'?`Nhóm "${esc(t.gname)}"`:'Gán riêng cho chuyến này';
-  const tripTable=(own,grp,id,t)=>{const rk=r=>r.role==='admin'?3:r.scope==='trip'?0:1;
+  const tripTable=(own,grp,id,t)=>{const RO={admin:0,organizer:1,leader:2,helper:3,viewer:4,code_trip:5,code_group:6},rk=r=>RO[r.role]!=null?RO[r.role]:9;
     const er=[].concat(own.filter(r=>r.email),grp.filter(r=>r.email),admins).sort((a,b)=>rk(a)-rk(b)||String(a.email).localeCompare(String(b.email)));
-    const body=er.map(r=>`<tr><td data-label="Người">${link('a:'+r.email,r.email)}</td><td data-label="Quyền">${pBadge(r)}</td><td data-label="Gắn từ đâu">${srcOf(r,t)}</td><td data-label="">${r.scope==='trip'&&(r.role==='leader'||r.role==='helper'||r.role==='viewer')?rmBtn(r):''}</td></tr>`).join('');
+    const body=er.map(r=>`<tr><td data-label="Tài khoản">${link('a:'+r.email,r.email)}</td><td data-label="Quyền">${pBadge(r)}</td><td data-label="Gắn từ đâu">${srcOf(r,t)}</td><td data-label="">${r.scope==='trip'&&(r.role==='leader'||r.role==='helper'||r.role==='viewer')?rmBtn(r):''}</td></tr>`).join('');
     const gst=(rows,lbl)=>{const n=rows.filter(r=>!r.email&&r.active).length,off=rows.filter(r=>!r.email&&!r.active).length;return n||off?`<div class="hint" style="min-height:0">👤 ${lbl}: ${n} đang xem${off?` · ${off} mã cũ đã tắt / hết hạn`:''}</div>`:'';};
-    return (er.length?`<div class="tablewrap"><table class="perm-tbl"><thead><tr><th>Người</th><th>Quyền</th><th>Gắn từ đâu</th><th></th></tr></thead><tbody>${body}</tbody></table></div>`:'<div class="hint" style="min-height:0">Chưa có ai.</div>')+gst(own,'Khách vào bằng mã chuyến')+gst(grp,'Khách vào bằng mã nhóm');};
+    return (er.length?`<div class="tablewrap"><table class="perm-tbl"><thead><tr><th>Tài khoản</th><th>Quyền</th><th>Gắn từ đâu</th><th></th></tr></thead><tbody>${body}</tbody></table></div>`:'<div class="hint" style="min-height:0">Chưa có ai.</div>')+gst(own,'Khách vào bằng mã chuyến')+gst(grp,'Khách vào bằng mã nhóm');};
   const det=k=>{if(!k)return '';const ty=k[0],id=k.slice(2);let title='',body='';
     if(ty==='g'){const g=groups.find(x=>x.id===id);if(!g)return '';title='Nhóm '+g.name;
       const own=P.filter(r=>r.group_id===id&&r.scope==='group'),tr=P.filter(r=>r.group_id===id&&r.scope==='trip');
@@ -5897,7 +5897,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v182',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v183',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

@@ -5823,7 +5823,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v156',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v157',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
@@ -5949,7 +5949,7 @@ function html(){var h='<div class="skin-dlg mini-dlg" role="dialog" aria-modal="
       return '<button type="button" class="mini-bill'+(edit===b.id?' sel':(edit?' mini-dim2':''))+'" data-mn="pick" data-id="'+b.id+'" aria-pressed="'+(edit===b.id)+'"><span style="flex:1 1 auto;min-width:0"><b>'+esc(b.desc||'Khoản chi')+'</b> · '+money(b.amount)+'<span class="hint" style="display:block;min-height:0">'+esc(b.payer)+' trả · '+b.ids.filter(inP).length+' người đi, chia '+n+' người ('+money(n?b.amount/n:0)+'/người)'+(fz>0?', '+fz+' miễn':'')+'</span></span><span class="mini-go">'+(edit===b.id?'Đang xem':'Xem')+'</span></button>';}).join(''):'<div class="hint" style="min-height:0">Chưa có khoản nào.</div>';
   /* 3. kết quả: của khoản đang chọn, hoặc của tất cả */
   if(st.bills.length&&edit&&viewBills().length){var vb=viewBills(),c=calc(vb),one=vb.length===1&&edit,rows=st.people.filter(function(p){return c.P[p].paid>0||c.P[p].share>0;});
-    h+='<div class="sk-h">Kết quả: '+(one?esc(vb[0].desc||'khoản đang chọn'):'')+'</div>'+
+    h+='<div class="sk-h" id="mnRes">Kết quả: '+(one?esc(vb[0].desc||'khoản đang chọn'):'')+'</div>'+
       '<div class="hint" style="min-height:0">Mỗi khoản tính riêng, không cộng gộp với khoản khác. <a href="#" data-mn="unpick" class="lnk">Thoát chế độ sửa</a></div>'+
       '<div class="tablewrap"><table class="t2"><thead><tr><th>Người</th><th>Đã trả</th><th>Phải chịu</th><th>Chênh</th></tr></thead><tbody>'+rows.map(function(p){var x=c.P[p],d=Math.round(x.paid-x.share);
         return '<tr><td>'+esc(p)+(isGuest(p)?' <span class="hint">(khách)</span>':'')+'</td><td class="num">'+money(x.paid)+'</td><td class="num">'+money(x.share)+'</td><td class="num" style="font-weight:700;color:'+(d>0?'var(--pos)':d<0?'var(--neg)':'inherit')+'">'+(d>0?'+':d<0?'−':'')+money(Math.abs(d))+'</td></tr>';}).join('')+'</tbody></table></div>'+
@@ -6058,7 +6058,7 @@ function act0(a,b){msg='';var focus=null;
   else if(a==='all'){dr.ids=st.people.slice();dr.fr=dr.fr.filter(function(n){return dr.ids.indexOf(n)>=0;});}
   else if(a==='none'){dr.ids=[];dr.fr=[];}
   else if(a==='addb'){var f=readForm();if(f){f.id=newId();st.bills.push(f);dr={desc:'',amount:'',payer:dr.payer,ids:f.ids.slice(),fr:f.fr.slice()};save();}}
-  else if(a==='pick'){var id=b.getAttribute('data-id');if(edit===id){edit=null;dr=blank();}else{var x=st.bills.filter(function(y){return y.id===id;})[0];if(x){edit=id;dr={desc:x.desc,amount:x.amount.toLocaleString('vi-VN'),payer:x.payer,ids:x.ids.filter(inP),fr:x.fr.filter(inP)};scrollTo='mnForm';}}}
+  else if(a==='pick'){var id=b.getAttribute('data-id');if(edit===id){edit=null;dr=blank();}else{var x=st.bills.filter(function(y){return y.id===id;})[0];if(x){edit=id;dr={desc:x.desc,amount:x.amount.toLocaleString('vi-VN'),payer:x.payer,ids:x.ids.filter(inP),fr:x.fr.filter(inP)};scrollTo='mnRes';}}}
   else if(a==='unpick'){edit=null;dr=blank();}
   else if(a==='updb'){var f2=readForm();if(f2&&edit){st.bills=st.bills.map(function(y){return y.id===edit?{id:edit,desc:f2.desc,amount:f2.amount,payer:f2.payer,ids:f2.ids,fr:f2.fr}:y;});save();msg='Đã cập nhật khoản.';}}
   else if(a==='newb'){var f3=readForm();if(f3){f3.id=newId();st.bills.push(f3);edit=f3.id;save();msg='Đã lưu thành khoản mới (khoản cũ giữ nguyên).';}}

@@ -5801,7 +5801,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v144',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v145',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
@@ -5868,7 +5868,7 @@ function inP(n){return st.people.indexOf(n)>=0;}
 function isGuest(n){var T=tripNames();return T.length>0&&T.indexOf(n)<0;}
 /* danh sách lớn là chuẩn: thứ tự và số thứ tự theo chuyến; người ngoài nhóm (khách) xếp cuối, ký hiệu + */
 function order(){var T=tripNames();if(!T.length)return;var a=T.filter(function(n){return st.people.indexOf(n)>=0;}),g=st.people.filter(function(n){return T.indexOf(n)<0;});st.people=a.concat(g);}
-function chip(n,cls,attrs,badge){var T=tripNames(),g=T.length>0&&T.indexOf(n)<0,t=g?'+':String(T.length?T.indexOf(n)+1:st.people.indexOf(n)+1);if(g)badge=(badge||'')+'<span class="mini-fl" title="Không có trong nhóm lớn">khách</span>';
+function chip(n,cls,attrs,badge){var T=tripNames(),g=T.length>0&&T.indexOf(n)<0,t=g?'+':String(T.length?T.indexOf(n)+1:st.people.indexOf(n)+1);if(g)badge=(badge||'')+'<span class="mini-fl" title="Không có trong nhóm lớn">(khách)</span>';
   return '<button type="button" class="chip mchip'+cls+'" '+attrs+'><span class="av" style="background:hsl('+hue(n)+' 38% 42%)'+(t.length>=3?';font-size:10px':'')+'" aria-hidden="true">'+t+'</span><span class="n">'+esc(n)+'</span>'+(badge||'')+'</button>';}
 /* người thực sự bị tính tiền của một khoản = người tham gia trừ người miễn (nếu toàn người miễn thì chia đều cho tất cả) */
 function payers(b){var a=b.ids.filter(inP),p=a.filter(function(n){return b.fr.indexOf(n)<0;});return p.length?p:a;}

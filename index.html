@@ -1593,6 +1593,13 @@ html.phone[data-ptable="grid"] .tablewrap td:first-child,html.phone[data-ptable=
 html.phone[data-ptable="grid"] .tablewrap td[data-label]::before,html.phone[data-ptable="grid"] #balBody tr.clk td[data-label]::before{content:none!important;display:none!important}
 html.phone[data-ptable="grid"] .tablewrap td+td,html.phone[data-ptable="grid"] .tablewrap th+th{border-left:1px solid var(--line)!important}
 html.phone[data-ptable="grid"] .tablewrap tr.det td{white-space:normal!important}
+/* bảng quyền: luôn nằm gọn trong khung, không kéo ngang (cột ✕ cố định), mọi thiết bị */
+.tablewrap:has(table.perm-tbl){overflow-x:visible!important}
+table.perm-tbl{table-layout:fixed;width:100%!important;min-width:0!important}
+table.perm-tbl th,table.perm-tbl td{white-space:normal!important;overflow-wrap:anywhere;word-break:normal;vertical-align:middle}
+table.perm-tbl th:nth-child(1){width:34%}table.perm-tbl th:nth-child(2){width:26%}table.perm-tbl th:nth-child(3){width:28%}table.perm-tbl th:nth-child(4){width:56px}
+table.perm-tbl td:nth-child(4){text-align:center;padding-inline:4px!important}
+table.perm-tbl .p-rm{min-width:36px;padding-inline:0}
 /* Bảng quyền của chuyến trên điện thoại: mỗi dòng là 1 thẻ gọn (tài khoản / quyền / gắn từ đâu), không phải kéo ngang, ở cả hai kiểu hiện bảng */
 html.phone .tablewrap:has(table.perm-tbl){overflow:visible!important;border:0!important;border-radius:0!important}
 html.phone .tablewrap table.perm-tbl{display:block!important;width:100%!important;min-width:0!important;font-size:13.5px!important}
@@ -4754,9 +4761,12 @@ function permHtml(){
       body=`<div class="hint" style="min-height:0">Thuộc nhóm ${link('g:'+t.gid,t.gname)}${t.hidden?' · ẩn với mã nhóm':''}${t.closed?' · đã chốt sổ':''}</div><div class="sub">Ai có quyền trong chuyến này</div>`+tripTable(own,grp,id,t)+addForm(id,null);}
     else{const rs=P.filter(r=>r.email===id),a=(admAcc||[]).find(x=>x.email===id);title=id;
       const gs=rs.filter(r=>r.scope==='group'),ts=rs.filter(r=>r.scope==='trip'),ad=rs.find(r=>r.role==='admin');
-      body=(a?`<div class="hint" style="min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}</div>`:'')+(ad?`<div class="pbadges">${pBadge(ad)}</div>`:'')+
-        `<div class="sub">Nhóm (${gs.length})</div>`+(gs.length?gs.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('g:'+r.group_id,r.group_name||'?')}<div class="pbadges">${pBadge(r)}</div></div></div>`).join(''):'<div class="hint" style="min-height:0">Không có.</div>')+
-        `<div class="sub">Chuyến (${ts.length})</div>`+(ts.length?`<div class="hist-scroll" data-rows="5">`+ts.map(r=>`<div class="acc-trip"><div style="flex:1 1 auto;min-width:0">${link('t:'+r.trip_id,r.trip_name)} <small>· ${esc(r.group_name||'')}</small>${r.closed?' <small>· đã chốt sổ</small>':''}<div class="pbadges">${pBadge(r)}</div></div>${r.role==='leader'||r.role==='helper'||r.role==='viewer'?rmBtn(r):''}</div>`).join('')+`</div>`:'<div class="hint" style="min-height:0">Không có.</div>')+addForm(null,id);}
+      const RO={admin:0,organizer:1,leader:2,helper:3,viewer:4,code_trip:5,code_group:6},rk=r=>RO[r.role]!=null?RO[r.role]:9;
+      const er=rs.filter(r=>r.role==='admin'||r.scope==='group'||r.scope==='trip').sort((x,y)=>rk(x)-rk(y)||String(x.group_name||'').localeCompare(String(y.group_name||''))||String(x.trip_name||'').localeCompare(String(y.trip_name||'')));
+      const tgt=r=>r.role==='admin'?'<b>Toàn hệ thống</b>':r.scope==='group'?`${link('g:'+r.group_id,r.group_name||'?')} <small>(nhóm)</small>`:`${link('t:'+r.trip_id,r.trip_name||'?')} <small>· ${esc(r.group_name||'')}${r.closed?' · đã chốt sổ':''}</small>`;
+      const src=r=>r.role==='admin'?'Hệ thống (quản trị viên toàn quyền)':r.scope==='group'?'Cấp nhóm':'Gán riêng cho chuyến';
+      body=(a?`<div class="hint" style="min-height:0">${a.last_sign_in_at?'Đăng nhập gần nhất '+fdt(a.last_sign_in_at):'Chưa đăng nhập lần nào'}</div>`:'')+
+        `<div class="sub">Tài khoản này có quyền ở đâu (${er.length})</div>`+(er.length?`<div class="tablewrap"><table class="perm-tbl"><thead><tr><th>Nơi áp dụng</th><th>Quyền</th><th>Gắn từ đâu</th><th></th></tr></thead><tbody>${er.map(r=>`<tr><td data-label="Nơi áp dụng">${tgt(r)}</td><td data-label="Quyền">${pBadge(r)}</td><td data-label="Gắn từ đâu">${src(r)}</td><td data-label="">${r.scope==='trip'&&r.trip_id&&(r.role==='leader'||r.role==='helper'||r.role==='viewer')?rmBtn(r):''}</td></tr>`).join('')}</tbody></table></div>`:'<div class="hint" style="min-height:0">Chưa có quyền nào.</div>')+addForm(null,id);}
     return `<div class="perm-det"><div class="row" style="align-items:center;flex-wrap:nowrap"><b style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">🔐 ${esc(title)}</b><button type="button" class="btn ghost small" data-q="pgo" data-k="${esc(k)}" aria-label="Đóng">✕</button></div>${body}</div>`;};
   const sec=(ic,name,L,row,ty)=>`<div class="gsub perm-sec"><div class="sub">${ic} ${name} (${L.length}${q?' khớp':''})</div>`+(L.length?`<div class="hist-scroll" data-rows="5">${L.map(x=>`<button type="button" class="perm-item${op===x.k?' cur':''}" data-q="pgo" data-k="${esc(x.k)}">${row(x)}</button>`).join('')}</div>`:'<div class="hint" style="min-height:0">Không có.</div>')+(op[0]===ty?det(op):'')+`</div>`;
   return (window.PERM_ERR?`<div class="note" role="alert">${esc(window.PERM_ERR)}</div>`:'')+
@@ -5917,7 +5927,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v185',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v186',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

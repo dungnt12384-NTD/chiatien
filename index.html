@@ -1642,6 +1642,10 @@ html .bal.neg,html .st.neg b,html .st.neg i,html .kpi b.kneg{-webkit-text-fill-c
 .mini-tg{padding:6px 12px;border-radius:99px;border:1.5px solid var(--line);background:var(--surface2);color:var(--fg);font:600 14px/1.2 inherit;cursor:pointer}
 .mini-tg[aria-pressed="true"]{border-color:var(--accent,var(--brand));background:var(--brand-bg,rgba(47,109,246,.12))}
 .mini-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0;align-items:center;max-width:100%}
+.mini-cfbg{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+.mini-cf{width:min(420px,100%);background:var(--surface,#222);color:var(--fg,#fff);border:2px solid var(--accent);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.mini-cft{font-size:17px;font-weight:700;line-height:1.35}
+.mini-cf .btn{width:100%;min-height:48px;font-size:16px}
 .mini-dlg{box-sizing:border-box;overflow-x:hidden}
 .mini-dlg *{box-sizing:border-box;max-width:100%}
 .mini-dlg .btn,.mini-dlg button{white-space:normal;overflow-wrap:anywhere;min-width:0}
@@ -5801,7 +5805,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v148',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v149',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
@@ -5896,7 +5900,7 @@ function addRow(){return '<div class="mini-row"><input type="text" id="mnName" p
   '<div class="mini-row"><button type="button" class="btn ghost small" data-mn="fromtrip">Lấy danh sách từ chuyến</button><button type="button" class="btn ghost small" data-mn="syncp" aria-pressed="'+syncOpen+'">🔄 Đồng bộ đúng với chuyến</button>'+(st.people.length?'<button type="button" class="btn ghost small" data-mn="delmode" aria-pressed="'+delMode+'">'+(delMode?'Xong xoá':'🗑 Xoá người khỏi danh sách')+'</button>':'')+'</div>'+syncHtml();}
 function html(){var h='<div class="skin-dlg mini-dlg" role="dialog" aria-modal="true" aria-label="Chia nhóm nhỏ"><h3>🍻 Chia nhóm nhỏ</h3>'+
   '<div class="hint" style="min-height:0;color:var(--muted);font-size:13px">Khoản riêng của nhóm nhỏ (karaoke, cà phê…). <b>Không cộng vào chuyến, không đồng bộ, không gửi thông báo.</b> Chỉ lưu trên máy này, dùng lại được cho chuyến khác.</div>'+
-  (msg?'<div class="mini-msg">'+esc(msg)+'</div>':'')+undoBar()+(cf?'<div class="mini-msg" id="mnCf" style="border:2px solid var(--accent)"><b>'+esc(cf.q)+'</b><div class="mini-row"><button type="button" class="btn small" data-mn="cfok">Đồng ý</button><button type="button" class="btn ghost small" data-mn="cfno">Huỷ</button></div></div>':'');
+  (msg?'<div class="mini-msg">'+esc(msg)+'</div>':'')+undoBar()+cfHtml();
   if(!st.people.length){delMode=false;return h+'<div class="sk-h">Bước 1: thêm người</div>'+addRow()+'<button type="button" class="btn skin-close" data-mn="close">Xong</button></div>';}
   /* 1. nhập / sửa khoản: ở trên cùng. MỘT danh sách người tham gia; tên xám = không đi, tên sáng = đi, 🆓 = đi nhưng miễn tiền */
   var nIn=dr.ids.filter(inP).length,nFr=dr.fr.filter(function(n){return dr.ids.indexOf(n)>=0&&inP(n);}).length;
@@ -5960,6 +5964,17 @@ function readForm(){var amt=num(dr.amount),sel=dr.ids.filter(inP);
 function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 /* mọi thay đổi danh sách/khoản đều lưu bản trước đó để bấm Hoàn tác */
 /* hộp xác nhận ngay trong trang (confirm() của trình duyệt có thể bị chặn và làm treo trang) */
+/* hộp xác nhận: nền tối che phần còn lại; nút an toàn (ở lại) màu nổi, nút nguy hiểm (thoát/xoá) màu đỏ */
+function cfLbl(a){var d={close:1,pick:1,unpick:1};
+  if(d[a])return {ok:'Bỏ thay đổi và thoát',no:'Tiếp tục sửa',bad:1};
+  if(a==='syncgo')return {ok:'Áp dụng đồng bộ',no:'Không áp dụng',bad:0};
+  if(a==='newtrip')return {ok:'Có, xoá các khoản',no:'Không xoá',bad:1};
+  return {ok:'Có, xoá',no:'Không xoá',bad:1};}
+function cfHtml(){if(!cf)return '';var l=cfLbl(cf.a);
+  var okS=l.bad?'background:#c62828!important;color:#fff!important;border:0!important':'',noS=l.bad?'':'';
+  return '<div class="mini-cfbg" id="mnCf"><div class="mini-cf" role="alertdialog" aria-modal="true"><div class="mini-cft">'+esc(cf.q)+'</div>'+
+    '<button type="button" class="btn mini-cfno" data-mn="cfno">'+esc(l.no)+'</button>'+
+    '<button type="button" class="btn ghost mini-cfok" data-mn="cfok" style="'+okS+'">'+esc(l.ok)+'</button></div></div>';}
 function needQ(a,b){var D=dirty()?' Các thay đổi chưa lưu của khoản đang sửa cũng sẽ mất.':'';
   if(a==='close')return dirty()?'Khoản đang sửa có thay đổi CHƯA LƯU. Đóng và bỏ các thay đổi này?':null;
   if(a==='pick'||a==='unpick')return dirty()?'Khoản đang sửa có thay đổi CHƯA LƯU. Bỏ các thay đổi này?':null;

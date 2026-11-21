@@ -4744,7 +4744,7 @@ document.addEventListener('change',ev=>{const t=ev.target;if(!t)return;const D=w
   if(t.id==='qPAddR'){D.r=t.value;renderGroupTab();}else if(t.id==='qPAddT')D.t=t.value;
   else if(t.closest&&t.closest('#qPAddTabs'))D.tabs=[...document.querySelectorAll('#qPAddTabs input:checked')].map(x=>x.value);});
 document.addEventListener('click',ev=>{if(!window.PERM_OPEN)return;const t=ev.target;if(!t||!t.closest)return;
-  if(t.closest('.perm-det')||t.closest('[data-q="pgo"]')||t.closest('.modal:not([hidden])'))return;
+  if(t.closest('.perm-det')||t.closest('[data-q="pgo"]')||t.closest('.modal')||t.closest('#accSug'))return;
   const had=!!document.querySelector('.perm-det');window.PERM_OPEN=null;if(had)try{renderGroupTab();}catch(e){}});
 /* Quản lý tài khoản: danh sách tài khoản email, thêm / gỡ quản trị viên (cần supabase/008_quan_ly_tai_khoan.sql) */
 function accountsHtml(dis){
@@ -4769,7 +4769,7 @@ function accountsHtml(dis){
         </div>${a.is_admin&&a.is_me?'':`<div class="acc-actions">${a.is_admin?`<button type="button" class="btn danger-o small" data-q="admrm" data-e="${esc(a.email)}"${dis}>Gỡ quản trị</button>`:`<button type="button" class="btn ghost small" data-q="admset" data-e="${esc(a.email)}"${dis}>Cấp quản trị</button><button type="button" class="btn danger-o small" data-q="accdel" data-e="${esc(a.email)}"${dis} title="Xoá tài khoản (chuyến vẫn giữ)">Xoá</button>`}</div>`}${op?tripsHtml(a.email):''}</div>`;}).join(''):'<div class="hint">Không có tài khoản nào khớp.</div>');}
 /* v77: bấm ra ngoài tài khoản đang mở thì tự đóng; bấm tài khoản khác thì đóng cái cũ, mở cái mới (xử lý ở accx) */
 document.addEventListener('click',ev=>{if(!window.ACC_OPEN)return;const t=ev.target;if(!t||!t.closest)return;
-  if(t.closest('.acc-card.open')||t.closest('[data-q="accx"]')||t.closest('.modal:not([hidden])'))return;
+  if(t.closest('.acc-card.open')||t.closest('[data-q="accx"]')||t.closest('.modal')||t.closest('#accSug'))return;
   const had=!!document.querySelector('.acc-card.open');window.ACC_OPEN=null;if(had)try{renderGroupTab();}catch(e){}});
 async function admLoadAcc(){
   const [{data,error},rt]=await Promise.all([sb.rpc('admin_accounts'),sb.rpc('admin_account_trips')]);
@@ -4791,7 +4791,7 @@ async function admLoadAcc(){
       box.style.cssText='position:fixed;z-index:2147483000;max-height:220px;overflow:auto;background:var(--surface,#fff);color:var(--fg,#000);border:1px solid var(--line,#ccc);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:4px';
       box.addEventListener('mousedown',e=>e.preventDefault());
       box.addEventListener('pointerdown',e=>e.preventDefault());
-      box.addEventListener('click',e=>{const b=e.target.closest('[data-em]');if(!b||!cur)return;const i=cur;i.value=b.dataset.em;i.dispatchEvent(new Event('input',{bubbles:true}));hide();i.focus();});
+      box.addEventListener('click',e=>{const b=e.target.closest('[data-em]');if(!b||!cur)return;const i=cur;i.value=b.dataset.em;i.dispatchEvent(new Event('input',{bubbles:true}));hide();i.focus();i.dispatchEvent(new Event('focusin',{bubbles:true}));});
       document.body.appendChild(box);}
     box.innerHTML=L.map(e=>`<button type="button" role="option" data-em="${esc(e)}" style="display:block;width:100%;text-align:left;padding:9px 10px;border:0;background:transparent;color:inherit;font:inherit;border-radius:8px;cursor:pointer;overflow-wrap:anywhere">${esc(e)}</button>`).join('');
     const r=inp.getBoundingClientRect(),h=Math.min(220,L.length*40+8),below=innerHeight-r.bottom;
@@ -4809,7 +4809,7 @@ document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qAdmQ'){adm
 document.addEventListener('click',ev=>{
   const s=admOpen&&document.querySelector('.sec.mng-focus');if(!s||!s.offsetParent)return;   /* chỉ khi đang ở tab có khung quản lý */
   const t=ev.target;if(!t||!t.closest)return;
-  if(t.closest('.admin-card .rcard.grp-row.cur')||t.closest('#modal')||t.closest('#authModal')||t.closest('.toast'))return;
+  if(t.closest('.admin-card .rcard.grp-row.cur')||t.closest('#modal')||t.closest('#accSug')||t.closest('#authModal')||t.closest('.toast'))return;
   ev.preventDefault();ev.stopPropagation();admSwitch(null);},true);
 /* bàn phím: Tab không đi ra ngoài khung quản lý */
 document.addEventListener('focusin',ev=>{
@@ -5851,7 +5851,7 @@ function fxApply(){document.querySelectorAll('.fx-dim').forEach(e=>e.classList.r
   const anc=new Set();c.keep.forEach(e=>{for(let x=e;x&&x!==document.body;x=x.parentElement)anc.add(x);});
   anc.forEach(x=>{const p=x.parentElement;if(!p)return;[...p.children].forEach(s=>{if(anc.has(s)||FX_SKIP.has(s.tagName)||s.classList.contains('modal')||s.id==='toast')return;s.classList.add('fx-dim');});});}
 document.addEventListener('click',ev=>{const c=fxCur();if(!c)return;const t=ev.target;if(!t||!t.closest)return;
-  if(t.closest('.modal')||t.closest('#toast')||document.querySelector('.modal:not([hidden])'))return;   /* đang có hộp hỏi (vd vừa đổi giá phòng) thì để hộp đó xử lý */
+  if(t.closest('.modal')||t.closest('#accSug')||t.closest('#toast')||document.querySelector('.modal:not([hidden])'))return;   /* đang có hộp hỏi (vd vừa đổi giá phòng) thì để hộp đó xử lý */
   if(c.d.dim===false&&!t.isConnected)return;
   const inside=c.keep.some(e=>e.contains(t)),sumr=c.d.k==='bulk'&&t.closest('#bulkBox>summary');
   if(inside&&!sumr)return;
@@ -5890,7 +5890,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v179',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v180',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

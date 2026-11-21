@@ -1750,17 +1750,17 @@ html:not(.phone) table.perm-tbl tbody td:first-child{border-left:4px solid var(-
 html:not(.phone) table.perm-tbl tbody td:last-child{border-right:1px solid var(--line);border-radius:0 10px 10px 0}
 html:not(.phone) table.perm-tbl thead th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border:0}
 
-/* Danh sách gợi ý email (gán người vào chuyến / thêm quản trị): bảng kính mờ trong suốt, sổ lên trên ô nhập */
-#accSug.acc-sug{position:fixed;z-index:2147483000;overflow:auto;overscroll-behavior:contain;padding:6px;border-radius:18px;color:var(--fg,#111);background:color-mix(in srgb,var(--surface,#fff) 76%,transparent);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);border:1px solid color-mix(in srgb,var(--line,#ccc) 65%,transparent);box-shadow:0 14px 40px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);animation:sugUp .16s ease-out}
+/* Danh sách gợi ý email: giống bảng chọn chuyến của iPhone (kính mờ đậm, bo lớn, chữ to, dấu ✓), sổ lên trên ô nhập */
+#accSug.acc-sug{position:fixed;z-index:2147483000;overflow:auto;overscroll-behavior:contain;padding:6px 0;border-radius:28px;color:var(--fg,#111);background:color-mix(in srgb,var(--surface,#fff) 68%,transparent);-webkit-backdrop-filter:saturate(200%) blur(30px);backdrop-filter:saturate(200%) blur(30px);border:1px solid color-mix(in srgb,#fff 55%,transparent);box-shadow:0 18px 50px rgba(15,23,42,.32),0 2px 8px rgba(15,23,42,.10);animation:sugUp .16s ease-out}
 #accSug[data-dir="down"]{animation-name:sugDown}
 @keyframes sugUp{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes sugDown{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
-#accSug .sug-item{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:6px 10px;border:0;background:transparent;color:inherit;font:inherit;font-size:14.5px;text-align:left;border-radius:12px;cursor:pointer}
-#accSug .sug-item+.sug-item{box-shadow:0 -1px 0 color-mix(in srgb,var(--line,#ccc) 55%,transparent)}
-#accSug .sug-item:hover,#accSug .sug-item:active{background:color-mix(in srgb,var(--brand,var(--accent)) 16%,transparent)}
-#accSug .sug-av{flex:none;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--brand,var(--accent)),color-mix(in srgb,var(--brand,var(--accent)) 60%,#001))}
+#accSug .sug-item{display:flex;align-items:center;gap:6px;width:100%;min-height:54px;padding:6px 18px 6px 12px;border:0;background:transparent;color:inherit;font:inherit;font-size:17.5px;text-align:left;border-radius:0;cursor:pointer;position:relative}
+#accSug .sug-item+.sug-item::before{content:"";position:absolute;left:42px;right:18px;top:0;height:1px;background:color-mix(in srgb,var(--fg,#000) 14%,transparent)}
+#accSug .sug-item:hover,#accSug .sug-item:active{background:color-mix(in srgb,var(--brand,var(--accent)) 14%,transparent)}
+#accSug .sug-ck{flex:none;width:24px;text-align:center;font-weight:700;color:var(--brand,var(--accent))}
 #accSug .sug-t{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-weight:500}
-#accSug .sug-t mark{background:color-mix(in srgb,var(--brand,var(--accent)) 24%,transparent);color:inherit;border-radius:4px;padding:0 1px}
+#accSug .sug-t mark{background:color-mix(in srgb,var(--brand,var(--accent)) 22%,transparent);color:inherit;border-radius:4px;padding:0 1px}
 </style>
 
 
@@ -4883,12 +4883,12 @@ async function admLoadAcc(){
       box.addEventListener('pointerdown',e=>e.preventDefault());
       box.addEventListener('click',e=>{const b=e.target.closest('[data-em]');if(!b||!cur)return;e.stopPropagation();const i=cur;picking=true;i.value=b.dataset.em;i.dispatchEvent(new Event('input',{bubbles:true}));hide();i.focus();picking=false;});
       document.body.appendChild(box);}
-    box.innerHTML=L.map(e=>`<button type="button" role="option" class="sug-item" data-em="${esc(e)}"><span class="sug-av" aria-hidden="true">${esc(e.charAt(0).toUpperCase())}</span><span class="sug-t">${fzMark(e,inp.value)}</span></button>`).join('');
+    box.innerHTML=L.map(e=>`<button type="button" role="option" class="sug-item" data-em="${esc(e)}"><span class="sug-ck" aria-hidden="true">${e===inp.value.trim()?'✓':''}</span><span class="sug-t">${fzMark(e,inp.value)}</span></button>`).join('');
     /* ưu tiên sổ lên TRÊN ô nhập (bàn phím điện thoại che phía dưới); chỉ sổ xuống khi phía trên không đủ chỗ */
-    const r=inp.getBoundingClientRect(),vh=(window.visualViewport?visualViewport.height:innerHeight),h=Math.min(240,L.length*48+12),above=r.top-8,below=vh-r.bottom-8;
+    const r=inp.getBoundingClientRect(),vh=(window.visualViewport?visualViewport.height:innerHeight),h=Math.min(300,L.length*56+14),above=r.top-8,below=vh-r.bottom-8;
     const w=Math.min(Math.max(r.width,260),innerWidth-16);box.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+'px';box.style.width=w+'px';
-    if(above>=Math.min(h,140)||above>=below){box.style.maxHeight=Math.max(96,Math.min(240,above))+'px';box.style.top='auto';box.style.bottom=(innerHeight-r.top+6)+'px';box.dataset.dir='up';}
-    else{box.style.maxHeight=Math.max(96,Math.min(240,below))+'px';box.style.bottom='auto';box.style.top=(r.bottom+6)+'px';box.dataset.dir='down';}}
+    if(above>=Math.min(h,140)||above>=below){box.style.maxHeight=Math.max(110,Math.min(320,above))+'px';box.style.top='auto';box.style.bottom=(innerHeight-r.top+6)+'px';box.dataset.dir='up';}
+    else{box.style.maxHeight=Math.max(110,Math.min(320,below))+'px';box.style.bottom='auto';box.style.top=(r.bottom+6)+'px';box.dataset.dir='down';}}
   document.addEventListener('focusin',e=>{if(e.target&&ids.includes(e.target.id)){clearTimeout(hideT);show(e.target);}});
   document.addEventListener('input',e=>{if(e.target&&ids.includes(e.target.id))show(e.target);});
   document.addEventListener('focusout',e=>{if(e.target&&ids.includes(e.target.id)){hideT=setTimeout(hide,200);}});

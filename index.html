@@ -4749,7 +4749,7 @@ document.addEventListener('click',ev=>{if(!window.PERM_OPEN)return;const t=ev.ta
 /* Quản lý tài khoản: danh sách tài khoản email, thêm / gỡ quản trị viên (cần supabase/008_quan_ly_tai_khoan.sql) */
 function accountsHtml(dis){
   const add=`<div class="rcard"><div class="sub">Thêm quản trị viên</div><div class="hint" style="min-height:0">Người này đăng nhập bằng đúng email là có toàn quyền quản trị (kể cả khi chưa đăng nhập lần nào).</div>
-    <div class="row"><div class="field"><input type="email" id="qAdm" placeholder="email@gmail.com" autocapitalize="off" autocomplete="off" aria-label="Email quản trị viên mới"></div><button type="button" class="btn" data-q="admadd"${dis}>Thêm quản trị</button></div></div>`;
+    <div class="row"><div class="field"><input type="email" id="qAdm" list="admAccList" placeholder="email@gmail.com" autocapitalize="off" autocomplete="off" aria-label="Email quản trị viên mới"></div><button type="button" class="btn" data-q="admadd"${dis}>Thêm quản trị</button></div><datalist id="admAccList">${(admAcc||[]).filter(a=>a.email).map(a=>`<option value="${esc(a.email)}">`).join('')}</datalist></div>`;
   if(admAccErr)return add+`<div class="note" role="alert">${esc(admAccErr)}</div>`;
   if(admAcc===null)return add+'<div class="hint">Đang tải danh sách tài khoản…</div>';
   const q=admAccQ.trim().toLowerCase(),tr=e=>admAccTrips[e]||[];
@@ -5198,7 +5198,7 @@ async function openDlg(k,opt){dlgKind=k;dlgNote='';dlgBusy=false;$('#authModal')
   else if(k==='code'){codeInfo=null;renderDlg();const {data,error}=await sb.rpc('trip_code_get',{tid:t.id});codeInfo=data||null;if(error)dlgNote=error.message;else codeCache.set(t.id,data);}
   else if(k==='share'){shareInfo=null;renderDlg();const {data}=await sb.rpc('share_info',{p_trip:t.id});shareInfo=data||{};}
   else if(k==='viewers'){tViewers=null;renderDlg();const {data,error}=await sb.rpc('trip_viewers',{tid:t.id});tViewers=data||[];if(error)dlgNote=ERR_VN[error.message]||error.message;}
-  else if(k==='people'){tPeople=null;renderDlg();const {data,error}=await sb.rpc('trip_people',{tid:t.id});tPeople=data||[];if(error)dlgNote=error.message;}
+  else if(k==='people'){tPeople=null;renderDlg();const {data,error}=await sb.rpc('trip_people',{tid:t.id});tPeople=data||[];if(error)dlgNote=error.message;if(sbAdmin&&admAcc===null){try{await admLoadAcc();}catch(e){}}if(dlgKind==='people')renderDlg();}
   else if(k==='trash'){tTrash=null;try{TR_SEL.clear();}catch(e){}renderDlg();const {data,error}=await sb.rpc('trip_trash',{gid});tTrash=data||[];if(error)dlgNote=error.message;}
   if(dlgKind===k)renderDlg();}
 const codeUrl=c=>location.origin+location.pathname+'?c='+encodeURIComponent(c);
@@ -5267,7 +5267,7 @@ function dlgBody(){
       ${p.role==='helper'?`<div class="tks">${LOCK_TABS.map(k=>ck(p,k)).join('')}</div>`:''}
       ${ld?`<div class="row"><button type="button" class="btn ghost small" data-dl="psave" data-e="${esc(p.email)}"${dis}>Lưu</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-dl="prm" data-e="${esc(p.email)}"${dis}>Gỡ</button></div>`:''}</div>`).join('');
     return `<p style="color:var(--muted);font-size:14px;margin:0"><b>Thủ quỹ</b> làm được mọi việc của chuyến. <b>Người hỗ trợ</b> chỉ nhập ở các mục được tick. <b>Người xem</b> chỉ xem, không sửa được. Mỗi người đăng nhập bằng đúng email này.</p>${rows||'<div class="hint">Chưa có ai.</div>'}
-      ${ld?`<div class="gcard"><div class="sub">Thêm người</div><div class="field"><label for="dlgEmail">Email</label><input type="email" id="dlgEmail" autocapitalize="off" placeholder="email@gmail.com"></div>
+      ${ld?`<div class="gcard"><div class="sub">Thêm người</div><div class="field"><label for="dlgEmail">Email</label><input type="email" id="dlgEmail" list="dlgAccList" autocomplete="off" autocapitalize="off" placeholder="email@gmail.com (gõ hoặc chọn từ danh sách)"></div><datalist id="dlgAccList">${(admAcc||[]).filter(a=>a.email&&!tPeople.some(p=>p.email===a.email)).map(a=>`<option value="${esc(a.email)}">`).join('')}</datalist>
         <div class="row" style="align-items:center"><select id="dlgRole" aria-label="Vai trò"><option value="helper">Người hỗ trợ</option><option value="viewer">Người xem (chỉ xem)</option><option value="leader">Thủ quỹ</option></select></div>
         <div class="tks" id="dlgTabs">${LOCK_TABS.map(k=>`<label class="tk"><input type="checkbox" value="${k}"${k==='expense'?' checked':''}>${TAB_NAME[k]}</label>`).join('')}</div>
         <div class="row"><button type="button" class="btn" data-dl="padd"${dis}>Thêm</button></div></div>`:''}`;}
@@ -5864,7 +5864,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v176',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v177',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

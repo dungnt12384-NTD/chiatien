@@ -1646,6 +1646,14 @@ html .bal.neg,html .st.neg b,html .st.neg i,html .kpi b.kneg{-webkit-text-fill-c
 .mini-cf{width:min(420px,100%);background:var(--surface,#222);color:var(--fg,#fff);border:2px solid var(--accent);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 .mini-cft{font-size:17px;font-weight:700;line-height:1.35}
 .mini-cf .btn{width:100%;min-height:48px;font-size:16px}
+html.phone .mini-dlg .tablewrap{border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+html.phone .mini-dlg table{display:table!important;width:100%;min-width:0!important}
+html.phone .mini-dlg thead{display:table-header-group!important}
+html.phone .mini-dlg tbody{display:table-row-group!important}
+html.phone .mini-dlg tr{display:table-row!important;border:0!important;border-radius:0!important;padding:0!important;background:transparent!important}
+html.phone .mini-dlg th,html.phone .mini-dlg td{display:table-cell!important;padding:8px 6px!important;font-size:13px;white-space:normal;overflow-wrap:anywhere}
+html.phone .mini-dlg td.num,html.phone .mini-dlg th:not(:first-child){text-align:right}
+html.phone .mini-dlg td:first-child{text-align:left;font-weight:600}
 .mini-dim{opacity:.32;filter:grayscale(1);pointer-events:none}
 .mini-dim2{opacity:.4;filter:grayscale(1)}
 .mini-dlg{box-sizing:border-box;overflow-x:hidden}
@@ -5812,7 +5820,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v153',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v154',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
@@ -5932,7 +5940,7 @@ function html(){var h='<div class="skin-dlg mini-dlg" role="dialog" aria-modal="
     (edit?'<div class="mini-row"><button type="button" class="btn" data-mn="updb">Cập nhật khoản này</button><button type="button" class="btn ghost" data-mn="newb">＋ Lưu thành khoản mới</button></div><div class="mini-row"><button type="button" class="btn ghost small" data-mn="unpick">Bỏ chọn khoản (thoát chế độ sửa)</button><button type="button" class="btn ghost small" data-mn="delb">Xoá khoản này</button></div>'
           :'<button type="button" class="btn" data-mn="addb">＋ Thêm khoản</button>')+'</div>';
   /* 2. các khoản đã nhập: bấm để nạp lại vào ô nhập phía trên và xem kết quả riêng */
-  h+='<div class="sk-h">Các khoản đã nhập ('+st.bills.length+')</div>';
+  h+='<div class="sk-h">Các khoản chi đã nhập ('+st.bills.length+')</div>';
   h+=st.bills.length?'<div class="hint" style="min-height:0">Bấm vào một khoản để nạp lại vào ô nhập phía trên (sửa hoặc dùng lại) và xem kết quả riêng của khoản đó.</div>'+
     st.bills.map(function(b){var pp=payers(b),n=pp.length,fz=b.ids.filter(inP).length-n;
       return '<button type="button" class="mini-bill'+(edit===b.id?' sel':(edit?' mini-dim2':''))+'" data-mn="pick" data-id="'+b.id+'" aria-pressed="'+(edit===b.id)+'"><span style="flex:1 1 auto;min-width:0"><b>'+esc(b.desc||'Khoản chi')+'</b> · '+money(b.amount)+'<span class="hint" style="display:block;min-height:0">'+esc(b.payer)+' trả · '+b.ids.filter(inP).length+' người đi, chia '+n+' người ('+money(n?b.amount/n:0)+'/người)'+(fz>0?', '+fz+' miễn':'')+'</span></span><span class="mini-go">'+(edit===b.id?'Đang xem':'Xem')+'</span></button>';}).join(''):'<div class="hint" style="min-height:0">Chưa có khoản nào.</div>';
@@ -5945,7 +5953,7 @@ function html(){var h='<div class="skin-dlg mini-dlg" role="dialog" aria-modal="
       (c.tr.length?'<div class="mini-tr"><b>Ai chuyển cho ai:</b>'+c.tr.map(function(t){return '<div>'+esc(t.from)+' → '+esc(t.to)+': <b>'+money(t.v)+'</b></div>';}).join('')+'</div>':'<div class="hint">Không ai phải chuyển thêm.</div>')+
       '<div class="mini-row"><button type="button" class="btn small" data-mn="copy">Sao chép kết quả</button></div>';}
   /* 4. danh sách tổng: ở cuối, thu gọn */
-  if(!ro())h+='<div class="mini-row'+(edit?' mini-dim':'')+'"><button type="button" class="btn ghost small" data-mn="newtrip">Buổi mới (giữ danh sách tổng, xoá các khoản)</button><button type="button" class="btn ghost small" data-mn="clear">Xoá hết</button></div>';
+  /* đã bỏ nút Buổi mới / Xoá hết */
   return h+'<button type="button" class="btn skin-close" data-mn="close">Xong</button></div>';}
 function srt(L){return L.filter(inP).slice().sort().join('|');}
 function dirty(){if(!edit)return false;var b=st.bills.filter(function(x){return x.id===edit;})[0];if(!b)return false;

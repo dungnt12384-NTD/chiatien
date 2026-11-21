@@ -1171,6 +1171,8 @@ html .kpi,html .stat,html .sum{background:var(--kpi)!important;border:1px solid 
 html .kpi b,html .stat b{font-family:var(--head-font);font-weight:800;color:var(--h2)!important}
 html .t2 thead th,html .matrix thead th,html table thead th{background:var(--surface2)!important;color:var(--h2)!important}
 html .matrix tr.tot td{background:var(--brand-bg)!important;border-top:2px solid var(--brand)!important}
+html .matrix tr.tot td:first-child{background-color:var(--surface)!important;background-image:linear-gradient(var(--brand-bg),var(--brand-bg))!important;z-index:2;box-shadow:2px 0 0 var(--line)}
+html .matrix td:first-child,html .matrix th:first-child{box-shadow:2px 0 0 var(--line)}
 
 /* ---- trang vào (gate) ---- */
 html .g-logo{background:var(--pv-grad)!important;box-shadow:0 12px 30px -10px rgba(10,106,214,.55)!important}
@@ -1366,7 +1368,7 @@ table.log-tbl th[aria-sort="ascending"] .ar::after{content:"▲";opacity:1;color
 table.log-tbl th[aria-sort="descending"] .ar::after{content:"▼";opacity:1;color:var(--accent)}
 table.log-tbl td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
 table.log-tbl td.lt-d{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--muted,#667085);font-size:12px}
-table.log-tbl td.lt-w{max-width:160px}
+table.log-tbl td.lt-w{max-width:200px;min-width:120px;overflow-wrap:anywhere;word-break:break-all;white-space:normal}
 table.log-tbl td.lt-a{white-space:nowrap;font-weight:600}
 table.log-tbl tbody tr:last-child td{border-bottom:0}
 /* v121b: tên chuyến tách rõ khỏi nội dung; mỗi dòng nội dung 1 hàng riêng */
@@ -2994,11 +2996,12 @@ function roomsReportData(){const ms=displayMembers(),out=[];
     const inRoom=new Set(rooms.flatMap(r=>r.people)),un=ms.map(m=>m.id).filter(i=>!inRoom.has(i));
     out.push({d,rooms,un,total:rooms.reduce((t,r)=>t+r.price,0)});});
   return out;}
+const rCnt=ids=>sumMode==='main'?groupMains(ids).length:ids.length;
 function roomsReportHtml(){const data=roomsReportData();
   if(!data.length)return '<div class="rsec"><h3>Báo cáo theo phòng</h3><div class="empty">Chưa có phòng nào. Thêm phòng ở tab Tiền phòng.</div></div>';
   return `<div class="rsec"><h3>Báo cáo theo phòng</h3><div class="hint" style="min-height:0">Mỗi ngày: số phòng, từng phòng có ai ở, giá phòng; cuối bảng là những người chưa xếp phòng.</div>${sumToggleHtml()}${repFoldBar}`+data.map(x=>`<div class="rcard" data-day="${x.d.id}"><div class="daytitle"><h3 style="color:var(--fg)">${esc(x.d.name)}</h3><span class="num">${x.rooms.length} phòng · ${fmt(x.total)}${x.d.place?` · ${esc(x.d.place)}`:''}</span></div><div class="tablewrap"><table class="t2"><thead><tr><th>Phòng</th><th>Loại phòng</th><th>Giá phòng</th><th>Số người</th><th>Giá mỗi người</th><th>Người ở</th></tr></thead><tbody>`+
-    x.rooms.map(r=>`<tr><td>${esc(r.name)}${r.solo?' <svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg>':''}</td><td>${esc(r.type)}${r.solo?(r.type?' · ':'')+'phòng riêng':''}</td><td class="num">${r.price?fmt(r.price):'<span class="rnoprice">chưa điền giá</span>'}</td><td class="num">${r.people.length}</td><td class="num">${r.people.length&&r.price?fmt(r.per):'-'}</td><td>${peopleCellM(r.people)}</td></tr>`).join('')+
-    `<tr class="tot"><td><b>Chưa xếp phòng</b></td><td></td><td></td><td class="num">${x.un.length}</td><td></td><td>${peopleCellM(x.un,'ai cũng đã có phòng')}</td></tr></tbody></table></div></div>`).join('')+`</div>`;}
+    x.rooms.map(r=>`<tr><td>${esc(r.name)}${r.solo?' <svg class="si" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg>':''}</td><td>${esc(r.type)}${r.solo?(r.type?' · ':'')+'phòng riêng':''}</td><td class="num">${r.price?fmt(r.price):'<span class="rnoprice">chưa điền giá</span>'}</td><td class="num">${rCnt(r.people)}</td><td class="num">${rCnt(r.people)&&r.price?fmt(r.price/rCnt(r.people)):'-'}</td><td>${peopleCellM(r.people)}</td></tr>`).join('')+
+    `<tr class="tot"><td><b>Chưa xếp phòng</b></td><td></td><td></td><td class="num">${rCnt(x.un)}</td><td></td><td>${peopleCellM(x.un,'ai cũng đã có phòng')}</td></tr></tbody></table></div></div>`).join('')+`</div>`;}
 function matrixData(){const ms=displayMembers(),rows=[];
   S.days.forEach(d=>S.expenses.filter(e=>e.dayId===d.id).forEach(e=>{const sh={};shareLines(e).forEach(l=>{sh[l.id]=(sh[l.id]||0)+l.sh;});rows.push({e,d,sh});}));
   const tot={};ms.forEach(m=>{tot[m.id]=rows.reduce((t,r)=>t+(r.sh[m.id]||0),0);});
@@ -5825,7 +5828,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v158',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v159',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

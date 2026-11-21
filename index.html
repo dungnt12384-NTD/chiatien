@@ -1625,13 +1625,21 @@ html.phone .tablewrap table.perm-tbl td{display:block!important;border:0!importa
 html.phone .tablewrap table.perm-tbl td::before{content:none!important;display:none!important}
 html.phone .tablewrap table.perm-tbl td:nth-child(1){grid-column:1;grid-row:1;font-weight:700}
 html.phone .tablewrap table.perm-tbl td:nth-child(2){grid-column:1;grid-row:2}
-html.phone .tablewrap table.perm-tbl td:nth-child(3){grid-column:1;grid-row:3;color:var(--muted);font-size:12px!important}
-html.phone .tablewrap table.perm-tbl td:nth-child(3)::before{content:"Gắn từ: "!important;display:inline!important}
-html.phone .tablewrap table.perm-tbl td:nth-child(4){grid-column:2;grid-row:1/4;align-self:start}
+html.phone .tablewrap table.perm-tbl:not(.perm-tbl3) td:nth-child(3){display:none!important}
+
+html.phone .tablewrap table.perm-tbl td:nth-child(4){grid-column:2;grid-row:1;align-self:start}
+/* danh sách chuyến trong khung nhóm: thu gọn, bấm để mở */
+details.ptrip>summary.ptrip-s{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;cursor:pointer;list-style:none;min-height:36px}
+details.ptrip>summary.ptrip-s::-webkit-details-marker{display:none}
+details.ptrip>summary.ptrip-s::after{content:"▾";margin-left:auto;color:var(--muted);transition:transform .15s}
+details.ptrip[open]>summary.ptrip-s::after{transform:rotate(180deg)}
+details.ptrip>summary b{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+.ptrip-n{font-size:12px;color:var(--muted);font-weight:400}
+details.ptrip[open]>summary{margin-bottom:6px}
 /* bảng 3 cột (Tài khoản | Quyền | ✕) của khung nhóm */
 table.perm-tbl.perm-tbl3 th:nth-child(1){width:50%}table.perm-tbl.perm-tbl3 th:nth-child(2){width:38%}table.perm-tbl.perm-tbl3 th:nth-child(3){width:56px}
 table.perm-tbl.perm-tbl3 td:nth-child(3){text-align:center;padding-inline:4px!important}
-html.phone .tablewrap table.perm-tbl.perm-tbl3 td:nth-child(3){grid-column:2;grid-row:1/3;color:inherit;font-size:13.5px!important;align-self:start}
+html.phone .tablewrap table.perm-tbl.perm-tbl3 td:nth-child(3){grid-column:2;grid-row:1;color:inherit;font-size:13.5px!important;align-self:start}
 html.phone .tablewrap table.perm-tbl.perm-tbl3 td:nth-child(3)::before{content:none!important;display:none!important}
 /* ===== Giao diện "Gốc" (mẫu từ artifact thanhtu): một màu chủ đạo xanh lá, thẻ phẳng viền mảnh, thanh chuyến đặc màu, thanh tab dạng thẻ ===== */
 /* ===== Số dương (xanh) / số âm (đỏ) rõ ràng ở mọi bộ giao diện + chỉnh tương phản (đặt CUỐI để thắng các khối trên) ===== */
@@ -1758,9 +1766,10 @@ html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td::before{content:none!
 html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(1){grid-column:1;grid-row:1;font-weight:700;font-size:14.5px!important;line-height:1.35}
 html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(1) small{font-weight:500;color:var(--muted)}
 html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(2){grid-column:1;grid-row:2}
-html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(3){grid-column:1;grid-row:3;color:var(--muted);font-size:12px!important;padding-top:6px!important;margin-top:2px;border-top:1px dashed var(--line)!important}
-html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(3)::before{content:"📍 Gắn từ: "!important;display:inline!important;font-weight:600}
-html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(4){grid-column:2;grid-row:1/3;align-self:start;justify-self:end;padding:0!important}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl:not(.perm-tbl3) td:nth-child(3){display:none!important}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl3 td:nth-child(3){grid-column:2;grid-row:1;align-self:start;justify-self:end;padding:0!important}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl3 td:nth-child(3):empty{display:none!important}
+html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(4){grid-column:2;grid-row:1;align-self:start;justify-self:end;padding:0!important}
 html.phone .tablewrap.tablewrap table.perm-tbl.perm-tbl td:nth-child(4):empty{display:none!important}
 /* máy tính: bảng gọn, hàng có vạch màu vai trò */
 html:not(.phone) table.perm-tbl{border-collapse:separate;border-spacing:0 6px}
@@ -4830,8 +4839,8 @@ function permHtml(){
     const ts=trips.filter(t=>t.gid===g.id);
     const cards=ts.map(t=>{const rs=tr.filter(r=>r.trip_id===t.id),er=rs.filter(r=>r.email).sort((a,b)=>rk(a)-rk(b)||String(a.email).localeCompare(String(b.email)));
       const gn=rs.filter(r=>!r.email&&r.active).length;
-      const tb=er.length?`<div class="tablewrap"><table class="perm-tbl perm-tbl3"><thead><tr><th>Tài khoản</th><th>Quyền</th><th></th></tr></thead><tbody>${er.map(r=>`<tr><td data-label="Tài khoản">${link('a:'+r.email,r.email)}</td><td data-label="Quyền">${pBadge(r)}</td><td data-label="">${r.role==='leader'||r.role==='helper'||r.role==='viewer'?rmBtn(r):''}</td></tr>`).join('')}</tbody></table></div>`:'<div class="hint" style="min-height:0">Chưa gán riêng cho ai (chỉ quản trị viên toàn hệ thống mới thấy).</div>';
-      return `<div class="gcard"><div class="row" style="align-items:center;gap:6px"><b style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere">🧳 ${link('t:'+t.id,t.name)}</b>${t.closed?'<span class="badge">đã chốt sổ</span>':''}</div>${tb}${gn?`<div class="hint" style="min-height:0">👤 Khách vào bằng mã chuyến: ${gn} đang xem</div>`:''}</div>`;}).join('');
+      const tb=er.length?`<div class="tablewrap"><table class="perm-tbl perm-tbl3"><thead><tr><th>Tài khoản</th><th>Quyền</th><th></th></tr></thead><tbody>${er.map(r=>`<tr data-role="${r.role}"><td data-label="Tài khoản">${link('a:'+r.email,r.email)}</td><td data-label="Quyền">${pBadge(r)}</td><td data-label="">${r.role==='leader'||r.role==='helper'||r.role==='viewer'?rmBtn(r):''}</td></tr>`).join('')}</tbody></table></div>`:'<div class="hint" style="min-height:0">Chưa gán riêng cho ai (chỉ quản trị viên toàn hệ thống mới thấy).</div>';
+      return `<details class="gcard ptrip" data-tid="${esc(t.id)}"${(window.PERM_GT||{})[t.id]?' open':''}><summary class="ptrip-s"><b>🧳 ${esc(t.name)}</b>${t.closed?'<span class="badge">đã chốt sổ</span>':''}<span class="ptrip-n">${er.length} tài khoản${gn?` · ${gn} khách`:''}</span></summary>${tb}${gn?`<div class="hint" style="min-height:0">👤 Khách vào bằng mã chuyến: ${gn} đang xem</div>`:''}<div class="row">${link('t:'+t.id,'Mở khung chuyến này →')}</div></details>`;}).join('');
     const og=own.filter(r=>r.email||r.active);
     return `<div class="hint" style="min-height:0">Nhóm chỉ là thư mục để phân loại. Quyền thuộc về từng chuyến bên dưới (quản trị viên có toàn quyền ở mọi nhóm nên không liệt kê lại).</div>`+
       `<div class="sub">Chuyến trong nhóm (${ts.length})</div>`+(cards||'<div class="hint" style="min-height:0">Nhóm chưa có chuyến nào.</div>')+
@@ -4859,6 +4868,7 @@ function permHtml(){
     sec('🧳','Chuyến',T,t=>`<b>${fzMark(t.name,q)}</b><small>${fzMark(t.gname,q)}${t.closed?' · đã chốt':''}</small>`,'t')+
     sec('👤','Tài khoản',A,a=>`<b>${fzMark(a.email,q)}</b><small>${a.adm?'Quản trị viên · ':''}${a.n} quyền</small>`,'a');}
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qPermQ'){window.PERM_Q=ev.target.value;renderGroupTab();}});
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.classList&&d.classList.contains('ptrip'))(window.PERM_GT=window.PERM_GT||{})[d.dataset.tid]=d.open;},true);
 /* v82: giữ chữ đang gõ / lựa chọn của khung Gán khi trang tự vẽ lại; đổi vai trò thì vẽ lại để hiện / ẩn ô tick mục */
 document.addEventListener('input',ev=>{const t=ev.target;if(t&&t.id==='qPAddE')(window.PADD=window.PADD||{}).e=t.value;});
 document.addEventListener('change',ev=>{const t=ev.target;if(!t)return;const D=window.PADD=window.PADD||{};
@@ -6017,7 +6027,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v191',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v192',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

@@ -1654,6 +1654,8 @@ html.phone .mini-dlg tr{display:table-row!important;border:0!important;border-ra
 html.phone .mini-dlg th,html.phone .mini-dlg td{display:table-cell!important;padding:8px 6px!important;font-size:13px;white-space:normal;overflow-wrap:anywhere}
 html.phone .mini-dlg td.num,html.phone .mini-dlg th:not(:first-child){text-align:right}
 html.phone .mini-dlg td:first-child{text-align:left;font-weight:600}
+html.phone .mini-dlg td[data-label]::before,.mini-dlg td[data-label]::before{content:none!important;display:none!important}
+html.phone .mini-dlg td.num{white-space:nowrap}
 .mini-exit{background:#546e7a!important;color:#fff!important;border:0!important}
 .mini-dim{opacity:.32;filter:grayscale(1);pointer-events:none}
 .mini-dim2{opacity:.4;filter:grayscale(1)}
@@ -5821,7 +5823,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v155',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v156',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

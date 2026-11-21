@@ -1654,6 +1654,7 @@ html.phone .mini-dlg tr{display:table-row!important;border:0!important;border-ra
 html.phone .mini-dlg th,html.phone .mini-dlg td{display:table-cell!important;padding:8px 6px!important;font-size:13px;white-space:normal;overflow-wrap:anywhere}
 html.phone .mini-dlg td.num,html.phone .mini-dlg th:not(:first-child){text-align:right}
 html.phone .mini-dlg td:first-child{text-align:left;font-weight:600}
+.mini-exit{background:#546e7a!important;color:#fff!important;border:0!important}
 .mini-dim{opacity:.32;filter:grayscale(1);pointer-events:none}
 .mini-dim2{opacity:.4;filter:grayscale(1)}
 .mini-dlg{box-sizing:border-box;overflow-x:hidden}
@@ -5820,7 +5821,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v154',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v155',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
@@ -5937,7 +5938,7 @@ function html(){var h='<div class="skin-dlg mini-dlg" role="dialog" aria-modal="
     '<div class="subtabs" role="group" aria-label="Lọc danh sách" style="margin:2px 0">'+[['all','Tất cả ('+st.people.length+')'],['in','Tham gia ('+nIn+')'],['out','Không tham gia ('+(st.people.length-nIn)+')']].map(function(x){return '<button type="button" class="subtab" data-mn="vf" data-v="'+x[0]+'" aria-pressed="'+(viewF===x[0])+'">'+x[1]+'</button>';}).join('')+'</div>'+
     dirtyBar()+'<div class="chips">'+(function(){var L=st.people.filter(function(p){var go=dr.ids.indexOf(p)>=0;return delMode||viewF==='all'||(viewF==='in'?go:!go);});return L.length?'':'<div class="hint" style="min-height:0">'+(viewF==='in'?'Chưa có ai tham gia.':'Ai cũng đang tham gia.')+'</div>';})()+st.people.filter(function(p){var go=dr.ids.indexOf(p)>=0;return delMode||viewF==='all'||(viewF==='in'?go:!go);}).map(function(p){var go=dr.ids.indexOf(p)>=0,fr=go&&dr.fr.indexOf(p)>=0;return chip(p,' tog'+(fr&&!delMode?' mini-free':''),'style="--c:var(--c-expense,var(--accent))" data-mn="'+(delMode?'delt':'tg')+'" data-n="'+esc(p)+'" aria-pressed="'+(delMode?delSel.indexOf(p)>=0:go)+'"',delMode?'<span class="mini-x" title="Bấm để xoá">×</span>':(fr?'<span class="mini-fl" title="Miễn tiền">🆓</span>':''));}).join('')+'</div>'+
     (delMode?'<div class="mini-msg">Chế độ xoá: bấm tên để đánh dấu (sáng = sẽ xoá), có thể đánh dấu nhiều người rồi xoá một lượt.</div><div class="mini-row"><button type="button" class="btn ghost small" data-mn="delall">Đánh dấu hết</button><button type="button" class="btn ghost small" data-mn="delnone">Bỏ đánh dấu</button><button type="button" class="btn small" data-mn="delgo"'+(delSel.length?'':' disabled')+'>Xoá '+delSel.length+' người đã đánh dấu</button></div>':'<div class="hint" style="min-height:0">Bấm lần 1: đi · lần 2: <b>🆓 đi nhưng miễn tiền</b> · lần 3: không đi.</div>')+addRow()+
-    (edit?'<div class="mini-row"><button type="button" class="btn" data-mn="updb">Cập nhật khoản này</button><button type="button" class="btn ghost" data-mn="newb">＋ Lưu thành khoản mới</button></div><div class="mini-row"><button type="button" class="btn ghost small" data-mn="unpick">Bỏ chọn khoản (thoát chế độ sửa)</button><button type="button" class="btn ghost small" data-mn="delb">Xoá khoản này</button></div>'
+    (edit?'<div class="mini-row"><button type="button" class="btn" data-mn="updb">Cập nhật khoản này</button><button type="button" class="btn ghost" data-mn="newb">＋ Lưu thành khoản mới</button></div><div class="mini-row"><button type="button" class="btn small mini-exit" data-mn="unpick">⏎ Thoát chế độ sửa</button><button type="button" class="btn ghost small" data-mn="delb">Xoá khoản này</button></div>'
           :'<button type="button" class="btn" data-mn="addb">＋ Thêm khoản</button>')+'</div>';
   /* 2. các khoản đã nhập: bấm để nạp lại vào ô nhập phía trên và xem kết quả riêng */
   h+='<div class="sk-h">Các khoản chi đã nhập ('+st.bills.length+')</div>';
@@ -5947,7 +5948,7 @@ function html(){var h='<div class="skin-dlg mini-dlg" role="dialog" aria-modal="
   /* 3. kết quả: của khoản đang chọn, hoặc của tất cả */
   if(st.bills.length&&edit&&viewBills().length){var vb=viewBills(),c=calc(vb),one=vb.length===1&&edit,rows=st.people.filter(function(p){return c.P[p].paid>0||c.P[p].share>0;});
     h+='<div class="sk-h">Kết quả: '+(one?esc(vb[0].desc||'khoản đang chọn'):'')+'</div>'+
-      '<div class="hint" style="min-height:0">Mỗi khoản tính riêng, không cộng gộp với khoản khác. <a href="#" data-mn="unpick" class="lnk">Bỏ chọn khoản</a></div>'+
+      '<div class="hint" style="min-height:0">Mỗi khoản tính riêng, không cộng gộp với khoản khác. <a href="#" data-mn="unpick" class="lnk">Thoát chế độ sửa</a></div>'+
       '<div class="tablewrap"><table class="t2"><thead><tr><th>Người</th><th>Đã trả</th><th>Phải chịu</th><th>Chênh</th></tr></thead><tbody>'+rows.map(function(p){var x=c.P[p],d=Math.round(x.paid-x.share);
         return '<tr><td>'+esc(p)+(isGuest(p)?' <span class="hint">(khách)</span>':'')+'</td><td class="num">'+money(x.paid)+'</td><td class="num">'+money(x.share)+'</td><td class="num" style="font-weight:700;color:'+(d>0?'var(--pos)':d<0?'var(--neg)':'inherit')+'">'+(d>0?'+':d<0?'−':'')+money(Math.abs(d))+'</td></tr>';}).join('')+'</tbody></table></div>'+
       (c.tr.length?'<div class="mini-tr"><b>Ai chuyển cho ai:</b>'+c.tr.map(function(t){return '<div>'+esc(t.from)+' → '+esc(t.to)+': <b>'+money(t.v)+'</b></div>';}).join('')+'</div>':'<div class="hint">Không ai phải chuyển thêm.</div>')+

@@ -1,0 +1,4 @@
+-- 048: cho phép gửi / gửi lại đề nghị "Tôi đã trả" cả khi sổ đã chốt (bỏ kiểm tra closed_at).
+-- Duyệt đề nghị vẫn do thủ quỹ làm (cần mở lại sổ nếu muốn ghi khoản chi).
+-- Nội dung hàm = bản trên DB sau khi bỏ dòng: if cl is not null then raise exception 'closed'; end if;
+-- Đã áp dụng trực tiếp qua Supabase (apply_migration 048_de_nghi_da_tra_khi_da_chot_so).

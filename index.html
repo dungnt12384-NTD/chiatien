@@ -5128,7 +5128,7 @@ function renderTripExtra(){
     ${cl?'<div class="hint" style="min-height:0">Sổ đã chốt: không ai sửa được cho tới khi thủ quỹ mở lại.</div>':''}${warn}
     <div class="row tx-row">
       <button type="button" class="btn ghost small" data-tx="reports">${hr?'Báo sai'+(rc?` <span class="cnt">${rc}</span>`:''):'Báo sai'}</button>
-      ${ld||!cl?`<button type="button" class="btn ghost small" data-tx="claims">${ld?'Đã trả hộ'+(clCount.get(t.id)?` <span class="cnt">${clCount.get(t.id)}</span>`:''):'Tôi đã trả'}</button>`:''}
+      <button type="button" class="btn ghost small" data-tx="claims">${ld?'Đã trả hộ'+(clCount.get(t.id)?` <span class="cnt">${clCount.get(t.id)}</span>`:''):'Tôi đã trả'}</button>
       ${ld?`<button type="button" class="btn ghost small" data-tx="${cl?'reopen':'close'}">${cl?'Mở lại sổ':'Chốt sổ'}</button>`:''}
     </div></div>`;}
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-tx]');if(!b)return;ev.preventDefault();
@@ -5232,14 +5232,13 @@ function dlgBody(){
     const stB=c=>c.status==='approved'?'<span class="badge on">Đã duyệt</span>':c.status==='rejected'?'<span class="badge warn">Từ chối</span>':'<span class="badge">Chờ duyệt</span>';
     const top=c=>`<div class="row" style="gap:8px;align-items:center;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-size:14.5px;font-weight:600">${esc(c.descr)} · ${fmt(c.amount)}</div>${stB(c)}</div>
       <div class="hint" style="min-height:0">${esc(c.member_name||nameOf(c.member_id))} đã trả${c.day_id&&day(c.day_id)?' · '+esc(dayName(c.day_id)):''} · ${fdt(c.at)}${c.reporter?' · người gửi: '+esc(c.reporter):''}</div>${c.note?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Ghi chú: ${esc(c.note)}</div>`:''}${c.status!=='pending'&&c.reply?`<div class="hint" style="min-height:0;overflow-wrap:anywhere">Thủ quỹ trả lời: ${esc(c.reply)}</div>`:''}`;
-    const redo=c=>c.mine&&c.status==='rejected'&&!isClosed()?`<div class="row"><button type="button" class="btn small" data-dl="clredo" data-id="${c.id}"${dis}>Sửa và gửi lại</button></div>`:'';
+    const redo=c=>c.mine&&c.status==='rejected'?`<div class="row"><button type="button" class="btn small" data-dl="clredo" data-id="${c.id}"${dis}>Sửa và gửi lại</button></div>`:'';
     if(ld){
       const rows=clRows.length?clRows.map(c=>`<div class="rcard">${top(c)}${redo(c)}${c.status==='pending'?`<div class="row"><div class="field"><input type="text" id="dlgCl-${c.id}" maxlength="500" placeholder="Trả lời (không bắt buộc)" aria-label="Trả lời"></div><button type="button" class="btn small" data-dl="clok" data-id="${c.id}"${dis}>Duyệt</button><button type="button" class="btn ghost small" style="color:var(--neg)" data-dl="clno" data-id="${c.id}"${dis}>Từ chối</button></div>`:''}</div>`).join(''):'<div class="hint">Chưa có đề nghị nào.</div>';
       return `<p style="color:var(--muted);font-size:14px;margin:0">Người đi báo đã trả hộ. <b>Duyệt</b> sẽ mở sẵn form khoản chi (đã điền), bạn chọn người chia rồi lưu. Chưa lưu thì đề nghị vẫn chờ.</p>${rows}`;}
     const dr=clDraft||{},me=dr.mem||lsGet('chiatien-me-'+R.current)||'',dsel=dr.day||S.activeDay||'';
-    const form=isClosed()?'<div class="hint">Sổ đã chốt, không gửi thêm được.</div>'
-      :clSent?`<div class="gcard"><div class="note info" role="status" style="--c:var(--pos)">✅ ${clSent.again?'Đã gửi lại':'Đã gửi'}: <b>${esc(clSent.desc)} · ${esc(clSent.amt)}</b>. Thủ quỹ sẽ xem và duyệt. Xem trạng thái ở danh sách bên dưới.</div><div class="row"><button type="button" class="btn" data-dl="clmore">Gửi thêm khoản khác</button></div></div>`
-      :`<div class="gcard"><div class="sub">${clResend?'Sửa và gửi lại đề nghị bị từ chối':'Gửi đề nghị'}</div><p style="color:var(--muted);font-size:12px;margin:0">${clResend?'Nội dung cũ đã được điền sẵn. Sửa nếu cần rồi gửi lại, vẫn là đề nghị cũ, không tạo thêm.':'Bạn đã trả giúp một khoản? Gửi ở đây, thủ quỹ kiểm tra rồi mới ghi vào chuyến.'}</p>
+    const form=clSent?`<div class="gcard"><div class="note info" role="status" style="--c:var(--pos)">✅ ${clSent.again?'Đã gửi lại':'Đã gửi'}: <b>${esc(clSent.desc)} · ${esc(clSent.amt)}</b>. Thủ quỹ sẽ xem và duyệt. Xem trạng thái ở danh sách bên dưới.</div><div class="row"><button type="button" class="btn" data-dl="clmore">Gửi thêm khoản khác</button></div></div>`
+      :`<div class="gcard"><div class="sub">${clResend?'Sửa và gửi lại đề nghị bị từ chối':'Gửi đề nghị'}</div><p style="color:var(--muted);font-size:12px;margin:0">${clResend?'Nội dung cũ đã được điền sẵn. Sửa nếu cần rồi gửi lại, vẫn là đề nghị cũ, không tạo thêm.':'Bạn đã trả giúp một khoản? Gửi ở đây, thủ quỹ kiểm tra rồi mới ghi vào chuyến.'}${isClosed()?' <b>Sổ đã chốt:</b> đề nghị vẫn gửi được, thủ quỹ sẽ mở lại sổ khi duyệt.':''}</p>
         <div class="field"><label for="clMem">Người đã trả</label><select id="clMem"><option value="">— chọn —</option>${S.members.map(m=>`<option value="${esc(m.id)}"${m.id===me?' selected':''}>${esc(m.name)}</option>`).join('')}</select></div>
         <div class="field"><label for="clDay">Ngày</label><select id="clDay"><option value="">(không rõ)</option>${S.days.map(d=>`<option value="${esc(d.id)}"${d.id===dsel?' selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
         <div class="field"><label for="clDesc">Nội dung</label><input type="text" id="clDesc" maxlength="80" placeholder="Ví dụ: cà phê sáng, tiền phà" value="${esc(dr.desc||'')}"></div>
@@ -5873,7 +5872,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v171',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v172',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

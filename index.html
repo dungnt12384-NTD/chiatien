@@ -1660,17 +1660,22 @@ html.phone .mini-dlg td.num,html.phone .mini-dlg th:not(:first-child){text-align
 html.phone .mini-dlg td:first-child{text-align:left;font-weight:600}
 html.phone .mini-dlg td[data-label]::before,.mini-dlg td[data-label]::before{content:none!important;display:none!important}
 html.phone .mini-dlg td.num{white-space:nowrap}
-/* điện thoại: bảng ở Tổng kết và Báo cáo giữ dạng bảng gọn như iPad/máy tính (không xếp thành thẻ dọc) */
-html.phone #report .tablewrap:not(.mx),html.phone .tablewrap:has(#balBody){border:1px solid var(--line)!important;border-radius:12px;overflow-x:auto!important}
-html.phone #report table:not(.matrix),html.phone table:has(#balBody){display:table!important;width:100%;min-width:0!important;font-size:12.5px}
+/* điện thoại: bảng ở Tổng kết và Báo cáo giữ dạng bảng; cột không bị ép hẹp, bảng rộng hơn màn hình thì kéo ngang TRONG khung (không đẩy trang) */
+html.phone #report .tablewrap:not(.mx),html.phone .tablewrap:has(#balBody){display:block;max-width:100%;border:1px solid var(--line)!important;border-radius:12px;overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+html.phone #report,html.phone #report .rsec,html.phone #report .rcard,html.phone #summary,html.phone .sec{min-width:0;max-width:100%}
+html.phone #report table:not(.matrix),html.phone table:has(#balBody){display:table!important;width:max-content!important;min-width:100%!important;font-size:12.5px;border-collapse:collapse}
 html.phone #report table:not(.matrix) thead,html.phone table:has(#balBody) thead{display:table-header-group!important}
 html.phone #report table:not(.matrix) tbody,html.phone table:has(#balBody) tbody{display:table-row-group!important}
 html.phone #report table:not(.matrix) tr,html.phone table:has(#balBody) tr{display:table-row!important;border:0!important;border-radius:0!important;padding:0!important;background:transparent!important}
-html.phone #report table:not(.matrix) th,html.phone #report table:not(.matrix) td,html.phone table:has(#balBody) th,html.phone table:has(#balBody) td{display:table-cell!important;padding:7px 6px!important;font-size:12.5px;text-align:left;vertical-align:middle;white-space:normal;overflow-wrap:anywhere;border-top:1px solid var(--line)}
-html.phone #report table:not(.matrix) td.num,html.phone #report table:not(.matrix) th.num,html.phone table:has(#balBody) td.num,html.phone table:has(#balBody) td:last-child,html.phone table:has(#balBody) th:last-child{text-align:right;white-space:nowrap}
+html.phone #report table:not(.matrix) th,html.phone #report table:not(.matrix) td,html.phone table:has(#balBody) th,html.phone table:has(#balBody) td{display:table-cell!important;padding:8px 9px!important;font-size:12.5px;text-align:left;vertical-align:middle;white-space:nowrap;border-top:1px solid var(--line)}
+html.phone #report table:not(.matrix) th,html.phone table:has(#balBody) th{font-size:11.5px;font-weight:700}
+/* cột chữ (tên, khoản chi, danh sách người) được xuống dòng nhưng không bị ép hẹp */
+html.phone #report table:not(.matrix) td:not(.num):not(.stt),html.phone table:has(#balBody) td:not(.num):not(.stt){white-space:normal;min-width:0;max-width:210px;overflow-wrap:break-word}
+html.phone #report table:not(.matrix) td:has(.pcell),html.phone #report table:not(.matrix) td:has(.pgrp){min-width:170px}
+html.phone #report table:not(.matrix) td.num,html.phone table:has(#balBody) td.num,html.phone table:has(#balBody) td:last-child,html.phone table:has(#balBody) th:last-child{text-align:right;white-space:nowrap;min-width:64px}
 html.phone #report table:not(.matrix) td[data-label]::before,html.phone table:has(#balBody) td[data-label]::before{content:none!important;display:none!important}
 html.phone #balBody tr.clk td.stt{display:table-cell!important}
-html.phone #report table:not(.matrix) tr.det td,html.phone table:has(#balBody) tr.det td{white-space:normal;text-align:left}
+html.phone #report table:not(.matrix) tr.det td,html.phone table:has(#balBody) tr.det td{white-space:normal;text-align:left;max-width:none;min-width:0;width:auto}
 .mini-exit{background:#546e7a!important;color:#fff!important;border:0!important}
 .mini-dim{opacity:.32;filter:grayscale(1);pointer-events:none}
 .mini-dim2{opacity:.4;filter:grayscale(1)}
@@ -5839,7 +5844,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v160',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v161',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

@@ -2679,7 +2679,7 @@ function openRoomEditor(dayId){if(curTab!=='room')showTab('room',true);$('#rmDay
 function startEdit(id,scroll){const e=S.expenses.find(x=>x.id===id);if(!e)return;
   if(e.rooms&&e.rooms.length){openRoomEditor(e.dayId);return;}
   editing=id;formExcl=new Set(e.excluded);
-  amtMode='total';render();$('#expDay').value=e.dayId;$('#expPayer').value=e.payer;$('#expDesc').value=e.desc;$('#expAmount').value=e.amount.toLocaleString('vi-VN');
+  amtMode=e.unit>0?'unit':'total';render();$('#expDay').value=e.dayId;$('#expPayer').value=e.payer;$('#expDesc').value=e.desc;$('#expAmount').value=(e.unit>0?e.unit:e.amount).toLocaleString('vi-VN');
   $('#expSubmit').textContent='Lưu thay đổi';$('#expCancel').textContent='Huỷ sửa';renderSplit();window.EXP_SNAP=expSig();
   if(scroll!==false){$('#expDesc').scrollIntoView({block:'center',behavior:'smooth'});$('#expDesc').focus();}}
 function copyRoomsFrom(srcId){
@@ -3032,17 +3032,19 @@ function addClear(sel){const i=$(sel);if(!i||i.parentNode.classList.contains('sb
 ['#roomSearch','#memberSearch','#expSearch'].forEach(addClear);
 /* nút × xoá nhanh cho mọi ô nhập chữ/số (hiện khi bấm vào ô có nội dung) */
 (function(){const GC=document.createElement('button');GC.type='button';GC.id='gclear';GC.hidden=true;GC.textContent='×';GC.setAttribute('aria-label','Xoá nội dung ô này');GC.title='Xoá nội dung ô này';document.body.appendChild(GC);
-  let cur=null;
+  let cur=null,GCtap=false;
   const ok=t=>t&&t.matches&&t.matches('input[type=text]')&&!t.readOnly&&!t.disabled&&!t.closest('.sbox');
   function pos(){const t=cur;if(!t||!document.contains(t)||!t.value){GC.hidden=true;return;}
     const r=t.getBoundingClientRect();if(r.width<60||r.bottom<0||r.top>innerHeight){GC.hidden=true;return;}
     GC.hidden=false;GC.style.left=(r.right-34)+'px';GC.style.top=(r.top+r.height/2-13)+'px';}
   document.addEventListener('focusin',e=>{if(e.target===GC)return;if(ok(e.target)){cur=e.target;pos();}else{cur=null;GC.hidden=true;}});
-  document.addEventListener('focusout',e=>{if(e.target===cur)setTimeout(()=>{if(document.activeElement!==cur){cur=null;GC.hidden=true;}},120);});
+  document.addEventListener('focusout',e=>{if(e.target===cur)setTimeout(()=>{if(document.activeElement!==cur&&!GCtap){cur=null;GC.hidden=true;}},500);});
   document.addEventListener('input',e=>{if(e.target===cur)pos();});
   window.addEventListener('scroll',pos,true);window.addEventListener('resize',pos);
   GC.addEventListener('mousedown',e=>e.preventDefault());
-  GC.addEventListener('click',()=>{const t=cur;if(!t)return;t.value='';t.dispatchEvent(new Event('input',{bubbles:true}));t.focus();pos();});
+  const doClear=()=>{const t=cur;if(!t)return;t.value='';t.dispatchEvent(new Event('input',{bubbles:true}));t.focus();pos();};
+  GC.addEventListener('touchstart',e=>{e.preventDefault();GCtap=true;doClear();setTimeout(()=>{GCtap=false;},300);},{passive:false});
+  GC.addEventListener('click',doClear);
 })();
 function foldDayCards(el){el.querySelectorAll('.rcard[data-day]').forEach(card=>{const id=card.dataset.day,open=repOpenDays.has(id),t=card.querySelector('.daytitle');if(!t)return;
   t.classList.add('tg');t.setAttribute('role','button');t.tabIndex=0;t.dataset.act='repTogDay';t.dataset.id=id;t.setAttribute('aria-expanded',open);
@@ -3279,7 +3281,7 @@ $('#expForm').addEventListener('submit',ev=>{ev.preventDefault();
     document.querySelectorAll('.room.bad').forEach(x=>x.classList.remove('bad'));
     if(rid){const c=document.querySelector('[data-card="'+rid+'"]');if(c){c.classList.add('bad');const pi=c.querySelector('[data-room-price]');if(pi&&!parseMoney(pi.value))pi.focus();c.scrollIntoView({block:'center',behavior:'smooth'});return;}}
     el.scrollIntoView({block:'center',behavior:'smooth'});};
-  let desc=$('#expDesc').value.trim(),a;
+  let desc=$('#expDesc').value.trim(),a,unitVal=null;
   if(!S.members.length){fail('Thêm thành viên trước.');return;}
   if(room){
     if(!desc)desc='Tiền phòng';
@@ -3295,11 +3297,11 @@ $('#expForm').addEventListener('submit',ev=>{ev.preventDefault();
     if(isNaN(a)){fail(amtMode==='unit'?'Nhập đơn giá hợp lệ, ví dụ 150.000 hoặc 150k.':'Nhập số tiền hợp lệ, ví dụ 1.500.000 hoặc 1,5tr.');return;}
     if(amtMode==='unit'){const dd=day($('#expDay').value),np=dd?dd.present.filter(i=>mem(i)&&!formExcl.has(i)).length:0;
       if(!np){fail('Chưa có người nào được chia, không nhân được đơn giá. Chọn người ở phần "Chia cho" bên dưới.');return;}
-      a=Math.round(a*np);}
+      unitVal=a;a=Math.round(a*np);}
   }
   const payer=$('#expPayer').value;
   if(payer==='fund'&&!S.holder){fail('Chọn người giữ quỹ trước.');return;}
-  const rec={dayId:$('#expDay').value,desc,amount:a,payer,excluded:room?[]:[...formExcl],
+  const rec={dayId:$('#expDay').value,desc,amount:a,unit:unitVal>0?unitVal:undefined,payer,excluded:room?[]:[...formExcl],
     rooms:room?formRooms.map((r,k)=>({id:r.id,name:r.name.trim()||('Phòng '+(k+1)),price:r.price,people:[...r.people]})):null,
     selfRoom:room?[...formSelf]:[]};
   const finish=()=>{
@@ -3495,11 +3497,11 @@ document.addEventListener('click',ev=>{
   else if((act==='delExp'||act==='editExp'||act==='moveExp')&&!expMine(S.expenses.find(x=>x.id===id))){toast(DENY_MSG.exp_other);return;}
   else if(act==='copyExp'){const e=S.expenses.find(x=>x.id===id);if(!e)return;
     if(e.rooms&&e.rooms.length){toast('Tiền phòng thì dùng nút chép phòng ở tab Phòng (Sao chép phòng từ ngày khác).');return;}
-    const ch=S.days.filter(d=>d.id!==e.dayId).map(d=>({label:d.name+' ('+S.expenses.filter(x=>x.dayId===d.id).length+' khoản)',fn:()=>ask('Sao chép khoản chi "'+e.desc+'" ('+fmt(e.amount)+') sang '+d.name+'? Bản gốc ở '+dayName(e.dayId)+' vẫn giữ nguyên.',{ok:'Sao chép sang '+d.name,title:'Xác nhận sao chép'},()=>{const c=JSON.parse(JSON.stringify(e));c.id=uid();c.dayId=d.id;if(myMail())c.by=myMail();else delete c.by;S.expenses.push(c);S.activeDay=d.id;openDays.add(d.id);render();toast('Đã sao chép khoản chi sang '+d.name+'.');})}));
+    const ch=S.days.filter(d=>d.id!==e.dayId).map(d=>({label:d.name+' ('+S.expenses.filter(x=>x.dayId===d.id).length+' khoản)',fn:()=>ask('Sao chép khoản chi "'+e.desc+'" ('+fmt(e.amount)+') sang '+d.name+'? Bản gốc ở '+dayName(e.dayId)+' vẫn giữ nguyên.',{ok:'Sao chép sang '+d.name,title:'Xác nhận sao chép'},()=>{const c=JSON.parse(JSON.stringify(e));c.id=uid();c.dayId=d.id;if(c.unit>0){const np=d.present.filter(i=>mem(i)&&!(c.excluded||[]).includes(i)).length;if(np)c.amount=Math.round(c.unit*np);}if(myMail())c.by=myMail();else delete c.by;S.expenses.push(c);S.activeDay=d.id;openDays.add(d.id);render();toast('Đã sao chép khoản chi sang '+d.name+'.');})}));
     if(!ch.length){toast('Chỉ có một ngày, không có ngày để sao chép sang.');return;}
     ask('Sao chép khoản chi "'+e.desc+'" ('+fmt(e.amount)+') sang ngày nào?',{title:'Sao chép sang ngày khác',noLabel:'Huỷ',choices:ch});}
   else if(act==='moveExp'){const e=S.expenses.find(x=>x.id===id);if(!e)return;const isRoom=!!(e.rooms&&e.rooms.length);
-    const ch=S.days.filter(d=>d.id!==e.dayId).map(d=>{const clash=isRoom&&S.expenses.some(x=>x.id!==e.id&&x.dayId===d.id&&x.rooms&&x.rooms.length);return clash?null:{label:d.name+' ('+S.expenses.filter(x=>x.dayId===d.id).length+' khoản)',fn:()=>ask('Chuyển khoản chi "'+e.desc+'" ('+fmt(e.amount)+') từ '+dayName(e.dayId)+' sang '+d.name+'? Người nhận/người chi giữ nguyên, kết quả sẽ tính lại.',{ok:'Chuyển sang '+d.name,title:'Xác nhận chuyển ngày'},()=>{e.dayId=d.id;S.activeDay=d.id;openDays.add(d.id);if(editing===id)resetExpForm();render();toast('Đã chuyển khoản chi sang '+d.name+'.');})};}).filter(Boolean);
+    const ch=S.days.filter(d=>d.id!==e.dayId).map(d=>{const clash=isRoom&&S.expenses.some(x=>x.id!==e.id&&x.dayId===d.id&&x.rooms&&x.rooms.length);return clash?null:{label:d.name+' ('+S.expenses.filter(x=>x.dayId===d.id).length+' khoản)',fn:()=>ask('Chuyển khoản chi "'+e.desc+'" ('+fmt(e.amount)+') từ '+dayName(e.dayId)+' sang '+d.name+'? Người nhận/người chi giữ nguyên, kết quả sẽ tính lại.',{ok:'Chuyển sang '+d.name,title:'Xác nhận chuyển ngày'},()=>{e.dayId=d.id;if(e.unit>0){const np=d.present.filter(i=>mem(i)&&!(e.excluded||[]).includes(i)).length;if(np)e.amount=Math.round(e.unit*np);}S.activeDay=d.id;openDays.add(d.id);if(editing===id)resetExpForm();render();toast('Đã chuyển khoản chi sang '+d.name+'.');})};}).filter(Boolean);
     if(!ch.length){toast(isRoom?'Các ngày khác đã có khoản tiền phòng, không chuyển được.':'Chỉ có một ngày, không có ngày để chuyển sang.');return;}
     ask('Chuyển khoản chi "'+e.desc+'" ('+fmt(e.amount)+') đang ở '+dayName(e.dayId)+' sang ngày nào?',{title:'Chuyển sang ngày khác',noLabel:'Huỷ',choices:ch});}
   else if(act==='delExp'){const e=S.expenses.find(x=>x.id===id);if(!e)return;
@@ -5843,7 +5845,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v167',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v168',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

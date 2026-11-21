@@ -1548,7 +1548,7 @@ html body .org-mail{font-size:14px!important}
 .who-chip b{font-weight:700;color:var(--accent)}
 html body .btn.code-warn{background:#fff4e0!important;color:#9a5b00!important;border:1px solid #f0b85a!important}
 </style>
-<script>try{var _s=localStorage.getItem("ctn-skin"),_m=localStorage.getItem("ctn-mode"),_h=document.documentElement;if(_s&&_s!=="pv")_h.setAttribute("data-skin",_s);if(_m==="light"||_m==="dark")_h.setAttribute("data-theme",_m);}catch(e){}</script>
+<script>try{var _s=localStorage.getItem("ctn-skin");if(_s==="goc"){_s="pv";localStorage.setItem("ctn-skin","pv");}var _x=0,_m=localStorage.getItem("ctn-mode"),_h=document.documentElement;if(_s&&_s!=="pv")_h.setAttribute("data-skin",_s);if(_m==="light"||_m==="dark")_h.setAttribute("data-theme",_m);}catch(e){}</script>
 <style id="skins">
 /* ===== CÁC BỘ GIAO DIỆN (data-skin) + chế độ sáng/tối (data-theme). Không đặt data-skin = Petrovietnam (mặc định). Đặt SAU khối layout. ===== */
 :root[data-skin="ios"]{--brand:#007aff;--brand-d:#0062cc;--brand-bg:rgba(0,122,255,.12);--accent:#007aff;--gold:#007aff;--on:#fff;--bg:#f2f2f7;--surface:#fff;--surface2:#f2f2f7;--fill:rgba(60,60,67,.08);--fill2:rgba(60,60,67,.15);--line:rgba(60,60,67,.14);--fg:#000000;--muted:rgba(60,60,67,.62);--h2:#1c1c1e;--pv-navy:#1c1c1e;--pv-navy-d:#000000;--pv-blue:#007aff;--pv-sky:#5ac8fa;--pv-green:#34c759;--pv-grad:linear-gradient(135deg,#5ac8fa 0%,#007aff 55%,#0051d5 100%);--pv-bar:linear-gradient(90deg,#5ac8fa,#007aff 55%,#0051d5);--pv-text:linear-gradient(90deg,#000000 0%,#1c1c1e 35%,#007aff 100%);--glass:rgba(255,255,255,.74);--glass-br:rgba(255,255,255,.95);--card:rgba(255,255,255,.88);--card-br:rgba(255,255,255,.95);--sel:#fff;--kpi:linear-gradient(180deg,#fff,#f2f2f7)}
@@ -5801,7 +5801,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v146',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v147',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
@@ -5820,7 +5820,7 @@ setInterval(()=>appUpdate(false),600000);
 
 <script>
 (function(){
-var SK=[['pv','Petrovietnam','#00a04b','#2e3a87'],['ios','iOS','#5ac8fa','#007aff'],['rung','Rừng xanh','#4ade80','#14532d'],['hoanghon','Hoàng hôn','#f59e0b','#9d174d'],['tim','Tím','#a78bfa','#4c1d95'],['mono','Đen trắng','#9ca3af','#111827'],['goc','Gốc (xanh lá)','#51cf66','#2f9e44']];
+var SK=[['pv','Petrovietnam','#00a04b','#2e3a87'],['ios','iOS','#5ac8fa','#007aff'],['rung','Rừng xanh','#4ade80','#14532d'],['hoanghon','Hoàng hôn','#f59e0b','#9d174d'],['tim','Tím','#a78bfa','#4c1d95'],['mono','Đen trắng','#9ca3af','#111827']];
 var MD=[['auto','🖥 Theo máy'],['light','☀️ Sáng'],['dark','🌙 Tối']];
 function get(k,d){try{return localStorage.getItem(k)||d;}catch(e){return d;}}
 function put(k,v){try{localStorage.setItem(k,v);}catch(e){}}

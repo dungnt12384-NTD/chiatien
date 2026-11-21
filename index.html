@@ -3147,17 +3147,19 @@ function addClear(sel){const i=$(sel);if(!i||i.parentNode.classList.contains('sb
   const sync=()=>{b.style.display=i.value?'flex':'none';};i.addEventListener('input',sync);i.addEventListener('change',sync);
   b.addEventListener('click',()=>{i.value='';i.dispatchEvent(new Event('input',{bubbles:true}));sync();i.focus();});sync();}
 ['#roomSearch','#memberSearch','#expSearch'].forEach(addClear);
+/* toạ độ của phần tử trong TRANG (không phải khung nhìn): vật nổi đặt absolute theo toạ độ này sẽ cuộn cùng nội dung, không bị giật / trôi khi kéo trang trên iPhone */
+function docXY(el){const r=el.getBoundingClientRect(),cs=getComputedStyle(document.body),b=cs.position!=='static'?document.body.getBoundingClientRect():{top:-window.scrollY,left:-window.scrollX};return{top:r.top-b.top,left:r.left-b.left,w:r.width,h:r.height};}
 /* nút × xoá nhanh cho mọi ô nhập chữ/số (hiện khi bấm vào ô có nội dung) */
 (function(){const GC=document.createElement('button');GC.type='button';GC.id='gclear';GC.hidden=true;GC.textContent='×';GC.setAttribute('aria-label','Xoá nội dung ô này');GC.title='Xoá nội dung ô này';document.body.appendChild(GC);
   let cur=null,GCtap=false;
   const ok=t=>t&&t.matches&&t.matches('input[type=text],input[type=search],input[type=email]')&&!t.readOnly&&!t.disabled&&!t.closest('.sbox');
   function pos(){const t=cur;if(!t||!document.contains(t)||!t.value){GC.hidden=true;return;}
     const r=t.getBoundingClientRect();if(r.width<60||r.bottom<0||r.top>innerHeight){GC.hidden=true;return;}
-    GC.hidden=false;GC.style.left=(r.right-34)+'px';GC.style.top=(r.top+r.height/2-13)+'px';}
+    GC.hidden=false;if(t.closest('.modal')){GC.style.position='fixed';GC.style.left=(r.right-34)+'px';GC.style.top=(r.top+r.height/2-13)+'px';}else{GC.style.position='absolute';const p=docXY(t);GC.style.left=(p.left+p.w-34)+'px';GC.style.top=(p.top+p.h/2-13)+'px';}}
   document.addEventListener('focusin',e=>{if(e.target===GC)return;if(ok(e.target)){cur=e.target;pos();}else{cur=null;GC.hidden=true;}});
   document.addEventListener('focusout',e=>{if(e.target===cur)setTimeout(()=>{if(document.activeElement!==cur&&!GCtap){cur=null;GC.hidden=true;}},500);});
   document.addEventListener('input',e=>{if(e.target===cur)pos();});
-  window.addEventListener('scroll',pos,true);window.addEventListener('resize',pos);
+  window.addEventListener('scroll',()=>{if(cur&&cur.closest('.modal'))pos();},true);window.addEventListener('resize',pos);
   GC.addEventListener('mousedown',e=>e.preventDefault());
   const doClear=()=>{const t=cur;if(!t)return;t.value='';t.dispatchEvent(new Event('input',{bubbles:true}));t.focus();pos();};
   GC.addEventListener('touchstart',e=>{e.preventDefault();GCtap=true;doClear();setTimeout(()=>{GCtap=false;},300);},{passive:false});
@@ -4951,16 +4953,18 @@ async function admLoadAcc(){
       document.body.appendChild(box);}
     box.innerHTML=L.map(e=>`<button type="button" role="option" class="sug-item" data-em="${esc(e)}"><span class="sug-ck" aria-hidden="true">${e===inp.value.trim()?'✓':''}</span><span class="sug-t">${fzMark(e,inp.value)}</span></button>`).join('');
     /* ưu tiên sổ lên TRÊN ô nhập (bàn phím điện thoại che phía dưới); chỉ sổ xuống khi phía trên không đủ chỗ */
+    const fixed=!!inp.closest('.modal');box.style.position=fixed?'fixed':'absolute';
     const r=inp.getBoundingClientRect(),vh=(window.visualViewport?visualViewport.height:innerHeight),h=Math.min(300,L.length*56+14),above=r.top-8,below=vh-r.bottom-8;
-    const w=Math.min(Math.max(r.width,260),innerWidth-16);box.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+'px';box.style.width=w+'px';
-    if(above>=Math.min(h,140)||above>=below){box.style.maxHeight=Math.max(110,Math.min(320,above))+'px';box.style.top='auto';box.style.bottom=(innerHeight-r.top+6)+'px';box.dataset.dir='up';}
-    else{box.style.maxHeight=Math.max(110,Math.min(320,below))+'px';box.style.bottom='auto';box.style.top=(r.bottom+6)+'px';box.dataset.dir='down';}}
+    const P=fixed?{top:r.top,left:r.left}:docXY(inp),offX=P.left-r.left,offY=P.top-r.top;
+    const w=Math.min(Math.max(r.width,260),innerWidth-16);box.style.left=(Math.max(8,Math.min(r.left,innerWidth-w-8))+offX)+'px';box.style.width=w+'px';box.style.bottom='auto';
+    if(above>=Math.min(h,140)||above>=below){box.style.maxHeight=Math.max(110,Math.min(320,above))+'px';box.dataset.dir='up';box.style.top=(r.top+offY-6-box.offsetHeight)+'px';}
+    else{box.style.maxHeight=Math.max(110,Math.min(320,below))+'px';box.dataset.dir='down';box.style.top=(r.bottom+offY+6)+'px';}}
   document.addEventListener('focusin',e=>{if(e.target&&ids.includes(e.target.id)){clearTimeout(hideT);show(e.target);}});
   document.addEventListener('input',e=>{if(e.target&&ids.includes(e.target.id))show(e.target);});
   document.addEventListener('focusout',e=>{if(e.target&&ids.includes(e.target.id)){hideT=setTimeout(hide,200);}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&box){hide();}},true);
   const reflow=e=>{if(!box||!cur)return;if(e&&e.target&&e.target.nodeType&&(e.target===box||box.contains(e.target)))return;if(!document.contains(cur)||document.activeElement!==cur){hide();return;}const r=cur.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight){box.style.visibility='hidden';return;}box.style.visibility='';const st=box.scrollTop;show(cur);if(box)box.scrollTop=st;};
-  window.addEventListener('resize',reflow);window.addEventListener('scroll',reflow,true);if(window.visualViewport)visualViewport.addEventListener('resize',reflow);
+  window.addEventListener('resize',reflow);window.addEventListener('scroll',e=>{if(cur&&cur.closest('.modal'))reflow(e);},true);if(window.visualViewport)visualViewport.addEventListener('resize',reflow);
 })();
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qAccQ'){admAccQ=ev.target.value;renderGroupTab();}});
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qAdmQ'){admGQ=ev.target.value;renderGroupTab();}});
@@ -6049,7 +6053,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v195',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v196',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

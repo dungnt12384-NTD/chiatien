@@ -2878,6 +2878,7 @@ function renderList(c){
       ${e.rooms&&e.rooms.length?`<div class="s">${nameNo(e.payer)} chi · ${e.rooms.length} phòng, tổng tiền phòng ${fmt(e.amount)}${byTxt(e)}</div><div class="rlines">${roomLinesHtml(e)}</div>`:`<div class="s">${nameNo(e.payer)} chi · ${splitText(e)}${e.excluded.length?` · bỏ ${e.excluded.map(i=>nameNo(i)).join(', ')}`:''}${byTxt(e)}</div>`}</div>
       <div class="amt num" style="color:var(--c-expense)">${fmt(e.amount)}</div>
       ${expMine(e)?`<button class="btn ghost small" data-act="editExp" data-id="${e.id}" type="button">Sửa</button>
+      <button class="btn ghost small" data-act="moveExp" data-id="${e.id}" type="button" title="Chuyển khoản chi này sang ngày khác (khi chọn nhầm ngày)">Chuyển ngày</button>
       <button class="xbtn" data-act="delExp" data-id="${e.id}" aria-label="Xoá khoản chi">${X}</button>`:`<span class="exp-lock" title="Khoản do ${esc(e.by||'người khác')} nhập. Chỉ người nhập hoặc Thủ quỹ sửa / xoá được.">🔒 ${esc(e.by?e.by.split('@')[0]:'người khác')}</span>`}${window.supabase&&sbGroup&&!PV_TOKEN?`<button type="button" class="rpbtn" data-rp="${e.id}">Báo sai</button>`:''}</div>`;}).join('')+'</div>'}</div>`;
   }).join('');
 }
@@ -3490,7 +3491,11 @@ document.addEventListener('click',ev=>{
   else if(act==='togBal'){openBal.has(id)?openBal.delete(id):openBal.add(id);render();}
   else if(act==='expandAdv'){S.members.forEach(m=>openAdv.add(m.id));render();}
   else if(act==='collapseAdv'){openAdv.clear();render();}
-  else if((act==='delExp'||act==='editExp')&&!expMine(S.expenses.find(x=>x.id===id))){toast(DENY_MSG.exp_other);return;}
+  else if((act==='delExp'||act==='editExp'||act==='moveExp')&&!expMine(S.expenses.find(x=>x.id===id))){toast(DENY_MSG.exp_other);return;}
+  else if(act==='moveExp'){const e=S.expenses.find(x=>x.id===id);if(!e)return;const isRoom=!!(e.rooms&&e.rooms.length);
+    const ch=S.days.filter(d=>d.id!==e.dayId).map(d=>{const clash=isRoom&&S.expenses.some(x=>x.id!==e.id&&x.dayId===d.id&&x.rooms&&x.rooms.length);return clash?null:{label:d.name+' ('+S.expenses.filter(x=>x.dayId===d.id).length+' khoản)',fn:()=>ask('Chuyển khoản chi "'+e.desc+'" ('+fmt(e.amount)+') từ '+dayName(e.dayId)+' sang '+d.name+'? Người nhận/người chi giữ nguyên, kết quả sẽ tính lại.',{ok:'Chuyển sang '+d.name,title:'Xác nhận chuyển ngày'},()=>{e.dayId=d.id;S.activeDay=d.id;openDays.add(d.id);if(editing===id)resetExpForm();render();toast('Đã chuyển khoản chi sang '+d.name+'.');})};}).filter(Boolean);
+    if(!ch.length){toast(isRoom?'Các ngày khác đã có khoản tiền phòng, không chuyển được.':'Chỉ có một ngày, không có ngày để chuyển sang.');return;}
+    ask('Chuyển khoản chi "'+e.desc+'" ('+fmt(e.amount)+') đang ở '+dayName(e.dayId)+' sang ngày nào?',{title:'Chuyển sang ngày khác',noLabel:'Huỷ',choices:ch});}
   else if(act==='delExp'){const e=S.expenses.find(x=>x.id===id);if(!e)return;
     ask(`Xoá khoản chi "${e.desc}" (${fmt(e.amount)})? Khoản chi được giữ trong Thùng rác, khôi phục được.`,{ok:'Xoá khoản chi',danger:true},()=>{trashExpense(e);S.expenses=S.expenses.filter(x=>x.id!==id);if(editing===id)resetExpForm();render();});}
   else if(act==='editExp'){startEdit(id);}
@@ -5832,7 +5837,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v165',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v166',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

@@ -3122,7 +3122,7 @@ function renderReport(c){
     dayCard=`<div class="rcard"><div class="daytitle"><h3 style="color:var(--fg)">${esc(dd.name)}</h3><span class="num">${es.length} khoản · tổng ${fmt(es.reduce((t,e)=>t+e.amount,0))} · ${dpeople(dd).length} người</span></div>`+
       (es.map(e=>`<div class="s" style="font-size:13px;color:var(--muted)">• ${esc(e.desc)}: ${fmt(e.amount)} (${nameNo(e.payer)} chi)</div>`).join('')||'<div class="hint">Ngày này chưa có khoản chi.</div>')+`</div>`;}
   const ppl=`<div class="rsec"><h3>Chi tiết từng người</h3><div class="hint" style="min-height:0">Bấm vào một người để xem các khoản họ đã tham gia và phần phải chịu.</div>${sumToggleHtml()}<div class="tablewrap"><table class="t2"><thead><tr><th>STT</th><th>Thành viên</th><th>Đã đóng trước</th><th>Đã chi hộ</th><th>Phải chịu</th><th>Chốt sổ</th></tr></thead><tbody>${modeGroups().map(g=>{const sm=k=>g.members.reduce((t,x)=>t+c.P[x.id][k],0),net=sm('net'),key=g.main.id,open=openPS.has(key);return `<tr class="clk" tabindex="0" role="button" aria-expanded="${open}" data-act="togPS" data-id="${key}"><td>${gNo(g.main.id)}</td><td>${memCell(g)}</td><td class="num">${fmt(sm('adv'))}</td><td class="num">${fmt(sm('paid'))}</td><td class="num">${fmt(sm('share'))}</td><td class="num ${net>0?'rpos':net<0?'rneg':''}" style="font-weight:700">${signed(net)}</td></tr>`+(open?`<tr class="det"><td colspan="6">${personDetail(g,c)}</td></tr>`:'');}).join('')}</tbody></table></div></div>`;
-  const subs=[['ov','Danh sách thành viên tham gia'],['stat','📊 Thống kê'],['day','Theo ngày'],['item','Theo khoản chi'],['person','Từng người'],['mx','Báo cáo chi tiết'],['rm','Theo phòng']];
+  const subs=[['ov','Danh sách thành viên tham gia'],['stat','📊 Thống kê'],['day','Theo ngày'],['item','Theo khoản chi'],['person','Từng người'],['rm','Theo phòng'],['mx','Báo cáo chi tiết']];
   const nav=`<div class="subtabs" role="tablist">`+subs.map(x=>`<button type="button" class="subtab" role="tab" aria-selected="${repTab===x[0]}" data-act="repTab" data-id="${x[0]}">${x[1]}</button>`).join('')+`</div>`;
   el.innerHTML=nav+({ov:ov,stat:statsHtml(c),day:dys,item:items,person:ppl,mx:matrixHtml(),rm:roomsReportHtml()}[repTab]||ov);
   if(['day','rm'].includes(repTab))foldDayCards(el);
@@ -5832,7 +5832,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v164',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v165',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}

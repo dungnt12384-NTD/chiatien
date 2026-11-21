@@ -4887,6 +4887,8 @@ async function admLoadAcc(){
   const ids=['dlgEmail','qAdm','qPAddE'];
   function list(inp){const q=inp.value.trim();const have=inp.id==='dlgEmail'?new Set((tPeople||[]).map(p=>p.email)):new Set();
     const set=new Set((admAcc||[]).map(a=>a.email));(window.PERM||[]).forEach(r=>{if(r.email)set.add(r.email);});
+    if(inp.id==='qPAddE'){const pa=inp.closest('.perm-add'),bt=pa&&pa.querySelector('[data-q="padd2"][data-t]'),st=document.getElementById('qPAddT'),tid=(bt&&bt.dataset.t)||(st&&st.value)||'';
+      if(tid)(window.PERM||[]).forEach(r=>{if(r.trip_id===tid&&r.scope==='trip'&&(r.role==='leader'||r.role==='helper'||r.role==='viewer')&&r.email)have.add(r.email);});}
     return [...set].filter(e=>e&&!have.has(e)&&fz(e,q)).sort().slice(0,60);}
   function hide(){if(box){box.remove();box=null;}cur=null;}
   function show(inp){if(!sbAdmin||picking)return;cur=inp;
@@ -4908,7 +4910,8 @@ async function admLoadAcc(){
   document.addEventListener('input',e=>{if(e.target&&ids.includes(e.target.id))show(e.target);});
   document.addEventListener('focusout',e=>{if(e.target&&ids.includes(e.target.id)){hideT=setTimeout(hide,200);}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&box){hide();}},true);
-  window.addEventListener('resize',hide);
+  const reflow=e=>{if(!box||!cur)return;if(e&&e.target&&e.target.nodeType&&(e.target===box||box.contains(e.target)))return;if(!document.contains(cur)||document.activeElement!==cur){hide();return;}const r=cur.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight){box.style.visibility='hidden';return;}box.style.visibility='';const st=box.scrollTop;show(cur);if(box)box.scrollTop=st;};
+  window.addEventListener('resize',reflow);window.addEventListener('scroll',reflow,true);if(window.visualViewport)visualViewport.addEventListener('resize',reflow);
 })();
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qAccQ'){admAccQ=ev.target.value;renderGroupTab();}});
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qAdmQ'){admGQ=ev.target.value;renderGroupTab();}});
@@ -5997,7 +6000,7 @@ try{applyRole();}catch(e){}
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}</script>
 <script>
 /* v106: tự kiểm tra bản mới (khi mở app, quay lại app, mỗi 10 phút) + nút "Cập nhật ứng dụng". Đổi APP_VER cùng VERSION trong sw.js mỗi lần phát hành. */
-var APP_VER='v188',UPD_LAST=0,UPD_NEW=null;
+var APP_VER='v189',UPD_LAST=0,UPD_NEW=null;
 async function appReload(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})));
     const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('chia-tien-')).map(k=>caches.delete(k)));}catch(e){}
   location.reload();}
